@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="aspnet-TestPlatform2-d11c7f73-4e9a-4de3-8055-b9850f6b89b2@ALBIIDRIZI" uuid="c67247d2-603a-48c6-90dd-eaf67bb1eab3">
+      <driver-ref>sqlserver.jb</driver-ref>
+      <synchronize>true</synchronize>
+      <configured-by-url>true</configured-by-url>
+      <jdbc-driver>com.jetbrains.jdbc.sqlserver.SqlServerDriver</jdbc-driver>
+      <jdbc-url>Server=ALBIIDRIZI;Database=aspnet-TestPlatform2-d11c7f73-4e9a-4de3-8055-b9850f6b89b2;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=true;</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+  </component>
+</project>
