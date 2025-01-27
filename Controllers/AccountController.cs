@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using TestPlatform2.Data;
 using TestPlatform2.Models.Account;
 
@@ -78,6 +79,8 @@ namespace TestPlatform2.Controllers
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                // add the error in the modelstate
+                ModelState.AddModelError( string.Empty, result.ToString());
             }
             return View(model);
         }

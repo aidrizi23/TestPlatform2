@@ -3,6 +3,7 @@
 public class QuestionViewModel
 {
     public string Id { get; set; }
+    public string TestId  { get; set; }
     public string Text { get; set; }
     public double Points { get; set; }
     public int Position { get; set; }

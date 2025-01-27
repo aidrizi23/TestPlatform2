@@ -106,17 +106,9 @@ public class TestController : Controller
         }
         
         // now just for security let's initialise a testViewModel
-        var testViewModel = new TestViewModel
-        {
-            Title = test.TestName,
-            Description = test.Description,
-            RandomizeQuestions = test.RandomizeQuestions,
-            TimeLimit = test.TimeLimit,
-            MaxAttempts = test.MaxAttempts,
-            Creator = test.User
-        };
+       
         
-        return View(testViewModel);
+        return View(test);
         
     }
     

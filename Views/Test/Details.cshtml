@@ -1,4 +1,121 @@
-@model TestViewModel
+@* @model TestPlatform2.Data.Test *@
+@* *@
+@* @{ *@
+@*     ViewData["Title"] = "Test Details"; *@
+@* } *@
+@* *@
+@* <h2>Test Details</h2> *@
+@* *@
+@* <div class="card mb-4"> *@
+@*     <div class="card-body"> *@
+@*         <h4 class="card-title">@Model.TestName</h4> *@
+@* *@
+@*         <dl class="row"> *@
+@*             <!-- Description --> *@
+@*             <dt class="col-sm-3">Description</dt> *@
+@*             <dd class="col-sm-9">@Model.Description</dd> *@
+@* *@
+@*             <!-- Randomization --> *@
+@*             <dt class="col-sm-3">Randomize Questions</dt> *@
+@*             <dd class="col-sm-9">@(Model.RandomizeQuestions ? "Yes" : "No")</dd> *@
+@* *@
+@*             <!-- Time Limit --> *@
+@*             <dt class="col-sm-3">Time Limit</dt> *@
+@*             <dd class="col-sm-9">@Model.TimeLimit minutes</dd> *@
+@* *@
+@*             <!-- Max Attempts --> *@
+@*             <dt class="col-sm-3">Max Attempts</dt> *@
+@*             <dd class="col-sm-9">@Model.MaxAttempts</dd> *@
+@* *@
+@*             <!-- Creator --> *@
+@*             <dt class="col-sm-3">Created By</dt> *@
+@*             <dd class="col-sm-9">@Model.User?.UserName</dd> *@
+@*         </dl> *@
+@* *@
+@*         <!-- Question Type Buttons --> *@
+@*         <div class="mb-4"> *@
+@*             <h5>Add Questions:</h5> *@
+@*             <div class="btn-group"> *@
+@*                 <a asp-controller="Question" asp-action="Create" asp-route-testId="@Model.Id" asp-route-type="MultipleChoice" class="btn btn-primary me-2"> *@
+@*                     <i class="fas fa-list-ul"></i> Multiple Choice *@
+@*                 </a> *@
+@*                 <a asp-controller="Question" asp-action="Create" asp-route-testId="@Model.Id" class="btn btn-success me-2"> *@
+@*                     <i class="fas fa-check-circle"></i> True/False *@
+@*                 </a> *@
+@*                 <a asp-controller="Question" asp-action="Create" asp-route-testId="@Model.Id" asp-route-type="ShortAnswer" class="btn btn-info me-2"> *@
+@*                     <i class="fas fa-pen"></i> Short Answer *@
+@*                 </a> *@
+@*             </div> *@
+@*         </div> *@
+@* *@
+@*         <!-- Navigation Buttons --> *@
+@*         <div class="mt-3"> *@
+@*             <a asp-action="Index" class="btn btn-secondary"> *@
+@*                 <i class="fas fa-arrow-left"></i> Back to Tests *@
+@*             </a> *@
+@*             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning ms-2"> *@
+@*                 <i class="fas fa-edit"></i> Edit Test *@
+@*             </a> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* <!-- List of Existing Questions --> *@
+@* @if (Model.Questions?.Any() == true) *@
+@* { *@
+@*     <div class="card"> *@
+@*         <div class="card-body"> *@
+@*             <h5 class="card-title">Questions</h5> *@
+@*             <div class="list-group"> *@
+@*                 @foreach (var question in Model.Questions.OrderBy(q => q.Position)) *@
+@*                 { *@
+@*                     <div class="list-group-item d-flex justify-content-between align-items-center"> *@
+@*                         <div> *@
+@*                             <span class="badge bg-secondary me-2">@question.Position</span> *@
+@*                             @question.Text *@
+@*                             <span class="badge bg-primary ms-2">@question.Points pts</span> *@
+@*                         </div> *@
+@*                         <div class="btn-group"> *@
+@*                             <a asp-controller="Question" asp-action="Edit" asp-route-id="@question.Id" class="btn btn-sm btn-warning"> *@
+@*                                 <i class="fas fa-edit"></i> *@
+@*                             </a> *@
+@*                             <button type="button" class="btn btn-sm btn-danger" onclick="deleteQuestion('@question.Id')"> *@
+@*                                 <i class="fas fa-trash"></i> *@
+@*                             </button> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 } *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* } *@
+@* *@
+@* @section Scripts { *@
+@*     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} *@
+@* *@
+@*     <script> *@
+@*         function deleteQuestion(id) { *@
+@*             if (confirm('Are you sure you want to delete this question?')) { *@
+@*                 $.ajax({ *@
+@*                     url: '@Url.Action("Delete", "Question")/' + id, *@
+@*                     type: 'DELETE', *@
+@*                     success: function() { *@
+@*                         location.reload(); *@
+@*                     }, *@
+@*                     error: function() { *@
+@*                         alert('Error deleting question'); *@
+@*                     } *@
+@*                 }); *@
+@*             } *@
+@*         } *@
+@*     </script> *@
+
+@* } *@
+
+
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using TestPlatform2.Data.Questions
+@model TestPlatform2.Data.Test
 
 @{
     ViewData["Title"] = "Test Details";
@@ -6,39 +123,121 @@
 
 <h2>Test Details</h2>
 
-<div class="card">
+<div class="card mb-4">
     <div class="card-body">
-        <h4 class="card-title">@Model.Title</h4>
-        
+        <h4 class="card-title">@Model.TestName</h4>
+
         <dl class="row">
-            <!-- Description -->
             <dt class="col-sm-3">Description</dt>
             <dd class="col-sm-9">@Model.Description</dd>
 
-            <!-- Randomization -->
             <dt class="col-sm-3">Randomize Questions</dt>
             <dd class="col-sm-9">@(Model.RandomizeQuestions ? "Yes" : "No")</dd>
 
-            <!-- Time Limit -->
             <dt class="col-sm-3">Time Limit</dt>
             <dd class="col-sm-9">@Model.TimeLimit minutes</dd>
 
-            <!-- Max Attempts -->
             <dt class="col-sm-3">Max Attempts</dt>
             <dd class="col-sm-9">@Model.MaxAttempts</dd>
 
-            <!-- Creator -->
             <dt class="col-sm-3">Created By</dt>
-            <dd class="col-sm-9">@Model.Creator?.UserName</dd>
+            <dd class="col-sm-9">@Model.User?.UserName</dd>
         </dl>
 
-        <!-- Back to List button -->
-        <a asp-action="Index" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Back to Tests
-        </a>
+        <!-- Question Type Buttons -->
+        <div class="mb-4">
+            <h5>Add Questions:</h5>
+            <div class="btn-group">
+                <a asp-controller="Question" asp-action="CreateMultipleChoice" asp-route-testId="@Model.Id" class="btn btn-primary me-2">
+                    <i class="fas fa-list-ul"></i> Multiple Choice
+                </a>
+                <a asp-controller="Question" asp-action="CreateTrueFalse" asp-route-testId="@Model.Id" class="btn btn-success me-2">
+                    <i class="fas fa-check-circle"></i> True/False
+                </a>
+                <a asp-controller="Question" asp-action="CreateShortAnswer" asp-route-testId="@Model.Id" class="btn btn-info me-2">
+                    <i class="fas fa-pen"></i> Short Answer
+                </a>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="mt-3">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tests
+            </a>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning ms-2">
+                <i class="fas fa-edit"></i> Edit Test
+            </a>
+            <button type="button" class="btn btn-danger ms-2" onclick="deleteTest('@Model.Id')">
+                <i class="fas fa-trash"></i> Delete Test
+            </button>
+        </div>
     </div>
 </div>
 
+<!-- List of Existing Questions -->
+@if (Model.Questions?.Any() == true)
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Questions</h5>
+            <div class="list-group">
+                @foreach (var question in Model.Questions.OrderBy(q => q.Position))
+                {
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-secondary me-2">@question.Position</span>
+                            @question.Text
+                            <span class="badge bg-primary ms-2">@question.Points pts</span>
+                            @{
+                                var questionType = question switch
+                                {
+                                    TrueFalseQuestion => "True/False",
+                                    MultipleChoiceQuestion => "Multiple Choice",
+                                    ShortAnswerQuestion => "Short Answer",
+                                    _ => "Unknown"
+                                };
+                            }
+                            <span class="badge bg-info ms-2">@questionType</span>
+                        </div>
+                        <div class="btn-group">
+                            <a asp-controller="Question" asp-action="Edit" asp-route-id="@question.Id" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteQuestion('@question.Id')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function confirmDeleteQuestion(id) {
+            if (confirm('Are you sure you want to delete this question?')) {
+                $.ajax({
+                    url: '@Url.Action("Delete", "Question")/' + id,
+                    type: 'POST',
+                    success: function() {
+                        location.reload();
+                    },
+                    error: function() {
+                        alert('Error deleting question');
+                    }
+                });
+            }
+        }
+
+        function deleteTest(id) {
+            if (confirm('Are you sure you want to delete this test and all its questions?')) {
+                window.location.href = '@Url.Action("Delete", "Test")/' + id;
+            }
+        }
+    </script>
 }
