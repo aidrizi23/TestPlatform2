@@ -1,0 +1,44 @@
+@model TestViewModel
+
+@{
+    ViewData["Title"] = "Test Details";
+}
+
+<h2>Test Details</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">@Model.Title</h4>
+        
+        <dl class="row">
+            <!-- Description -->
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@Model.Description</dd>
+
+            <!-- Randomization -->
+            <dt class="col-sm-3">Randomize Questions</dt>
+            <dd class="col-sm-9">@(Model.RandomizeQuestions ? "Yes" : "No")</dd>
+
+            <!-- Time Limit -->
+            <dt class="col-sm-3">Time Limit</dt>
+            <dd class="col-sm-9">@Model.TimeLimit minutes</dd>
+
+            <!-- Max Attempts -->
+            <dt class="col-sm-3">Max Attempts</dt>
+            <dd class="col-sm-9">@Model.MaxAttempts</dd>
+
+            <!-- Creator -->
+            <dt class="col-sm-3">Created By</dt>
+            <dd class="col-sm-9">@Model.Creator?.UserName</dd>
+        </dl>
+
+        <!-- Back to List button -->
+        <a asp-action="Index" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tests
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

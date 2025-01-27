@@ -1,0 +1,43 @@
+@model TestForCreationDto
+
+<h2>Create New Test</h2>
+
+<form asp-action="Create" method="post">
+    <!-- Validation Summary at the top for visibility -->
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <!-- Test Title -->
+    <div class="form-group">
+        <label asp-for="Title" class="control-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+        <label asp-for="Description" class="control-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <!-- Randomize Questions (correct checkbox implementation) -->
+    <div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" asp-for="RandomizeQuestions" />
+        <label class="form-check-label" asp-for="RandomizeQuestions"></label>
+    </div>
+
+    <!-- Time Limit -->
+    <div class="form-group">
+        <label asp-for="TimeLimit" class="control-label"></label>
+        <input asp-for="TimeLimit" class="form-control" />
+        <span asp-validation-for="TimeLimit" class="text-danger"></span>
+    </div>
+
+    <!-- Max Attempts -->
+    <div class="form-group">
+        <label asp-for="MaxAttempts" class="control-label"></label>
+        <input asp-for="MaxAttempts" class="form-control" />
+        <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Test</button>
+</form>

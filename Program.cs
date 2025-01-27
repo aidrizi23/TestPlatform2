@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TestPlatform2.Data;
+using TestPlatform2.Repository;
 
 namespace TestPlatform2;
 
@@ -31,6 +32,9 @@ public class Program
         .AddDefaultTokenProviders();
 
         builder.Services.AddControllersWithViews();
+
+        builder.Services.AddScoped<ITestRepository, TestRepository>();
+        builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 
         var app = builder.Build();
 

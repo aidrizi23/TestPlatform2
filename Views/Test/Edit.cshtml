@@ -1,0 +1,57 @@
+@model TestForEditDto
+
+@{
+    ViewData["Title"] = "Edit Test";
+}
+
+<h2>Edit Test</h2>
+
+<form asp-action="Edit" method="post">
+    <!-- Hidden ID field for model binding -->
+    <input type="hidden" asp-for="Id" />
+    
+    <!-- Validation Summary -->
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+    <!-- Test Name -->
+    <div class="form-group">
+        <label asp-for="TestName" class="control-label"></label>
+        <input asp-for="TestName" class="form-control" />
+        <span asp-validation-for="TestName" class="text-danger"></span>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+        <label asp-for="Description" class="control-label"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+    </div>
+
+    <!-- Randomize Questions -->
+    <div class="form-group form-check">
+        <input type="checkbox" class="form-check-input" asp-for="RandomizeQuestions" />
+        <label class="form-check-label" asp-for="RandomizeQuestions"></label>
+    </div>
+
+    <!-- Time Limit -->
+    <div class="form-group">
+        <label asp-for="TimeLimit" class="control-label"></label>
+        <input asp-for="TimeLimit" class="form-control" />
+        <span asp-validation-for="TimeLimit" class="text-danger"></span>
+    </div>
+
+    <!-- Max Attempts -->
+    <div class="form-group">
+        <label asp-for="MaxAttempts" class="control-label"></label>
+        <input asp-for="MaxAttempts" class="form-control" />
+        <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Update Test</button>
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
