@@ -1,0 +1,341 @@
+@* @using Microsoft.AspNetCore.Mvc.TagHelpers *@
+@* @model TestPlatform2.Data.Questions.CreateMultipleChoiceQuestionViewModel *@
+@* *@
+@* <div class="container mt-4"> *@
+@*     <h2>Create Multiple Choice Question</h2> *@
+@* *@
+@*     <form asp-controller="Question" asp-action="CreateMultipleChoice" method="post" id="questionForm"> *@
+@*         <input type="hidden" asp-for="TestId" /> *@
+@* *@
+@*         <div class="form-group mb-3"> *@
+@*             <label asp-for="Text">Question Text</label> *@
+@*             <textarea asp-for="Text" class="form-control" rows="3" required></textarea> *@
+@*             <span asp-validation-for="Text" class="text-danger"></span> *@
+@*         </div> *@
+@* *@
+@*         <div class="form-group mb-3"> *@
+@*             <label asp-for="Points">Points</label> *@
+@*             <input asp-for="Points" class="form-control" type="number" step="0.5" min="0" required /> *@
+@*             <span asp-validation-for="Points" class="text-danger"></span> *@
+@*         </div> *@
+@* *@
+@*         <div class="form-group mb-3"> *@
+@*             <div class="form-check"> *@
+@*                 <input asp-for="AllowMultipleSelections" id="AllowMultipleSelections" class="form-check-input" type="checkbox" /> *@
+@*                 <label asp-for="AllowMultipleSelections" class="form-check-label">Allow Multiple Selections</label> *@
+@*             </div> *@
+@*         </div> *@
+@* *@
+@*         <div class="form-group mb-3" id="optionsContainer"> *@
+@*             <label>Options</label> *@
+@*             <div id="optionsList"> *@
+@*                 @if (Model.Options.Any()) *@
+@*                 { *@
+@*                     @for (var i = 0; i < Model.Options.Count; i++) *@
+@*                     { *@
+@*                         <div class="option-group mb-2"> *@
+@*                             <div class="input-group"> *@
+@*                                 <input type="text" name="Options" value="@Model.Options[i]" class="form-control" required /> *@
+@*                                 <div class="input-group-append"> *@
+@*                                     <div class="input-group-text"> *@
+@*                                         <input type="checkbox" name="CorrectAnswers" value="@Model.Options[i]" *@
+@*                                                @(Model.CorrectAnswers.Contains(Model.Options[i]) ? "checked" : "") /> *@
+@*                                         <label class="ms-2 mb-0">Correct</label> *@
+@*                                     </div> *@
+@*                                 </div> *@
+@*                                 <button type="button" class="btn btn-danger remove-option">Remove</button> *@
+@*                             </div> *@
+@*                         </div> *@
+@*                     } *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     <div class="option-group mb-2"> *@
+@*                         <div class="input-group"> *@
+@*                             <input type="text" name="Options" class="form-control" required /> *@
+@*                             <div class="input-group-append"> *@
+@*                                 <div class="input-group-text"> *@
+@*                                     <input type="checkbox" name="CorrectAnswers" /> *@
+@*                                     <label class="ms-2 mb-0">Correct</label> *@
+@*                                 </div> *@
+@*                             </div> *@
+@*                             <button type="button" class="btn btn-danger remove-option">Remove</button> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 } *@
+@*             </div> *@
+@*         </div> *@
+@* *@
+@*         <button type="button" class="btn btn-secondary mb-3" id="addOption">Add Option</button> *@
+@* *@
+@*         <div class="mt-3"> *@
+@*             <button type="submit" class="btn btn-primary">Create</button> *@
+@*             <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-secondary">Cancel</a> *@
+@*         </div> *@
+@*     </form> *@
+@* </div> *@
+@* *@
+@* @section Scripts { *@
+@*     <script> *@
+@*         $(document).ready(function () { *@
+@*             const toggleCorrectAnswers = () => { *@
+@*                 const allowMultiple = $("#AllowMultipleSelections").is(":checked"); *@
+@* *@
+@*                 if (!allowMultiple) { *@
+@*                     // Enforce only one checkbox to be selected *@
+@*                     $("input[name='CorrectAnswers']").prop("checked", false).prop("disabled", true); *@
+@*                     const firstChecked = $("input[name='CorrectAnswers']:checked").first(); *@
+@*                     if (firstChecked.length) { *@
+@*                         firstChecked.prop("checked", true).prop("disabled", false); *@
+@*                     } *@
+@*                 } else { *@
+@*                     $("input[name='CorrectAnswers']").prop("disabled", false); *@
+@*                 } *@
+@*             }; *@
+@* *@
+@*             const enforceSingleSelection = () => { *@
+@*                 $("input[name='CorrectAnswers']").on("change", function () { *@
+@*                     if (!$("#AllowMultipleSelections").is(":checked")) { *@
+@*                         $("input[name='CorrectAnswers']").not(this).prop("checked", false); *@
+@*                     } *@
+@*                 }); *@
+@*             }; *@
+@* *@
+@*             // Initial toggle state *@
+@*             toggleCorrectAnswers(); *@
+@*             enforceSingleSelection(); *@
+@* *@
+@*             // Listen for AllowMultipleSelections toggle *@
+@*             $("#AllowMultipleSelections").change(function () { *@
+@*                 toggleCorrectAnswers(); *@
+@*             }); *@
+@* *@
+@*             // Add a new option dynamically *@
+@*             $("#addOption").click(function () { *@
+@*                 const optionHtml = ` *@
+@*                     <div class="option-group mb-2"> *@
+@*                         <div class="input-group"> *@
+@*                             <input type="text" name="Options" class="form-control" required /> *@
+@*                             <div class="input-group-append"> *@
+@*                                 <div class="input-group-text"> *@
+@*                                     <input type="checkbox" name="CorrectAnswers" /> *@
+@*                                     <label class="ms-2 mb-0">Correct</label> *@
+@*                                 </div> *@
+@*                             </div> *@
+@*                             <button type="button" class="btn btn-danger remove-option">Remove</button> *@
+@*                         </div> *@
+@*                     </div> *@
+@*                 `; *@
+@*                 $("#optionsList").append(optionHtml); *@
+@*                 enforceSingleSelection(); *@
+@*                 toggleCorrectAnswers(); *@
+@*             }); *@
+@* *@
+@*             // Remove an option *@
+@*             $(document).on("click", ".remove-option", function () { *@
+@*                 if ($(".option-group").length > 1) { *@
+@*                     $(this).closest(".option-group").remove(); *@
+@*                 } else { *@
+@*                     alert("You must have at least one option"); *@
+@*                 } *@
+@*             }); *@
+@* *@
+@*             // Form submission validation *@
+@*             $("#questionForm").submit(function (e) { *@
+@*                 const options = $("input[name='Options']"); *@
+@*                 const correctAnswers = $("input[name='CorrectAnswers']:checked"); *@
+@* *@
+@*                 if (options.length < 2) { *@
+@*                     alert("Please add at least 2 options"); *@
+@*                     e.preventDefault(); *@
+@*                     return false; *@
+@*                 } *@
+@* *@
+@*                 if (correctAnswers.length === 0) { *@
+@*                     alert("Please select at least one correct answer"); *@
+@*                     e.preventDefault(); *@
+@*                     return false; *@
+@*                 } *@
+@* *@
+@*                 // Update correct answers values to match their corresponding option text *@
+@*                 correctAnswers.each(function () { *@
+@*                     $(this).val($(this).closest('.input-group').find('input[name="Options"]').val()); *@
+@*                 }); *@
+@*             }); *@
+@*         }); *@
+@*     </script> *@
+@* } *@
+
+
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model TestPlatform2.Data.Questions.CreateMultipleChoiceQuestionViewModel
+
+<div class="container mt-4">
+    <h2>Create Multiple Choice Question</h2>
+
+    <form asp-controller="Question" asp-action="CreateMultipleChoice" method="post" id="questionForm">
+        <input type="hidden" asp-for="TestId" />
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label asp-for="Text" class="form-label fw-bold">Question Text</label>
+                    <textarea asp-for="Text" class="form-control" rows="3" required></textarea>
+                    <span asp-validation-for="Text" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label asp-for="Points" class="form-label fw-bold">Points</label>
+                            <input asp-for="Points" class="form-control" type="number" step="0.5" min="0" required />
+                            <span asp-validation-for="Points" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3 pt-4">
+                            <div class="form-check form-switch">
+                                <input asp-for="AllowMultipleSelections" class="form-check-input" type="checkbox" role="switch" id="AllowMultipleSelections">
+                                <label asp-for="AllowMultipleSelections" class="form-check-label fw-bold">Allow Multiple Selections</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label fw-bold mb-3">Answer Options</label>
+                    <div id="optionsContainer" class="border rounded p-3 bg-light">
+                        <div id="optionsList">
+                            @if (Model.Options.Any())
+                            {
+                                @for (var i = 0; i < Model.Options.Count; i++)
+                                {
+                                    <div class="option-group mb-3">
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <input type="text" name="Options" value="@Model.Options[i]" class="form-control" required />
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" name="CorrectAnswers" value="@Model.Options[i]"
+                                                       @(Model.CorrectAnswers.Contains(Model.Options[i]) ? "checked" : "") 
+                                                       class="form-check-input correct-answer" />
+                                                <label class="form-check-label">Correct</label>
+                                            </div>
+                                            <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="option-group mb-3">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <input type="text" name="Options" class="form-control" required />
+                                        <div class="form-check form-check-inline">
+                                            <input type="checkbox" name="CorrectAnswers" class="form-check-input correct-answer" />
+                                            <label class="form-check-label">Correct</label>
+                                        </div>
+                                        <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary mt-3" id="addOption">
+                    <i class="bi bi-plus-circle"></i> Add Option
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-circle"></i> Create Question
+            </button>
+            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-x-circle"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const handleMultipleSelection = () => {
+                const allowMultiple = $("#AllowMultipleSelections").is(":checked");
+                $(".correct-answer").off('change');
+
+                if (!allowMultiple) {
+                    $(".correct-answer").on('change', function() {
+                        if (this.checked) {
+                            $(".correct-answer").not(this).prop('checked', false);
+                        }
+                    });
+                    
+                    // Ensure only one is checked initially
+                    const $checked = $(".correct-answer:checked");
+                    if ($checked.length > 1) {
+                        $checked.slice(1).prop('checked', false);
+                    }
+                }
+            };
+
+            // Initial setup
+            handleMultipleSelection();
+            $("#AllowMultipleSelections").change(handleMultipleSelection);
+
+            // Add new option
+            $("#addOption").click(function () {
+                const newOption = `
+                    <div class="option-group mb-3">
+                        <div class="d-flex gap-2 align-items-center">
+                            <input type="text" name="Options" class="form-control" required />
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" name="CorrectAnswers" class="form-check-input correct-answer" />
+                                <label class="form-check-label">Correct</label>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
+                        </div>
+                    </div>`;
+                $("#optionsList").append(newOption);
+                handleMultipleSelection();
+            });
+
+            // Remove option
+            $(document).on("click", ".remove-option", function () {
+                if ($(".option-group").length > 1) {
+                    $(this).closest(".option-group").remove();
+                } else {
+                    alert("You must have at least one option");
+                }
+            });
+
+            // Form validation
+            $("#questionForm").submit(function (e) {
+                const options = $("input[name='Options']").map(function() { return $(this).val(); }).get();
+                const uniqueOptions = [...new Set(options)];
+                
+                if (uniqueOptions.length < 2) {
+                    alert("Please provide at least 2 distinct options");
+                    e.preventDefault();
+                    return;
+                }
+
+                const correctAnswers = $(".correct-answer:checked");
+                if (correctAnswers.length === 0) {
+                    alert("Please select at least one correct answer");
+                    e.preventDefault();
+                    return;
+                }
+
+                // Update correct answer values
+                correctAnswers.each(function() {
+                    $(this).val($(this).closest('.option-group').find('input[name="Options"]').val());
+                });
+            });
+        });
+    </script>
+}

@@ -1,0 +1,36 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model TestPlatform2.Data.Questions.CreateTrueFalseQuestionViewModel
+
+<div class="container mt-4">
+    <h2>Create True/False Question</h2>
+    
+    <form asp-controller="Question" asp-action="CreateTrueFalse"  method="post">
+        <input type="hidden" asp-for="TestId" />
+        
+        <div class="form-group">
+            <label asp-for="Text">Question Text</label>
+            <textarea asp-for="Text" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Text" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Points">Points</label>
+            <input asp-for="Points" class="form-control" />
+            <span asp-validation-for="Points" class="text-danger"></span>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="CorrectAnswer">Correct Answer</label>
+            <select asp-for="CorrectAnswer" class="form-control">
+                <option value="true">True</option>
+                <option value="false">False</option>
+            </select>
+            <span asp-validation-for="CorrectAnswer" class="text-danger"></span>
+        </div>
+        
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Create</button>
+            <a asp-controller="Test" asp-action="Edit" asp-route-id="@Model.TestId" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
