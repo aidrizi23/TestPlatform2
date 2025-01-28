@@ -182,4 +182,60 @@ public class QuestionController : Controller
         await _questionRepository.Create(question);
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }
+
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> CreateShortAnswer(string testId)
+    {
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+        // get the user
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null || test.UserId != user!.Id)
+            return Unauthorized();
+
+
+
+        var model = new CreateShortAnswerQuestionViewModel()
+        {
+            TestId = testId,
+            Points = 1,
+            Text = "",
+            ExpectedAnswer = "",
+            CaseSensitive = false,
+        };
+        
+        return View(model);
+        
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> CreateShortAnswer(CreateShortAnswerQuestionViewModel model)
+    {
+        var test = await _testRepository.GetTestByIdAsync(model.TestId);
+        var user = await _userManager.GetUserAsync(User);
+        if (test is null)
+            return NotFound("Test not found");
+        if (user is null || test.UserId != user!.Id)
+            return Unauthorized();
+
+        var question = new ShortAnswerQuestion()
+        {
+            TestId = model.TestId,
+            Points = model.Points,
+            Text = model.Text,
+            Position = test.Questions.Count,
+            ExpectedAnswer = model.ExpectedAnswer,
+            CaseSensitive = model.CaseSensitive,
+            Test = test!,
+        };
+        
+        await _questionRepository.Create(question);
+        
+        return RedirectToAction("Details", "Test", new { id = test.Id });
+        
+    }
 }
