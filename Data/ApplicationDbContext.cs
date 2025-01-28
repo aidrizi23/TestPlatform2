@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿// ApplicationDbContext.cs
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TestPlatform2.Data.Questions;
 
 namespace TestPlatform2.Data
 {
-    // Inherit from IdentityDbContext<User> instead of IdentityDbContext
     public class ApplicationDbContext : IdentityDbContext<User>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -15,28 +15,26 @@ namespace TestPlatform2.Data
 
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Configure TPH inheritance
-            modelBuilder.Entity<Question>()
-                .HasDiscriminator<QuestionType>("QuestionType")
-                .HasValue<MultipleChoiceQuestion>(QuestionType.MultipleChoice)
-                .HasValue<TrueFalseQuestion>(QuestionType.TrueFalse)
-                .HasValue<ShortAnswerQuestion>(QuestionType.ShortAnswer);
 
-            // Configure owned entities for complex properties
-            modelBuilder.Entity<MultipleChoiceQuestion>(mcq =>
-            {
-                mcq.OwnsMany(m => m.Options, o =>
-                {
-                    o.WithOwner().HasForeignKey("QuestionId");
-                    o.Property<string>("Id");
-                    o.HasKey("Id");
-                });
-            });
-            
+            // Configuring Test and User relationship
+            modelBuilder.Entity<Test>()
+                .HasOne(t => t.User)
+                .WithMany(u => u.Tests)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascading delete
+
+            // Configuring Question hierarchy
+            modelBuilder.Entity<Question>()
+                .HasDiscriminator<ApplicationDbContext.QuestionType>("QuestionType")
+                .HasValue<MultipleChoiceQuestion>(ApplicationDbContext.QuestionType.MultipleChoice)
+                .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
+                .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer);
         }
+
 
         public enum QuestionType
         {

@@ -2,7 +2,7 @@
 
 public class MultipleChoiceQuestion : Question
 {
-    public List<ChoiceOption> Options { get; set; } = new();
+    public List<string> Options { get; set; } = new();
     public List<string> CorrectAnswers { get; set; } = new();
     public bool AllowMultipleSelections { get; set; }
 

@@ -2,7 +2,7 @@
 
 public class MultipleChoiceQuestionViewModel : QuestionViewModel
 {
-    public List<ChoiceOption> Options { get; set; } = new();
+    public List<string> Options { get; set; } = new();
     public bool AllowMultipleSelections { get; set; }
     public List<string> SelectedAnswers { get; set; } = new();
 }
