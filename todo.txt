@@ -2,3 +2,26 @@
 
 
 create short answer view
+
+
+    Invite Students:
+
+        A professor adds student emails to TestInvite.
+
+        Emails are sent with a unique link: https://yourapp.com/test/{testId}?token={UniqueToken}.
+
+    Start Test:
+
+        Students click the link and enter their name/email (no login).
+
+        The system validates the token and creates a TestAttempt.
+
+    Track Activity:
+
+        IsUsed in TestInvite marks if a student started the test.
+
+        TestAttempt records timestamps and whether they finished (IsCompleted).
+
+    Store Answers:
+
+        Answers are saved to the Answer table with the AttemptId to link them to a specific session.

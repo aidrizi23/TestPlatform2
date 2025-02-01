@@ -33,6 +33,29 @@ namespace TestPlatform2.Data
                 .HasValue<MultipleChoiceQuestion>(ApplicationDbContext.QuestionType.MultipleChoice)
                 .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
                 .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer);
+            
+            // TestInvite relationships
+            modelBuilder.Entity<TestInvite>()
+                .HasOne(i => i.Test)
+                .WithMany(t => t.InvitedStudents)
+                .HasForeignKey(i => i.TestId);
+
+            // TestAttempt relationships
+            modelBuilder.Entity<TestAttempt>()
+                .HasOne(a => a.Test)
+                .WithMany(t => t.Attempts)
+                .HasForeignKey(a => a.TestId);
+
+            // Answer relationships
+            modelBuilder.Entity<Answer>()
+                .HasOne(a => a.Question)
+                .WithMany()
+                .HasForeignKey(a => a.QuestionId);
+
+            modelBuilder.Entity<Answer>()
+                .HasOne(a => a.Attempt)
+                .WithMany(a => a.Answers)
+                .HasForeignKey(a => a.AttemptId);
         }
 
 

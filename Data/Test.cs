@@ -18,4 +18,7 @@ public class Test
     public User User { get; set; }
 
     public virtual ICollection<Question> Questions { get; set; } = new List<Question>();
+    
+    public List<TestInvite> InvitedStudents { get; set; } = new();
+    public List<TestAttempt> Attempts { get; set; } = new();
 }
