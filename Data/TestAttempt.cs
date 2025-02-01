@@ -3,11 +3,13 @@
 public class TestAttempt
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string StudentName { get; set; } // Collected at test start
-    public string StudentEmail { get; set; } // Collected at test start
+    public string FirstName { get; set; } // Student's first name
+    public string LastName { get; set; } // Student's last name
+    public string StudentEmail { get; set; } // Automatically saved from the invite
     public DateTime StartTime { get; set; }
     public DateTime? EndTime { get; set; } // Null if test is abandoned
     public bool IsCompleted { get; set; } = false;
+    public double Score { get; set; }
 
     // Relationships
     public string TestId { get; set; }

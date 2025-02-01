@@ -19,6 +19,7 @@
 
     <ItemGroup>
       <Folder Include="Views\Account\" />
+      <Folder Include="Views\TestAttempt\" />
       <Folder Include="Views\Test\" />
     </ItemGroup>
 

@@ -50,6 +50,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlTXVsdGlwbGVDaG9pY2UuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/User/Desktop/TestPlatform2/Views/Question/CreateShortAnswer.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlU2hvcnRBbnN3ZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/User/Desktop/TestPlatform2/Views/Question/CreateTrueFalse.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlVHJ1ZUZhbHNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -64,6 +68,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/User/Desktop/TestPlatform2/Views/Shared/_ValidationScriptsPartial.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/User/Desktop/TestPlatform2/Views/TestAttempt/StartTest.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdEF0dGVtcHRcU3RhcnRUZXN0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/User/Desktop/TestPlatform2/Views/TestAttempt/TakeTest.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdEF0dGVtcHRcVGFrZVRlc3QuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/User/Desktop/TestPlatform2/Views/Test/Create.cshtml]

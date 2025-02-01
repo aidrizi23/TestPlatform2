@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TestPlatform2.Data;
 using TestPlatform2.Repository;
+using TestPlatform2.Services;
 
 namespace TestPlatform2;
 
@@ -35,6 +36,11 @@ public class Program
 
         builder.Services.AddScoped<ITestRepository, TestRepository>();
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
+        builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+        builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
+        builder.Services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
+        builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
+        
 
         var app = builder.Build();
 

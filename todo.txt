@@ -25,3 +25,9 @@ create short answer view
     Store Answers:
 
         Answers are saved to the Answer table with the AttemptId to link them to a specific session.
+        
+        
+        
+        
+        
+when creating a question make it so that it checks the points to be over 0
