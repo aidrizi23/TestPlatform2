@@ -1,0 +1,461 @@
+@* @model TestPlatform2.Models.TakeTestViewModel *@
+@* @using Microsoft.AspNetCore.Mvc.TagHelpers *@
+@* @using TestPlatform2.Data.Questions *@
+@* @using TestPlatform2.Models $1$ Add namespace for question types #1# *@
+@* *@
+@* @{ *@
+@*     ViewData["Title"] = "Take Test"; *@
+@* } *@
+@* *@
+@* <div class="container mt-5"> *@
+@*     <div class="card"> *@
+@*         <div class="card-body"> *@
+@*             <h2 class="card-title">Test: @Model.Test.TestName</h2> *@
+@*             <p class="card-text">@Model.Test.Description</p> *@
+@* *@
+@*             <!-- Timer Display --> *@
+@*             <div class="alert alert-info"> *@
+@*                 Time Remaining: <span id="timer">@($"{Model.Test.TimeLimit:00}:00")</span> *@
+@*             </div> *@
+@* *@
+@*             <!-- Test Form --> *@
+@*             <form id="testForm" asp-action="SubmitAnswers" method="post"> *@
+@*                 <input type="hidden" asp-for="AttemptId" /> *@
+@* *@
+@*                 <!-- Loop Through Questions --> *@
+@*                 @if (Model.Questions != null && Model.Questions.Any()) *@
+@*                 { *@
+@*                     @for (int i = 0; i < Model.Questions.Count; i++) *@
+@*                     { *@
+@*                         var question = Model.Questions[i]; *@
+@*                         <div class="form-group mb-4"> *@
+@*                             <h5>Question @(i + 1): @question.Text</h5> *@
+@*                             <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" /> *@
+@* *@
+@*                             @switch (question) *@
+@*                             { *@
+@*                                 case MultipleChoiceQuestion mcq: *@
+@*                                     <!-- Multiple Choice Question --> *@
+@*                                     foreach (var option in mcq.Options) *@
+@*                                     { *@
+@*                                         <div class="form-check"> *@
+@*                                             $1$ Use radio buttons for single selection #1# *@
+@*                                             <input class="form-check-input" type="radio"  *@
+@*                                                    name="answers[@i].Response"  *@
+@*                                                    value="@option" /> *@
+@*                                             <label class="form-check-label">@option</label> *@
+@*                                         </div> *@
+@*                                     } *@
+@*                                     break; *@
+@* *@
+@*                                 case TrueFalseQuestion tfq: *@
+@*                                     <!-- True/False Question --> *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="True" /> *@
+@*                                         <label class="form-check-label">True</label> *@
+@*                                     </div> *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="False" /> *@
+@*                                         <label class="form-check-label">False</label> *@
+@*                                     </div> *@
+@*                                     break; *@
+@* *@
+@*                                 case ShortAnswerQuestion saq: *@
+@*                                     <!-- Short Answer Question --> *@
+@*                                     <input class="form-control" type="text"  *@
+@*                                            name="answers[@i].Response" /> *@
+@*                                     break; *@
+@* *@
+@*                                 default: *@
+@*                                     <p class="text-danger">Unsupported question type</p> *@
+@*                                     break; *@
+@*                             } *@
+@*                         </div> *@
+@*                     } *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     <p class="text-danger">No questions available for this test.</p> *@
+@*                 } *@
+@* *@
+@*                 <!-- Submit Button --> *@
+@*                 <button type="submit" class="btn btn-primary">Submit Test</button> *@
+@*             </form> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* @section Scripts { *@
+@*     <script> *@
+@*         // Timer Logic *@
+@*         let timeRemaining = @Model.Test.TimeLimit * 60; // Convert minutes to seconds *@
+@*         const timerElement = document.getElementById('timer'); *@
+@* *@
+@*         function updateTimer() { *@
+@*             const minutes = Math.floor(timeRemaining / 60); *@
+@*             const seconds = timeRemaining % 60; *@
+@*             timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; *@
+@* *@
+@*             if (timeRemaining <= 0) { *@
+@*                 clearInterval(timerInterval); *@
+@*                 document.getElementById('testForm').submit(); *@
+@*             } else { *@
+@*                 timeRemaining--; *@
+@*             } *@
+@*         } *@
+@* *@
+@*         // Start timer only if test has time limit *@
+@*         let timerInterval; *@
+@*         if (timeRemaining > 0) { *@
+@*             timerInterval = setInterval(updateTimer, 1000); *@
+@*         } *@
+@* *@
+@*         // Detect Window Leave *@
+@*         window.addEventListener("blur", () => { *@
+@*             incrementAttempt(); *@
+@*         }); *@
+@* *@
+@*         function incrementAttempt() { *@
+@*             fetch(`/TestAttempt/IncrementAttempt?attemptId=@Model.AttemptId`, { *@
+@*                 method: 'POST', *@
+@*                 headers: { *@
+@*                     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val(), *@
+@*                     'Content-Type': 'application/json', *@
+@*                 }, *@
+@*             }) *@
+@*             .catch(error => console.error('Error:', error)); *@
+@*         } *@
+@* *@
+@*         // Handle form submission *@
+@*         document.getElementById('testForm').addEventListener('submit', function(e) { *@
+@*             clearInterval(timerInterval); *@
+@*         }); *@
+@*     </script> *@
+@* } *@
+
+
+@* *@
+@* @model TestPlatform2.Models.TakeTestViewModel *@
+@* @using Microsoft.AspNetCore.Mvc.TagHelpers *@
+@* @using TestPlatform2.Data.Questions *@
+@* @using TestPlatform2.Models $1$ Add namespace for question types #1# *@
+@* @{ *@
+@*     ViewData["Title"] = "Take Test"; *@
+@* } *@
+@* <div class="container mt-5"> *@
+@*     <div class="card"> *@
+@*         <div class="card-body"> *@
+@*             <h2 class="card-title">Test: @Model.Test.TestName</h2> *@
+@*             <p class="card-text">@Model.Test.Description</p> *@
+@*             <!-- Timer Display --> *@
+@*             <div class="alert alert-info"> *@
+@*                 Time Remaining: <span id="timer">@($"{Model.Test.TimeLimit:00}:00")</span> *@
+@*             </div> *@
+@*             <!-- Test Form --> *@
+@*             <form id="testForm" asp-action="SubmitAnswers" method="post"> *@
+@*                 <input type="hidden" asp-for="AttemptId" /> *@
+@*                 <!-- Loop Through Questions --> *@
+@*                 @if (Model.Questions != null && Model.Questions.Any()) *@
+@*                 { *@
+@*                     @for (int i = 0; i < Model.Questions.Count; i++) *@
+@*                     { *@
+@*                         var question = Model.Questions[i]; *@
+@*                         <div class="form-group mb-4"> *@
+@*                             <h5>Question @(i + 1): @question.Text</h5> *@
+@*                             <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" /> *@
+@*                             @switch (question) *@
+@*                             { *@
+@*                                 case MultipleChoiceQuestion mcq: *@
+@*                                     <!-- Multiple Choice Question --> *@
+@*                                     foreach (var option in mcq.Options) *@
+@*                                     { *@
+@*                                         <div class="form-check"> *@
+@*                                             $1$ Use radio buttons for single selection #1# *@
+@*                                             <input class="form-check-input" type="radio"  *@
+@*                                                    name="answers[@i].Response"  *@
+@*                                                    value="@option" /> *@
+@*                                             <label class="form-check-label">@option</label> *@
+@*                                         </div> *@
+@*                                     } *@
+@*                                     break; *@
+@*                                 case TrueFalseQuestion tfq: *@
+@*                                     <!-- True/False Question --> *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="True" /> *@
+@*                                         <label class="form-check-label">True</label> *@
+@*                                     </div> *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="False" /> *@
+@*                                         <label class="form-check-label">False</label> *@
+@*                                     </div> *@
+@*                                     break; *@
+@*                                 case ShortAnswerQuestion saq: *@
+@*                                     <!-- Short Answer Question --> *@
+@*                                     <input class="form-control" type="text"  *@
+@*                                            name="answers[@i].Response" /> *@
+@*                                     break; *@
+@*                                 default: *@
+@*                                     <p class="text-danger">Unsupported question type</p> *@
+@*                                     break; *@
+@*                             } *@
+@*                         </div> *@
+@*                     } *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     <p class="text-danger">No questions available for this test.</p> *@
+@*                 } *@
+@*                 <!-- Submit Button --> *@
+@*                 <button type="submit" class="btn btn-primary">Submit Test</button> *@
+@*             </form> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* @section Scripts { *@
+@*     <script> *@
+@*         // Timer Logic *@
+@*         let timeRemaining = @Model.Test.TimeLimit * 60; // Convert minutes to seconds *@
+@*         const timerElement = document.getElementById('timer'); *@
+@*         function updateTimer() { *@
+@*             const minutes = Math.floor(timeRemaining / 60); *@
+@*             const seconds = timeRemaining % 60; *@
+@*             timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; *@
+@*             if (timeRemaining <= 0) { *@
+@*                 clearInterval(timerInterval); *@
+@*                 document.getElementById('testForm').submit(); *@
+@*             } else { *@
+@*                 timeRemaining--; *@
+@*             } *@
+@*         } *@
+@*         // Start timer only if test has time limit *@
+@*         let timerInterval; *@
+@*         if (timeRemaining > 0) { *@
+@*             timerInterval = setInterval(updateTimer, 1000); *@
+@*         } *@
+@* *@
+@*         // Prevent Copy, Paste, Cut, and Right-Click *@
+@*         document.addEventListener('contextmenu', (e) => e.preventDefault()); *@
+@*         document.addEventListener('copy', (e) => e.preventDefault()); *@
+@*         document.addEventListener('paste', (e) => e.preventDefault()); *@
+@*         document.addEventListener('cut', (e) => e.preventDefault()); *@
+@* *@
+@*         // Detect Window Leave (Blur Event) *@
+@*         window.addEventListener("blur", () => { *@
+@*             handleTestEnd("You left the test window. The test has been submitted."); *@
+@*         }); *@
+@* *@
+@*         // Detect Page Refresh or Close *@
+@*         window.addEventListener("beforeunload", (event) => { *@
+@*             handleTestEnd("The test has been submitted due to a page refresh or close."); *@
+@*             event.preventDefault(); *@
+@*             event.returnValue = ''; // Required for some browsers *@
+@*         }); *@
+@* *@
+@*         // Handle Test End *@
+@*         function handleTestEnd(message) { *@
+@*             alert(message); // Notify the user *@
+@*             clearInterval(timerInterval); // Stop the timer *@
+@*             document.getElementById('testForm').submit(); // Submit the form *@
+@*         } *@
+@* *@
+@*         // Increment Attempt on Blur *@
+@*         function incrementAttempt() { *@
+@*             fetch(`/TestAttempt/IncrementAttempt?attemptId=@Model.AttemptId`, { *@
+@*                 method: 'POST', *@
+@*                 headers: { *@
+@*                     'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val(), *@
+@*                     'Content-Type': 'application/json', *@
+@*                 }, *@
+@*             }) *@
+@*             .catch(error => console.error('Error:', error)); *@
+@*         } *@
+@* *@
+@*         // Handle Form Submission *@
+@*         document.getElementById('testForm').addEventListener('submit', function(e) { *@
+@*             clearInterval(timerInterval); *@
+@*         }); *@
+@*     </script> *@
+@* } *@
+
+
+
+@model TestPlatform2.Models.TakeTestViewModel
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using TestPlatform2.Data.Questions
+@using TestPlatform2.Models
+
+@{
+    ViewData["Title"] = "Take Test";
+}
+
+<style>
+    /* Prevent text selection on questions */
+    .card-title, .card-text, .form-group h5 {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    
+    /* Allow selection in input fields */
+    input, textarea {
+        user-select: auto !important;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title">Test: @Model.Test.TestName</h2>
+            <p class="card-text">@Model.Test.Description</p>
+
+            <div class="alert alert-info">
+                Time Remaining: <span id="timer">@($"{Model.Test.TimeLimit:00}:00")</span>
+            </div>
+
+            <form id="testForm" asp-action="SubmitAnswers" method="post">
+                <input type="hidden" asp-for="AttemptId" />
+
+                @if (Model.Questions != null && Model.Questions.Any())
+                {
+                    @for (int i = 0; i < Model.Questions.Count; i++)
+                    {
+                        var question = Model.Questions[i];
+                        <div class="form-group mb-4">
+                            <h5>Question @(i + 1): @question.Text</h5>
+                            <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" />
+
+                            @switch (question)
+                            {
+                                case MultipleChoiceQuestion mcq:
+                                    foreach (var option in mcq.Options)
+                                    {
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" 
+                                                   name="answers[@i].Response" 
+                                                   value="@option" />
+                                            <label class="form-check-label">@option</label>
+                                        </div>
+                                    }
+                                    break;
+
+                                case TrueFalseQuestion tfq:
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" 
+                                               name="answers[@i].Response" 
+                                               value="True" />
+                                        <label class="form-check-label">True</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" 
+                                               name="answers[@i].Response" 
+                                               value="False" />
+                                        <label class="form-check-label">False</label>
+                                    </div>
+                                    break;
+
+                                case ShortAnswerQuestion saq:
+                                    <input class="form-control" type="text" 
+                                           name="answers[@i].Response" autocomplete="off" />
+                                    break;
+
+                                default:
+                                    <p class="text-danger">Unsupported question type</p>
+                                    break;
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-danger">No questions available for this test.</p>
+                }
+
+                <button type="submit" class="btn btn-primary">Submit Test</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let timeRemaining = @Model.Test.TimeLimit * 60;
+        const timerElement = document.getElementById('timer');
+        let formSubmitted = false;
+
+        function updateTimer() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            if (timeRemaining <= 0) {
+                submitForm();
+            } else {
+                timeRemaining--;
+            }
+        }
+
+        let timerInterval;
+        if (timeRemaining > 0) {
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Submit form function
+        function submitForm() {
+            if (formSubmitted) return;
+            formSubmitted = true;
+            clearInterval(timerInterval);
+            document.getElementById('testForm').submit();
+        }
+
+        // Visibility change detection
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                submitForm();
+            }
+        });
+
+        // Beforeunload handler
+        window.addEventListener('beforeunload', (e) => {
+            if (!formSubmitted) {
+                e.preventDefault();
+                e.returnValue = 'Are you sure you want to leave? The test will be submitted automatically.';
+                submitForm();
+            }
+        });
+
+        // Disable right-click
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Disable copy/paste
+        document.addEventListener('copy', e => e.preventDefault());
+        document.addEventListener('cut', e => e.preventDefault());
+        document.addEventListener('paste', e => e.preventDefault());
+
+        // Disable keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            // Disable Ctrl+C, Ctrl+V, Ctrl+X
+            if (e.ctrlKey && (e.key === 'c' || e.key === 'C' || e.key === 'v' || 
+                e.key === 'V' || e.key === 'x' || e.key === 'X')) {
+                e.preventDefault();
+            }
+            
+            // Disable F5 and Ctrl+R
+            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+            }
+        });
+
+        // Disable text selection via dragging
+        document.addEventListener('dragstart', e => e.preventDefault());
+    </script>
+}
