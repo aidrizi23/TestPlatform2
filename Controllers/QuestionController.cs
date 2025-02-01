@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Repository;
@@ -109,7 +108,7 @@ public class QuestionController : Controller
             Text = model.Text,
             Position = test.Questions.Count, // will start from 0 and increment by 1
             CorrectAnswer = model.CorrectAnswer,
-            Test = test!
+            Test = test
         };
         
         await _questionRepository.Create(question);
@@ -163,7 +162,7 @@ public class QuestionController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (test is null)
             return NotFound("test not found");
-        if (user is null || test.UserId != user!.Id)
+        if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
         // create the question
@@ -176,7 +175,7 @@ public class QuestionController : Controller
             Options = model.Options,
             CorrectAnswers = model.CorrectAnswers,
             AllowMultipleSelections = model.AllowMultipleSelections,
-            Test = test!,
+            Test = test,
         };
         
         await _questionRepository.Create(question);
@@ -193,7 +192,7 @@ public class QuestionController : Controller
             return NotFound("Test not found");
         // get the user
         var user = await _userManager.GetUserAsync(User);
-        if (user is null || test.UserId != user!.Id)
+        if (user is null || test.UserId != user.Id)
             return Unauthorized();
 
 
