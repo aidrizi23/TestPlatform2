@@ -6,6 +6,6 @@ public static class UrlHelper
     {
         var request = context.Request;
         var baseUrl = $"{request.Scheme}://{request.Host}"; // Automatically handles localhost/production
-        return $"{baseUrl}/test/start?testId={testId}&token={token}";
+        return $"{baseUrl}/testattempt/starttest?testId={testId}&token={token}";
     }
 }

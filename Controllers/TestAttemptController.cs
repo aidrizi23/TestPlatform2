@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
+using TestPlatform2.Data.Questions;
 using TestPlatform2.Models;
 using TestPlatform2.Repository;
 
@@ -131,6 +132,61 @@ public class TestAttemptController : Controller
         });
     } 
 
+    // [HttpPost]
+    // public async Task<IActionResult> SubmitAnswers(string attemptId, List<AnswerViewModel> answers)
+    // {
+    //     // Get the test attempt
+    //     var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
+    //     if (attempt == null || attempt.IsCompleted)
+    //         return NotFound();
+    //
+    //     // Get the test and questions
+    //     var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+    //     if (test == null)
+    //         return NotFound();
+    //
+    //     // Initialize total score
+    //     double totalScore = 0;
+    //
+    //     // Save and grade the answers
+    //     foreach (var answer in answers)
+    //     {
+    //         // Get the question
+    //         var question = test.Questions.FirstOrDefault(q => q.Id == answer.QuestionId);
+    //         if (question == null)
+    //             continue;
+    //
+    //         // Validate the answer and calculate points
+    //         double pointsAwarded = 0;
+    //         if (question.ValidateAnswer(answer.Response))
+    //         {
+    //             pointsAwarded = question.Points;
+    //         }
+    //
+    //         // Save the answer
+    //         var newAnswer = new Answer
+    //         {
+    //             AttemptId = attemptId,
+    //             QuestionId = answer.QuestionId,
+    //             Response = answer.Response,
+    //             PointsAwarded = pointsAwarded
+    //         };
+    //         await _answerRepository.Create(newAnswer);
+    //
+    //         // Add to total score
+    //         totalScore += pointsAwarded;
+    //     }
+    //
+    //     // Update the attempt with the total score
+    //     attempt.Score = totalScore;
+    //     attempt.IsCompleted = true;
+    //     attempt.EndTime = DateTime.UtcNow;
+    //     await _attemptRepository.Update(attempt);
+    //
+    //     // Redirect to the test completed page
+    //     return RedirectToAction("TestCompleted");
+    // }
+
     [HttpPost]
     public async Task<IActionResult> SubmitAnswers(string attemptId, List<AnswerViewModel> answers)
     {
@@ -155,9 +211,31 @@ public class TestAttemptController : Controller
             if (question == null)
                 continue;
 
+            // Parse the answer based on the question type
+            object parsedAnswer = null;
+            switch (question)
+            {
+                case TrueFalseQuestion tfq:
+                    if (bool.TryParse(answer.Response, out bool boolAnswer))
+                        parsedAnswer = boolAnswer;
+                    break;
+
+                case ShortAnswerQuestion saq:
+                    parsedAnswer = answer.Response;
+                    break;
+
+                case MultipleChoiceQuestion mcq:
+                    if (answer.Response != null)
+                    {
+                        var selectedAnswers = answer.Response.Split(',').ToList();
+                        parsedAnswer = selectedAnswers;
+                    }
+                    break;
+            }
+
             // Validate the answer and calculate points
             double pointsAwarded = 0;
-            if (question.ValidateAnswer(answer.Response))
+            if (parsedAnswer != null && question.ValidateAnswer(parsedAnswer))
             {
                 pointsAwarded = question.Points;
             }
@@ -185,7 +263,9 @@ public class TestAttemptController : Controller
         // Redirect to the test completed page
         return RedirectToAction("TestCompleted");
     }
-
+        
+    
+    
     [HttpGet]
     public IActionResult TestCompleted()
     {
