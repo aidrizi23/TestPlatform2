@@ -10,6 +10,8 @@ public class TestAttempt
     public DateTime? EndTime { get; set; } // Null if test is abandoned
     public bool IsCompleted { get; set; } = false;
     public double Score { get; set; }
+    
+    public int RemainingAttempts { get; set; } // Remaining attempts for the test "to cheat"
 
     // Relationships
     public string TestId { get; set; }

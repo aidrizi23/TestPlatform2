@@ -54,6 +54,10 @@ public class TestAttemptController : Controller
         var invite = await _inviteRepository.GetInviteByTokenAsync(model.Token);
         if (invite == null || invite.IsUsed)
             return Forbid();
+        
+        var test = await _testRepository.GetTestByIdAsync(model.TestId);
+        if (test == null)
+            return NotFound();
 
         // Create a new test attempt
         var attempt = new TestAttempt
@@ -63,7 +67,8 @@ public class TestAttemptController : Controller
             LastName = model.LastName,
             StudentEmail = invite.Email, // Automatically save the email from the invite
             StartTime = DateTime.UtcNow,
-            IsCompleted = false
+            IsCompleted = false,
+            RemainingAttempts = test.MaxAttempts
         };
         await _attemptRepository.Create(attempt);
 
@@ -114,6 +119,9 @@ public class TestAttemptController : Controller
         var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
         if (test == null)
             return NotFound();
+        
+        if(attempt.RemainingAttempts <= 0)
+            return RedirectToAction("TestCompleted");
 
         // Randomize questions if needed
         var questions = test.Questions.OrderBy(q => q.Position).ToList();
@@ -122,15 +130,35 @@ public class TestAttemptController : Controller
             var random = new Random();
             questions = questions.OrderBy(q => random.Next()).ToList();
         }
-
-        // Show the test-taking view
+        
         return View(new TakeTestViewModel
         {
             AttemptId = attemptId,
             Test = test,
-            Questions = questions
+            Questions = questions,
+            RemainingAttempts = test.MaxAttempts 
         });
     } 
+    public class UpdateAttemptsRequest
+    {
+        public string AttemptId { get; set; }
+        public int RemainingAttempts { get; set; }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateRemainingAttempts([FromBody] UpdateAttemptsRequest request)
+    {
+        if (string.IsNullOrEmpty(request.AttemptId)) 
+            return BadRequest("Invalid attempt ID");
+
+        var attempt = await _attemptRepository.GetAttemptByIdAsync(request.AttemptId);
+        if (attempt == null) return NotFound();
+
+        attempt.RemainingAttempts = request.RemainingAttempts;
+        await _attemptRepository.Update(attempt);
+
+        return Ok();
+    }
 
     // [HttpPost]
     // public async Task<IActionResult> SubmitAnswers(string attemptId, List<AnswerViewModel> answers)
@@ -187,6 +215,8 @@ public class TestAttemptController : Controller
     //     return RedirectToAction("TestCompleted");
     // }
 
+    
+    
     [HttpPost]
     public async Task<IActionResult> SubmitAnswers(string attemptId, List<AnswerViewModel> answers)
     {
@@ -263,9 +293,7 @@ public class TestAttemptController : Controller
         // Redirect to the test completed page
         return RedirectToAction("TestCompleted");
     }
-        
-    
-    
+
     [HttpGet]
     public IActionResult TestCompleted()
     {
