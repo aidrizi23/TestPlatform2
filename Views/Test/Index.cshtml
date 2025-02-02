@@ -1,48 +1,219 @@
-@model IEnumerable<TestPlatform2.Data.Test>
+@* @model IEnumerable<TestPlatform2.Data.Test> *@
+@* *@
+@* @{ *@
+@*     ViewData["Title"] = "My Tests"; *@
+@* } *@
+@* *@
+@* <div class="container mt-4"> *@
+@*     <h2>My Tests</h2> *@
+@*     <p> *@
+@*         <a asp-action="Create" class="btn btn-primary">Create New Test</a> *@
+@*     </p> *@
+@* *@
+@*     @if (!Model.Any()) *@
+@*     { *@
+@*         <div class="alert alert-info">No tests found. Create your first test!</div> *@
+@*     } *@
+@*     else *@
+@*     { *@
+@*         <table class="table table-striped"> *@
+@*             <thead> *@
+@*             <tr> *@
+@*                 <th>Test Name</th> *@
+@*                 <th>Description</th> *@
+@*                 <th>Time Limit (mins)</th> *@
+@*                 <th>Max Attempts</th> *@
+@*                 <th>Actions</th> *@
+@*             </tr> *@
+@*             </thead> *@
+@*             <tbody> *@
+@*             @foreach (var test in Model) *@
+@*             { *@
+@*                 <tr> *@
+@*                     <td>@test.TestName</td> *@
+@*                     <td>@test.Description</td> *@
+@*                     <td>@test.TimeLimit</td> *@
+@*                     <td>@test.MaxAttempts</td> *@
+@*                     <td> *@
+@*                         <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning">Edit</a> *@
+@*                         <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info">Details</a> *@
+@*                         <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger">Delete</a> *@
+@*                     </td> *@
+@*                 </tr> *@
+@*             } *@
+@*             </tbody> *@
+@*         </table> *@
+@*     } *@
+@* </div> *@
+@* *@
+@* @section Scripts { *@
+@*     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} *@
+@* } *@
 
+@model IEnumerable<TestPlatform2.Data.Test>
 @{
     ViewData["Title"] = "My Tests";
 }
 
-<div class="container mt-4">
-    <h2>My Tests</h2>
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Create New Test</a>
-    </p>
+<!-- Custom Styles -->
+<style>
+    /* Page Title Styling */
+    h2 {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #343a40;
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+    }
 
+    h2::after {
+        content: '';
+        display: block;
+        width: 80px;
+        height: 3px;
+        background: linear-gradient(90deg, #0d6efd, #17a2b8);
+        margin: 1rem auto 0;
+    }
+
+    /* Create New Test Button */
+    .btn-primary {
+        background: linear-gradient(90deg, #0d6efd, #17a2b8);
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* No Tests Found Alert */
+    .alert-info {
+        background: linear-gradient(90deg, #cce5ff, #b3d7ff);
+        border: none;
+        color: #004085;
+        font-size: 1.2rem;
+        font-weight: 500;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Card Styling */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, #0d6efd, #17a2b8);
+        border-radius: 15px 15px 0 0;
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    /* Table Styling */
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa !important;
+        color: #343a40;
+        transition: all 0.3s ease;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f8f9fa;
+    }
+
+    .table-striped tbody tr:nth-of-type(even) {
+        background-color: #e9ecef;
+    }
+
+    /* Action Buttons */
+    .btn-group .btn {
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .btn-warning {
+        background: linear-gradient(90deg, #ffc107, #f7b924);
+        border: none;
+        color: white;
+    }
+
+    .btn-info {
+        background: linear-gradient(90deg, #17a2b8, #138496);
+        border: none;
+        color: white;
+    }
+
+    .btn-danger {
+        background: linear-gradient(90deg, #dc3545, #c82333);
+        border: none;
+        color: white;
+    }
+
+    .btn-group .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+<div class="container mt-5">
+    <!-- Page Title -->
+    <h2>My Tests</h2>
+
+    <!-- Create New Test Button -->
+    <div class="d-flex justify-content-end mb-4">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Test
+        </a>
+    </div>
+
+    <!-- No Tests Found Alert -->
     @if (!Model.Any())
     {
-        <div class="alert alert-info">No tests found. Create your first test!</div>
+        <div class="alert alert-info text-center" role="alert">
+            <i class="fas fa-info-circle me-2"></i>No tests found. Create your first test!
+        </div>
     }
     else
     {
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Test Name</th>
-                <th>Description</th>
-                <th>Time Limit (mins)</th>
-                <th>Max Attempts</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var test in Model)
-            {
-                <tr>
-                    <td>@test.TestName</td>
-                    <td>@test.Description</td>
-                    <td>@test.TimeLimit</td>
-                    <td>@test.MaxAttempts</td>
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info">Details</a>
-                        <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
-                </tr>
-            }
-            </tbody>
-        </table>
+        <!-- Tests List -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Test List</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    @foreach (var test in Model)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">@test.TestName</h5>
+                                <p class="mb-1 text-muted">@test.Description</p>
+                                <small class="text-muted">
+                                    Time Limit: @test.TimeLimit mins | Max Attempts: @test.MaxAttempts
+                                </small>
+                            </div>
+                            <div class="btn-group">
+                                <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning" title="Edit">
+                                    <i class="fas fa-edit">Edit</i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info" title="Details">
+                                    <i class="fas fa-eye">Details</i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger" title="Delete">
+                                    <i class="fas fa-trash">Delete</i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     }
 </div>
 
