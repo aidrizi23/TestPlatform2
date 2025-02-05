@@ -79,33 +79,6 @@ public class TestAttemptController : Controller
         return RedirectToAction("TakeTest", new { attemptId = attempt.Id });
     }
 
-    // [HttpGet]
-    // public async Task<IActionResult> TakeTest(string attemptId)
-    // {
-    //     // Get the test attempt
-    //     var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
-    //     if (attempt == null || attempt.IsCompleted)
-    //         return NotFound();
-    //
-    //     // Get the test and questions
-    //     var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
-    //     // check if the test randomizes questions
-    //     var questions = test.Questions.OrderBy(q => q.Position).ToList();
-    //     if (test.RandomizeQuestions)
-    //     {
-    //         var random = new Random();
-    //         questions = test.Questions.OrderBy(q => random.Next()).ToList();
-    //     }
-    //     
-    //    
-    //
-    //     // Show the test-taking view
-    //     return View(new TakeTestViewModel
-    //     {
-    //         AttemptId = attemptId,
-    //         Questions = questions
-    //     });
-    // }
     
     [HttpGet]
     public async Task<IActionResult> TakeTest(string attemptId)
@@ -159,62 +132,6 @@ public class TestAttemptController : Controller
 
         return Ok();
     }
-
-    // [HttpPost]
-    // public async Task<IActionResult> SubmitAnswers(string attemptId, List<AnswerViewModel> answers)
-    // {
-    //     // Get the test attempt
-    //     var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
-    //     if (attempt == null || attempt.IsCompleted)
-    //         return NotFound();
-    //
-    //     // Get the test and questions
-    //     var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
-    //     if (test == null)
-    //         return NotFound();
-    //
-    //     // Initialize total score
-    //     double totalScore = 0;
-    //
-    //     // Save and grade the answers
-    //     foreach (var answer in answers)
-    //     {
-    //         // Get the question
-    //         var question = test.Questions.FirstOrDefault(q => q.Id == answer.QuestionId);
-    //         if (question == null)
-    //             continue;
-    //
-    //         // Validate the answer and calculate points
-    //         double pointsAwarded = 0;
-    //         if (question.ValidateAnswer(answer.Response))
-    //         {
-    //             pointsAwarded = question.Points;
-    //         }
-    //
-    //         // Save the answer
-    //         var newAnswer = new Answer
-    //         {
-    //             AttemptId = attemptId,
-    //             QuestionId = answer.QuestionId,
-    //             Response = answer.Response,
-    //             PointsAwarded = pointsAwarded
-    //         };
-    //         await _answerRepository.Create(newAnswer);
-    //
-    //         // Add to total score
-    //         totalScore += pointsAwarded;
-    //     }
-    //
-    //     // Update the attempt with the total score
-    //     attempt.Score = totalScore;
-    //     attempt.IsCompleted = true;
-    //     attempt.EndTime = DateTime.UtcNow;
-    //     await _attemptRepository.Update(attempt);
-    //
-    //     // Redirect to the test completed page
-    //     return RedirectToAction("TestCompleted");
-    // }
-
     
     
     [HttpPost]
@@ -291,26 +208,44 @@ public class TestAttemptController : Controller
         await _attemptRepository.Update(attempt);
 
         // Redirect to the test completed page
-        return RedirectToAction("TestCompleted");
+        return RedirectToAction("TestCompleted" , new { attemptId });
     }
 
     [HttpGet]
-    public IActionResult TestCompleted()
+    public async Task<IActionResult> TestCompleted(string attemptId)
     {
-        return View();
-    }
+        // Get the test attempt
+        var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
+        if (attempt == null)
+            return NotFound();
+
+        // Get the associated test details
+        var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+        if (test == null)
+            return NotFound();
+
+        // Calculate total points for the test
+        double totalPoints = test.Questions.Sum(q => q.Points);
+
+        // Calculate time taken
+        var timeTaken = attempt.EndTime - attempt.StartTime;
+
+        // Pass data to the view
+        var viewModel = new TestCompletedViewModel
+        {
+            AttemptId = attempt.Id,
+            TestName = test.TestName,
+            Description = test.Description,
+            Score = attempt.Score,
+            TotalPoints = totalPoints,
+            TimeTaken = timeTaken ?? TimeSpan.Zero,
+            FirstName = attempt.FirstName,
+            LastName = attempt.LastName,
+            StudentEmail = attempt.StudentEmail,
+            EndTime = attempt.EndTime ?? DateTime.UtcNow
+        };
+
+        return View(viewModel);
+    }   
     
-    // [HttpPost]
-    // public async Task<IActionResult> IncrementAttempt(string attemptId)
-    // {
-    //     var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
-    //     if (attempt == null || attempt.IsCompleted)
-    //         return NotFound();
-    //
-    //     // Increment the attempt number
-    //     attempt.AttemptNumber++;
-    //     await _attemptRepository.Update(attempt);
-    //
-    //     return Ok();
-    // }
 }
