@@ -1,4 +1,4 @@
-@model TestForEditDto
+@model TestPlatform2.Models.TestForEditDto
 
 @{
     ViewData["Title"] = "Edit Test";
@@ -9,9 +9,9 @@
 <form asp-action="Edit" method="post">
     <!-- Hidden ID field for model binding -->
     <input type="hidden" asp-for="Id" />
-    
+
     <!-- Validation Summary -->
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <!-- Test Name -->
     <div class="form-group">
@@ -35,15 +35,43 @@
     <!-- Time Limit -->
     <div class="form-group">
         <label asp-for="TimeLimit" class="control-label"></label>
-        <input asp-for="TimeLimit" class="form-control" />
+        <input asp-for="TimeLimit" class="form-control" type="number" />
         <span asp-validation-for="TimeLimit" class="text-danger"></span>
     </div>
 
     <!-- Max Attempts -->
     <div class="form-group">
         <label asp-for="MaxAttempts" class="control-label"></label>
-        <input asp-for="MaxAttempts" class="form-control" />
+        <input asp-for="MaxAttempts" class="form-control" type="number" />
         <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+    </div>
+
+    <!-- Multiple Choice Questions to Show -->
+    <div class="form-group">
+        <label asp-for="MultipleChoiceQuestionsToShow" class="control-label"></label>
+        <input asp-for="MultipleChoiceQuestionsToShow" class="form-control" type="number" />
+        <span asp-validation-for="MultipleChoiceQuestionsToShow" class="text-danger"></span>
+    </div>
+
+    <!-- True/False Questions to Show -->
+    <div class="form-group">
+        <label asp-for="TrueFalseQuestionsToShow" class="control-label"></label>
+        <input asp-for="TrueFalseQuestionsToShow" class="form-control" type="number" />
+        <span asp-validation-for="TrueFalseQuestionsToShow" class="text-danger"></span>
+    </div>
+
+    <!-- Short Answer Questions to Show -->
+    <div class="form-group">
+        <label asp-for="ShortAnswerQuestionsToShow" class="control-label"></label>
+        <input asp-for="ShortAnswerQuestionsToShow" class="form-control" type="number" />
+        <span asp-validation-for="ShortAnswerQuestionsToShow" class="text-danger"></span>
+    </div>
+
+    <!-- Questions to Show -->
+    <div class="form-group">
+        <label asp-for="QuestionsToShow" class="control-label"></label>
+        <input asp-for="QuestionsToShow" class="form-control" type="number" />
+        <span asp-validation-for="QuestionsToShow" class="text-danger"></span>
     </div>
 
     <div class="form-group">
@@ -53,5 +81,7 @@
 </form>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

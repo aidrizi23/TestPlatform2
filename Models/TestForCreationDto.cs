@@ -20,5 +20,19 @@ public record TestForCreationDto
     [Required]
     [Range(1, 10, ErrorMessage = "No more than 10 attempts allowed")]
     public int MaxAttempts { get; init; } = 1;
+    
+    
+    // properties to set the nr of each type of question that will be shown
+    [Display(Name = "Multiple Choice Questions to Show")]
+    public int? MultipleChoiceQuestionsToShow { get; set; }
+
+    [Display(Name = "True/False Questions to Show")]
+    public int? TrueFalseQuestionsToShow { get; set; }
+
+    [Display(Name = "Short Answer Questions to Show")]
+    public int? ShortAnswerQuestionsToShow { get; set; }
+
+    [Display(Name = "Questions to Show")]
+    public int QuestionsToShow { get; set; }
 
 }

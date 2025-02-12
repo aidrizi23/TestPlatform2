@@ -21,5 +21,18 @@ public class TestForEditDto
     [Required(ErrorMessage = "Max attempts is required")]
     [Range(1, 10, ErrorMessage = "Max attempts must be between 1-10")]
     public int MaxAttempts { get; set; }
+    
+    
+    [Display(Name = "Multiple Choice Questions to Show")]
+    public int? MultipleChoiceQuestionsToShow { get; set; }
+
+    [Display(Name = "True/False Questions to Show")]
+    public int? TrueFalseQuestionsToShow { get; set; }
+
+    [Display(Name = "Short Answer Questions to Show")]
+    public int? ShortAnswerQuestionsToShow { get; set; }
+
+    [Display(Name = "Questions to Show")]
+    public int QuestionsToShow { get; set; }
 
 }

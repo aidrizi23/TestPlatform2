@@ -48,15 +48,15 @@ public class TestController : Controller
     {
         if (!ModelState.IsValid)
         {
-            // If validation fails, return the view with the DTO to show validation errors
+            
             return View(dto);
         }
         
-        // Get the current authenticated user
+        
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
         {
-            // If the user is not found, redirect to the login page
+            
             return RedirectToAction("Login", "Account");
         }
         
@@ -68,10 +68,14 @@ public class TestController : Controller
             RandomizeQuestions = dto.RandomizeQuestions,
             TimeLimit = dto.TimeLimit,
             MaxAttempts = dto.MaxAttempts,
-            UserId = user.Id // Set the UserId server-side (do not trust client input)
+            UserId = user.Id ,
+            
+            MultipleChoiceQuestionsToShow = dto.MultipleChoiceQuestionsToShow,
+            TrueFalseQuestionsToShow = dto.TrueFalseQuestionsToShow,
+            ShortAnswerQuestionsToShow = dto.ShortAnswerQuestionsToShow,
+            QuestionsToShow = dto.QuestionsToShow,
         };
 
-        // Save the test to the database
         await _testRepository.Create(test);
 
         // Set a success message to display on the Index page
@@ -145,7 +149,11 @@ public class TestController : Controller
             Description = test.Description,
             RandomizeQuestions = test.RandomizeQuestions,
             TimeLimit = test.TimeLimit,
-            MaxAttempts = test.MaxAttempts
+            MaxAttempts = test.MaxAttempts,
+            MultipleChoiceQuestionsToShow = test.MultipleChoiceQuestionsToShow,
+            TrueFalseQuestionsToShow = test.TrueFalseQuestionsToShow,
+            ShortAnswerQuestionsToShow = test.ShortAnswerQuestionsToShow,
+            QuestionsToShow = test.QuestionsToShow,
         };
         
         return View(testForEditDto);
@@ -187,6 +195,10 @@ public class TestController : Controller
         test.RandomizeQuestions = dto.RandomizeQuestions;
         test.TimeLimit = dto.TimeLimit;
         test.MaxAttempts = dto.MaxAttempts;
+        test.MultipleChoiceQuestionsToShow = dto.MultipleChoiceQuestionsToShow;
+        test.TrueFalseQuestionsToShow = dto.TrueFalseQuestionsToShow;
+        test.ShortAnswerQuestionsToShow = dto.ShortAnswerQuestionsToShow;
+        test.QuestionsToShow = dto.QuestionsToShow;
         
         // Save the test to the database
         await _testRepository.Update(test);

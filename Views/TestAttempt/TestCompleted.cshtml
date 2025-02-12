@@ -1,0 +1,44 @@
+@model TestPlatform2.Models.TestCompletedViewModel
+@{
+    ViewData["Title"] = "Test Completed";
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h2 class="mb-0"><i class="fas fa-check-circle"></i> Test Submitted Successfully</h2>
+        </div>
+        <div class="card-body">
+            <!-- Test Details -->
+            <div class="mb-4">
+                <h4>@Model.TestName</h4>
+                <p class="text-muted">@Model.Description</p>
+            </div>
+
+            <!-- Score and Time -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-primary">
+                        <h5>Your Score</h5>
+                        <p class="display-4">@Model.Score.ToString("0.00") / @Model.TotalPoints.ToString("0.00")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h5>Time Taken</h5>
+                        <p class="lead">
+                            @($"{Model.TimeTaken.Minutes}m {Model.TimeTaken.Seconds}s")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Info -->
+            <div class="alert alert-light">
+                <p class="mb-1"><strong>Name:</strong> @Model.FirstName @Model.LastName</p>
+                <p class="mb-1"><strong>Email:</strong> @Model.StudentEmail</p>
+                <p class="mb-0"><strong>Submitted at:</strong> @Model.EndTime.ToString("MMMM dd, yyyy hh:mm tt")</p>
+            </div>
+        </div>
+    </div>
+</div>

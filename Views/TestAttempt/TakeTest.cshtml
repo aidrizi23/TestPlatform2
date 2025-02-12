@@ -1,3 +1,238 @@
+@* @model TestPlatform2.Models.TakeTestViewModel *@
+@* @using Microsoft.AspNetCore.Mvc.TagHelpers *@
+@* @using TestPlatform2.Data.Questions *@
+@* @using TestPlatform2.Models *@
+@* *@
+@* @{ *@
+@*     ViewData["Title"] = "Take Test"; *@
+@* } *@
+@* *@
+@* <style> *@
+@*     /* Prevent text selection on questions */ *@
+@*     .card-title, .card-text, .form-group h5 { *@
+@*         user-select: none; *@
+@*         -webkit-user-select: none; *@
+@*         -moz-user-select: none; *@
+@*         -ms-user-select: none; *@
+@*     } *@
+@*      *@
+@*     /* Allow selection in input fields */ *@
+@*     input, textarea { *@
+@*         user-select: auto !important; *@
+@*     } *@
+@* *@
+@*     #attemptWarningModal .modal-header { *@
+@*         background-color: #fff3cd; *@
+@*         border-color: #ffeeba; *@
+@*     } *@
+@* *@
+@*     #attemptWarningModal .modal-title { *@
+@*         color: #856404; *@
+@*     } *@
+@* *@
+@*     #remainingAttemptsCounter { *@
+@*         font-weight: bold; *@
+@*         color: #dc3545; *@
+@*     } *@
+@* </style> *@
+@* *@
+@* <div class="container mt-5"> *@
+@*     <div class="card"> *@
+@*         <div class="card-body"> *@
+@*             <h2 class="card-title">Test: @Model.Test.TestName</h2> *@
+@*             <p class="card-text">@Model.Test.Description</p> *@
+@* *@
+@*             <div class="alert alert-info"> *@
+@*                 Time Remaining: <span id="timer">@($"{Model.Test.TimeLimit:00}:00")</span> *@
+@*             </div> *@
+@* *@
+@*             <form id="testForm" asp-action="SubmitAnswers" method="post"> *@
+@*                 <input type="hidden" asp-for="AttemptId" /> *@
+@*                 <input type="hidden" id="remainingAttempts" value="@Model.RemainingAttempts" /> *@
+@* *@
+@*                 @if (Model.Questions != null && Model.Questions.Any()) *@
+@*                 { *@
+@*                     @for (int i = 0; i < Model.Questions.Count; i++) *@
+@*                     { *@
+@*                         var question = Model.Questions[i]; *@
+@*                         <div class="form-group mb-4"> *@
+@*                             <h5>Question @(i + 1): @question.Text</h5> *@
+@*                             <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" /> *@
+@* *@
+@*                             @switch (question) *@
+@*                             { *@
+@*                                 case MultipleChoiceQuestion mcq: *@
+@*                                     foreach (var option in mcq.Options) *@
+@*                                     { *@
+@*                                         <div class="form-check"> *@
+@*                                             <input class="form-check-input" type="radio"  *@
+@*                                                    name="answers[@i].Response"  *@
+@*                                                    value="@option" /> *@
+@*                                             <label class="form-check-label">@option</label> *@
+@*                                         </div> *@
+@*                                     } *@
+@*                                     break; *@
+@* *@
+@*                                 case TrueFalseQuestion tfq: *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="True" /> *@
+@*                                         <label class="form-check-label">True</label> *@
+@*                                     </div> *@
+@*                                     <div class="form-check"> *@
+@*                                         <input class="form-check-input" type="radio"  *@
+@*                                                name="answers[@i].Response"  *@
+@*                                                value="False" /> *@
+@*                                         <label class="form-check-label">False</label> *@
+@*                                     </div> *@
+@*                                     break; *@
+@* *@
+@*                                 case ShortAnswerQuestion saq: *@
+@*                                     <input class="form-control" type="text"  *@
+@*                                            name="answers[@i].Response" autocomplete="off" /> *@
+@*                                     break; *@
+@* *@
+@*                                 default: *@
+@*                                     <p class="text-danger">Unsupported question type</p> *@
+@*                                     break; *@
+@*                             } *@
+@*                         </div> *@
+@*                     } *@
+@*                 } *@
+@*                 else *@
+@*                 { *@
+@*                     <p class="text-danger">No questions available for this test.</p> *@
+@*                 } *@
+@* *@
+@*                 <button type="submit" class="btn btn-primary">Submit Test</button> *@
+@*             </form> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* <!-- Add this modal at the bottom of your TakeTest view --> *@
+@* <div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel" aria-hidden="true"> *@
+@*     <div class="modal-dialog"> *@
+@*         <div class="modal-content"> *@
+@*             <div class="modal-header bg-warning"> *@
+@*                 <h5 class="modal-title" id="attemptWarningLabel">Warning!</h5> *@
+@*             </div> *@
+@*             <div class="modal-body"> *@
+@*                 <p>You have <span id="remainingAttemptsCounter">@Model.RemainingAttempts</span> attempt(s) remaining.</p> *@
+@*                 <p class="text-danger">Leaving the page or using restricted features will reduce your remaining attempts.</p> *@
+@*             </div> *@
+@*             <div class="modal-footer"> *@
+@*                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Test</button> *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* </div> *@
+@* *@
+@* @section Scripts { *@
+@*     <script> *@
+@*         // Initialize variables *@
+@*         let timeRemaining = @Model.Test.TimeLimit * 60; *@
+@*         const timerElement = document.getElementById('timer'); *@
+@*         let formSubmitted = false; *@
+@*         let remainingAttempts = parseInt(document.getElementById('remainingAttempts').value); *@
+@*         const attemptId = document.getElementById('AttemptId').value; *@
+@*         const modal = new bootstrap.Modal(document.getElementById('attemptWarningModal')); *@
+@* *@
+@*         // Timer logic *@
+@*         function updateTimer() { *@
+@*             const minutes = Math.floor(timeRemaining / 60); *@
+@*             const seconds = timeRemaining % 60; *@
+@*             timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`; *@
+@* *@
+@*             if (timeRemaining <= 0) { *@
+@*                 submitForm(); *@
+@*             } else { *@
+@*                 timeRemaining--; *@
+@*             } *@
+@*         } *@
+@* *@
+@*         // Start timer if needed *@
+@*         let timerInterval; *@
+@*         if (timeRemaining > 0) { *@
+@*             timerInterval = setInterval(updateTimer, 1000); *@
+@*         } *@
+@* *@
+@*         // Form submission handler *@
+@*         function submitForm() { *@
+@*             if (formSubmitted) return; *@
+@*             formSubmitted = true; *@
+@*             clearInterval(timerInterval); *@
+@*             document.getElementById('testForm').submit(); *@
+@*         } *@
+@* *@
+@*         // Decrement attempts with modal notification *@
+@*         async function decrementAttempts(showWarning = true) { *@
+@*             if (remainingAttempts <= 0) return; *@
+@* *@
+@*             remainingAttempts--; *@
+@*             document.getElementById('remainingAttempts').value = remainingAttempts; *@
+@*             document.getElementById('remainingAttemptsCounter').textContent = remainingAttempts; *@
+@* *@
+@*             try { *@
+@*                 const response = await fetch('/TestAttempt/UpdateRemainingAttempts', { *@
+@*                     method: 'POST', *@
+@*                     headers: { 'Content-Type': 'application/json' }, *@
+@*                     body: JSON.stringify({ attemptId, remainingAttempts }) *@
+@*                 }); *@
+@* *@
+@*                 if (!response.ok) throw new Error('Failed to update attempts'); *@
+@*                  *@
+@*                 if (remainingAttempts <= 0) { *@
+@*                     submitForm(); *@
+@*                 } else if (showWarning) { *@
+@*                     modal.show(); *@
+@*                 } *@
+@*             } catch (error) { *@
+@*                 console.error('Error:', error); *@
+@*                 remainingAttempts++; // Rollback on error *@
+@*             } *@
+@*         } *@
+@* *@
+@*         // Page visibility detection *@
+@*         document.addEventListener('visibilitychange', () => { *@
+@*             if (document.visibilityState === 'hidden') { *@
+@*                 decrementAttempts(true); *@
+@*             } *@
+@*         }); *@
+@* *@
+@*         // Navigation/closing detection *@
+@*         window.addEventListener('beforeunload', (e) => { *@
+@*             if (!formSubmitted) { *@
+@*                 e.preventDefault(); *@
+@*                 e.returnValue = 'Are you sure you want to leave? Your remaining attempts will be decremented.'; *@
+@*                 decrementAttempts(false); *@
+@*             } *@
+@*         }); *@
+@* *@
+@*         // Prevent refreshing *@
+@*         document.addEventListener('keydown', (e) => { *@
+@*             if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) { *@
+@*                 e.preventDefault(); *@
+@*                 decrementAttempts(true); *@
+@*             } *@
+@*         }); *@
+@* *@
+@*         // Prevent inspecting elements *@
+@*         document.addEventListener('contextmenu', (e) => { *@
+@*             e.preventDefault(); *@
+@*             decrementAttempts(true); *@
+@*         }); *@
+@* *@
+@*         document.addEventListener('keydown', (e) => { *@
+@*             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) { *@
+@*                 e.preventDefault(); *@
+@*                 decrementAttempts(true); *@
+@*             } *@
+@*         }); *@
+@*     </script> *@
+@* }} *@
+
+
 @model TestPlatform2.Models.TakeTestViewModel
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using TestPlatform2.Data.Questions
@@ -15,7 +250,7 @@
         -moz-user-select: none;
         -ms-user-select: none;
     }
-    
+
     /* Allow selection in input fields */
     input, textarea {
         user-select: auto !important;
@@ -47,7 +282,8 @@
             </div>
 
             <form id="testForm" asp-action="SubmitAnswers" method="post">
-                <input type="hidden" asp-for="AttemptId" />
+                <!--CRUCIAL: Add the Attempt Id here-->
+                <input type="hidden" id="AttemptId" asp-for="AttemptId"/>
                 <input type="hidden" id="remainingAttempts" value="@Model.RemainingAttempts" />
 
                 @if (Model.Questions != null && Model.Questions.Any())
@@ -65,8 +301,8 @@
                                     foreach (var option in mcq.Options)
                                     {
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" 
-                                                   name="answers[@i].Response" 
+                                            <input class="form-check-input" type="radio"
+                                                   name="answers[@i].Response"
                                                    value="@option" />
                                             <label class="form-check-label">@option</label>
                                         </div>
@@ -75,21 +311,21 @@
 
                                 case TrueFalseQuestion tfq:
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[@i].Response" 
+                                        <input class="form-check-input" type="radio"
+                                               name="answers[@i].Response"
                                                value="True" />
                                         <label class="form-check-label">True</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[@i].Response" 
+                                        <input class="form-check-input" type="radio"
+                                               name="answers[@i].Response"
                                                value="False" />
                                         <label class="form-check-label">False</label>
                                     </div>
                                     break;
 
                                 case ShortAnswerQuestion saq:
-                                    <input class="form-control" type="text" 
+                                    <input class="form-control" type="text"
                                            name="answers[@i].Response" autocomplete="off" />
                                     break;
 
@@ -111,7 +347,8 @@
     </div>
 </div>
 <!-- Add this modal at the bottom of your TakeTest view -->
-<div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel" aria-hidden="true">
+<div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel"
+     aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-warning">
@@ -119,7 +356,8 @@
             </div>
             <div class="modal-body">
                 <p>You have <span id="remainingAttemptsCounter">@Model.RemainingAttempts</span> attempt(s) remaining.</p>
-                <p class="text-danger">Leaving the page or using restricted features will reduce your remaining attempts.</p>
+                <p class="text-danger">Leaving the page or using restricted features will reduce your remaining
+                    attempts.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Test</button>
@@ -176,12 +414,17 @@
             try {
                 const response = await fetch('/TestAttempt/UpdateRemainingAttempts', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ attemptId, remainingAttempts })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        attemptId,
+                        remainingAttempts
+                    })
                 });
 
                 if (!response.ok) throw new Error('Failed to update attempts');
-                
+
                 if (remainingAttempts <= 0) {
                     submitForm();
                 } else if (showWarning) {
@@ -230,4 +473,4 @@
             }
         });
     </script>
-}}
+}
