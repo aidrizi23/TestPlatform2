@@ -8,26 +8,119 @@
 }
 
 <style>
-    /* Prevent text selection on questions */
+    /* General Styles - pulling from other views */
+    body {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+    }
+
+    .card {
+        background-color: var(--secondary-bg);
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
+        color: var(--text-primary);
+        border-bottom: none;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .list-group-item {
+        background-color: var(--secondary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    /* Custom Button Colors */
+    .btn-primary {
+        background-color: var(--accent-green);
+        color: var(--text-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--accent-purple);
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: var(--text-primary);
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: var(--text-primary);
+    }
+
+    .btn-info {
+        background-color: #17a2b8;
+        color: var(--text-primary);
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .form-control {
+        background-color: var(--primary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        background-color: var(--primary-bg);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        color: var(--text-primary);
+    }
+
+    /* Specific to this page */
     .card-title, .card-text, .form-group h5 {
         user-select: none;
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
     }
-    
+
     /* Allow selection in input fields */
     input, textarea {
         user-select: auto !important;
     }
 
+    #attemptWarningModal .modal-content {
+        background-color: var(--secondary-bg);
+        color: var(--text-primary);
+    }
+
     #attemptWarningModal .modal-header {
-        background-color: #fff3cd;
+        background-color: #ffc107;  /* Using Bootstrap's warning color as the theme */
         border-color: #ffeeba;
     }
 
     #attemptWarningModal .modal-title {
-        color: #856404;
+        color: #212529;  /* Darken the title for better contrast */
     }
 
     #remainingAttemptsCounter {
@@ -65,9 +158,9 @@
                                     foreach (var option in mcq.Options)
                                     {
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" 
-                                                   name="answers[@i].Response" 
-                                                   value="@option" />
+                                            <input class="form-check-input mc-option" type="radio"
+                                                   name="answers[@i].Response"
+                                                   value="@option" data-question-index="@i" />
                                             <label class="form-check-label">@option</label>
                                         </div>
                                     }
@@ -75,22 +168,22 @@
 
                                 case TrueFalseQuestion tfq:
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[@i].Response" 
-                                               value="True" />
+                                        <input class="form-check-input tf-option" type="radio"
+                                               name="answers[@i].Response"
+                                               value="True" data-question-index="@i" />
                                         <label class="form-check-label">True</label>
                                     </div>
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" 
-                                               name="answers[@i].Response" 
-                                               value="False" />
+                                        <input class="form-check-input tf-option" type="radio"
+                                               name="answers[@i].Response"
+                                               value="False" data-question-index="@i" />
                                         <label class="form-check-label">False</label>
                                     </div>
                                     break;
 
                                 case ShortAnswerQuestion saq:
-                                    <input class="form-control" type="text" 
-                                           name="answers[@i].Response" autocomplete="off" />
+                                    <input class="form-control sa-answer" type="text"
+                                           name="answers[@i].Response" autocomplete="off" data-question-index="@i" />
                                     break;
 
                                 default:
@@ -114,7 +207,7 @@
 <div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-warning">
+            <div class="modal-header">
                 <h5 class="modal-title" id="attemptWarningLabel">Warning!</h5>
             </div>
             <div class="modal-body">
@@ -127,6 +220,7 @@
         </div>
     </div>
 </div>
+
 
 @section Scripts {
     <script>

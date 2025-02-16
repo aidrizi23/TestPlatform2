@@ -1,0 +1,155 @@
+@model TestPlatform2.Models.TestCompletedViewModel
+@{
+    ViewData["Title"] = "Test Completed";
+}
+
+<style>
+    /* General Styles - pulling from other views */
+    body {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+    }
+
+    .card {
+        background-color: var(--secondary-bg);
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
+        color: var(--text-primary);
+        border-bottom: none;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .list-group-item {
+        background-color: var(--secondary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    /* Custom Button Colors */
+    .btn-primary {
+        background-color: var(--accent-green);
+        color: var(--text-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--accent-purple);
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: var(--text-primary);
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: var(--text-primary);
+    }
+
+    .btn-info {
+        background-color: #17a2b8;
+        color: var(--text-primary);
+    }
+
+    .btn-success {
+        background-color: #28a745;
+        color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .form-control {
+        background-color: var(--primary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        background-color: var(--primary-bg);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        color: var(--text-primary);
+    }
+
+    /* Specific to this page */
+    .completed-header {
+        background: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
+        color: var(--text-primary);
+    }
+
+    .alert-primary, .alert-info, .alert-light {
+        background-color: var(--secondary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .display-4 {
+        color: var(--accent-green);
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header completed-header">
+            <h2 class="mb-0"><i class="fas fa-check-circle"></i> Test Submitted Successfully</h2>
+        </div>
+        <div class="card-body">
+            <!-- Test Details -->
+            <div class="mb-4">
+                <h4>@Model.TestName</h4>
+                <p class="text-muted">@Model.Description</p>
+            </div>
+
+            <!-- Score and Time -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="alert alert-primary">
+                        <h5>Your Score</h5>
+                        <p class="display-4">@Model.Score.ToString("0.00") / @Model.TotalPoints.ToString("0.00")</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="alert alert-info">
+                        <h5>Time Taken</h5>
+                        <p class="lead">
+                            @($"{Model.TimeTaken.Minutes}m {Model.TimeTaken.Seconds}s")
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Info -->
+            <div class="alert alert-light">
+                <p class="mb-1"><strong>Name:</strong> @Model.FirstName @Model.LastName</p>
+                <p class="mb-1"><strong>Email:</strong> @Model.StudentEmail</p>
+                <p class="mb-0"><strong>Submitted at:</strong> @Model.EndTime.ToString("MMMM dd, yyyy hh:mm tt")</p>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- No JavaScript required for this view -->
+}

@@ -50,6 +50,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlTXVsdGlwbGVDaG9pY2UuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/albi/RiderProjects/TestPlatform2/Views/Question/CreateShortAnswer.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlU2hvcnRBbnN3ZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/albi/RiderProjects/TestPlatform2/Views/Question/CreateTrueFalse.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlVHJ1ZUZhbHNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
@@ -92,6 +96,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [/home/albi/RiderProjects/TestPlatform2/Views/TestAttempt/TakeTest.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdEF0dGVtcHQvVGFrZVRlc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/albi/RiderProjects/TestPlatform2/Views/TestAttempt/TestCompleted.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdEF0dGVtcHQvVGVzdENvbXBsZXRlZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/albi/RiderProjects/TestPlatform2/Views/_ViewImports.cshtml]
