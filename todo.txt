@@ -1,10 +1,4 @@
-﻿idk what i have to do right now vl
-
-
-create short answer view
-
-
-    Invite Students:
+﻿    Invite Students:
 
         A professor adds student emails to TestInvite.
 
@@ -27,13 +21,10 @@ create short answer view
         Answers are saved to the Answer table with the AttemptId to link them to a specific session.
         
         
-        
-        
-        
-when creating a question make it so that it checks the points to be over 0
-// add the cheatingDetected to the testAttempt table
-// make it so that the user has as many attempts as the test has to cheat
+
+
+// add view when test is finnished.
 // view to see all submissions
 // view to edit a submission and it's points
-// add the ability to create bigger tests and only show a certain amount of questions
+// add the ability to only show a certain amount of questions based on their type.
 

@@ -17,95 +17,87 @@ build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = TestPlatform2
 build_property.RootNamespace = TestPlatform2
-build_property.ProjectDir = C:\Users\User\Desktop\TestPlatform2\
+build_property.ProjectDir = /home/albi/RiderProjects/TestPlatform2/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.RazorLangVersion = 8.0
 build_property.SupportLocalizedComponentNames = 
 build_property.GenerateRazorMetadataSourceChecksumAttributes = 
-build_property.MSBuildProjectDirectory = C:\Users\User\Desktop\TestPlatform2
+build_property.MSBuildProjectDirectory = /home/albi/RiderProjects/TestPlatform2
 build_property._RazorSourceGeneratorDebug = 
 
-[C:/Users/User/Desktop/TestPlatform2/Areas/Identity/Pages/_ViewStart.cshtml]
-build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Areas/Identity/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXMvSWRlbnRpdHkvUGFnZXMvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Account/Login.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9Mb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Account/Register.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWdpc3Rlci5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Views/Account/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZWdpc3Rlci5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Home/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxJbmRleC5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Views/Home/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Home/Privacy.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/Home/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Question/CreateMultipleChoice.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlTXVsdGlwbGVDaG9pY2UuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Question/CreateMultipleChoice.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlTXVsdGlwbGVDaG9pY2UuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Question/CreateShortAnswer.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlU2hvcnRBbnN3ZXIuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Question/CreateTrueFalse.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlVHJ1ZUZhbHNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Question/CreateTrueFalse.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcUXVlc3Rpb25cQ3JlYXRlVHJ1ZUZhbHNlLmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Shared/Error.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Shared/_LoginPartial.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Shared/_LoginPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19Mb2dpblBhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Shared/_ValidationScriptsPartial.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL19WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/TestAttempt/StartTest.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdEF0dGVtcHRcU3RhcnRUZXN0LmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/Test/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdC9DcmVhdGUuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/TestAttempt/TakeTest.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdEF0dGVtcHRcVGFrZVRlc3QuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Test/Details.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdC9EZXRhaWxzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/TestAttempt/TestCompleted.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdEF0dGVtcHRcVGVzdENvbXBsZXRlZC5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Views/Test/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdC9FZGl0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Test/Create.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdFxDcmVhdGUuY3NodG1s
+[/home/albi/RiderProjects/TestPlatform2/Views/Test/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdC9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Test/Details.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdFxEZXRhaWxzLmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/TestAttempt/StartTest.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdEF0dGVtcHQvU3RhcnRUZXN0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Test/Edit.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdFxFZGl0LmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/TestAttempt/TakeTest.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvVGVzdEF0dGVtcHQvVGFrZVRlc3QuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/Test/Index.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVGVzdFxJbmRleC5jc2h0bWw=
+[/home/albi/RiderProjects/TestPlatform2/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdJbXBvcnRzLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[C:/Users/User/Desktop/TestPlatform2/Views/_ViewImports.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+[/home/albi/RiderProjects/TestPlatform2/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvX1ZpZXdTdGFydC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/User/Desktop/TestPlatform2/Views/_ViewStart.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
-[C:/Users/User/Desktop/TestPlatform2/Views/Shared/_Layout.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
-build_metadata.AdditionalFiles.CssScope = b-0rjarv2wnn

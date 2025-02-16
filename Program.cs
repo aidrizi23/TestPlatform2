@@ -18,7 +18,7 @@ public class Program
         
         // Register ApplicationDbContext with Identity
         builder.Services.AddDbContext<ApplicationDbContext>(options => 
-            options.UseSqlServer(connectionString));
+            options.UseNpgsql(connectionString));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
         // Configure Identity with custom User and Role (using string keys)

@@ -49,19 +49,17 @@
 @* @section Scripts { *@
 @*     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} *@
 @* } *@
-
 @model IEnumerable<TestPlatform2.Data.Test>
 @{
     ViewData["Title"] = "My Tests";
 }
 
-<!-- Custom Styles -->
 <style>
     /* Page Title Styling */
     h2 {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #343a40;
+        color: var(--text-primary);
         text-align: center;
         margin-bottom: 3rem;
         position: relative;
@@ -72,28 +70,28 @@
         display: block;
         width: 80px;
         height: 3px;
-        background: linear-gradient(90deg, #0d6efd, #17a2b8);
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
         margin: 1rem auto 0;
     }
 
     /* Create New Test Button */
     .btn-primary {
-        background: linear-gradient(90deg, #0d6efd, #17a2b8);
+        background: var(--accent-green);
         border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        background-color: var(--accent-purple);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
     }
 
     /* No Tests Found Alert */
     .alert-info {
-        background: linear-gradient(90deg, #cce5ff, #b3d7ff);
-        border: none;
-        color: #004085;
+        background: var(--secondary-bg);
+        border: 1px solid var(--accent-green);
+        color: var(--text-primary);
         font-size: 1.2rem;
         font-weight: 500;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -101,63 +99,63 @@
 
     /* Card Styling */
     .card {
+        background-color: var(--secondary-bg);
         border: none;
-        border-radius: 15px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     }
 
     .card-header {
-        background: linear-gradient(90deg, #0d6efd, #17a2b8);
-        border-radius: 15px 15px 0 0;
-        color: white;
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
+        border-radius: 8px 8px 0 0;
+        color: var(--text-primary);
         font-size: 1.2rem;
         font-weight: bold;
     }
 
-    /* Table Styling */
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa !important;
-        color: #343a40;
-        transition: all 0.3s ease;
+    /* List Group Styling */
+    .list-group-item {
+        background-color: var(--secondary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
     }
 
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: #f8f9fa;
-    }
-
-    .table-striped tbody tr:nth-of-type(even) {
-        background-color: #e9ecef;
+    .list-group-item:hover {
+        background-color: rgba(255, 255, 255, 0.05);
     }
 
     /* Action Buttons */
     .btn-group .btn {
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
         padding: 0.5rem 0.75rem;
     }
 
     .btn-warning {
-        background: linear-gradient(90deg, #ffc107, #f7b924);
+        background-color: #ffc107;
         border: none;
-        color: white;
+        color: #000;
     }
 
     .btn-info {
-        background: linear-gradient(90deg, #17a2b8, #138496);
+        background-color: var(--accent-green);
         border: none;
-        color: white;
+        color: var(--text-primary);
     }
 
     .btn-danger {
-        background: linear-gradient(90deg, #dc3545, #c82333);
+        background-color: #dc3545;
         border: none;
-        color: white;
+        color: var(--text-primary);
     }
 
     .btn-group .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .text-muted {
+        color: var(--text-secondary) !important;
     }
 </style>
 
@@ -182,8 +180,8 @@
     else
     {
         <!-- Tests List -->
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
+        <div class="card">
+            <div class="card-header">
                 <h5 class="mb-0">Test List</h5>
             </div>
             <div class="card-body">
@@ -200,13 +198,13 @@
                             </div>
                             <div class="btn-group">
                                 <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit">Edit</i>
+                                    <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info" title="Details">
-                                    <i class="fas fa-eye">Details</i>
+                                    <i class="fas fa-eye"></i> Details
                                 </a>
                                 <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger" title="Delete">
-                                    <i class="fas fa-trash">Delete</i>
+                                    <i class="fas fa-trash"></i> Delete
                                 </a>
                             </div>
                         </div>

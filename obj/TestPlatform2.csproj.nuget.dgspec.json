@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\User\\Desktop\\TestPlatform2\\TestPlatform2.csproj": {}
+    "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj": {}
   },
   "projects": {
-    "C:\\Users\\User\\Desktop\\TestPlatform2\\TestPlatform2.csproj": {
+    "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\User\\Desktop\\TestPlatform2\\TestPlatform2.csproj",
+        "projectUniqueName": "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj",
         "projectName": "TestPlatform2",
-        "projectPath": "C:\\Users\\User\\Desktop\\TestPlatform2\\TestPlatform2.csproj",
-        "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\User\\Desktop\\TestPlatform2\\obj\\",
+        "projectPath": "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj",
+        "packagesPath": "/home/albi/.nuget/packages/",
+        "outputPath": "/home/albi/RiderProjects/TestPlatform2/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "/home/albi/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -32,11 +32,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -70,6 +65,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[8.0.7, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.11, )"
             }
           },
           "imports": [
@@ -91,7 +90,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.112/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

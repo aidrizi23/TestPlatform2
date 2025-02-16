@@ -1,43 +1,121 @@
+<style>
+    body {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+    }
+
+    .container {
+        max-width: 800px;
+    }
+
+    .card {
+        background-color: var(--secondary-bg);
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-control, .form-select {
+        background-color: var(--primary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: var(--primary-bg);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        color: var(--text-primary);
+    }
+
+    .form-check-input {
+        background-color: var(--primary-bg);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent-green);
+        border-color: var(--accent-green);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-green);
+        border: none;
+        color: var(--text-primary);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--accent-purple);
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
 @model TestForCreationDto
 
-<h2>Create New Test</h2>
+<div class="container mt-4">
+    <h2 class="mb-4">Create New Test</h2>
 
-<form asp-action="Create" method="post">
-    <!-- Validation Summary at the top for visibility -->
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <!-- Validation Summary at the top for visibility -->
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-    <!-- Test Title -->
-    <div class="form-group">
-        <label asp-for="Title" class="control-label"></label>
-        <input asp-for="Title" class="form-control" />
-        <span asp-validation-for="Title" class="text-danger"></span>
+                <!-- Test Title -->
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-bold"></label>
+                    <input asp-for="Title" class="form-control" required />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <!-- Randomize Questions -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" asp-for="RandomizeQuestions" id="randomizeQuestions" />
+                    <label class="form-check-label" for="randomizeQuestions">Randomize Questions</label>
+                </div>
+
+                <!-- Time Limit -->
+                <div class="mb-3">
+                    <label asp-for="TimeLimit" class="form-label fw-bold"></label>
+                    <div class="input-group">
+                        <input asp-for="TimeLimit" class="form-control" type="number" min="1" required />
+                        <span class="input-group-text">minutes</span>
+                    </div>
+                    <span asp-validation-for="TimeLimit" class="text-danger"></span>
+                </div>
+
+                <!-- Max Attempts -->
+                <div class="mb-3">
+                    <label asp-for="MaxAttempts" class="form-label fw-bold"></label>
+                    <input asp-for="MaxAttempts" class="form-control" type="number" min="1" required />
+                    <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Create Test
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <!-- Description -->
-    <div class="form-group">
-        <label asp-for="Description" class="control-label"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-    </div>
-
-    <!-- Randomize Questions (correct checkbox implementation) -->
-    <div class="form-group form-check">
-        <input type="checkbox" class="form-check-input" asp-for="RandomizeQuestions" />
-        <label class="form-check-label" asp-for="RandomizeQuestions"></label>
-    </div>
-
-    <!-- Time Limit -->
-    <div class="form-group">
-        <label asp-for="TimeLimit" class="control-label"></label>
-        <input asp-for="TimeLimit" class="form-control" />
-        <span asp-validation-for="TimeLimit" class="text-danger"></span>
-    </div>
-
-    <!-- Max Attempts -->
-    <div class="form-group">
-        <label asp-for="MaxAttempts" class="control-label"></label>
-        <input asp-for="MaxAttempts" class="form-control" />
-        <span asp-validation-for="MaxAttempts" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Create Test</button>
-</form>
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

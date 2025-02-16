@@ -4,6 +4,75 @@
     ViewData["Title"] = "Start Test";
 }
 
+<style>
+    body {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+    }
+
+    .container {
+        max-width: 600px;
+    }
+
+    .card {
+        background-color: var(--secondary-bg);
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .card-title {
+        color: var(--accent-green);
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .card-text {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: var(--text-primary);
+        font-weight: bold;
+    }
+
+    .form-control {
+        background-color: var(--primary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        background-color: var(--primary-bg);
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        color: var(--text-primary);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-green);
+        border: none;
+        color: var(--text-primary);
+        padding: 0.5rem 2rem;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--accent-purple);
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
 <div class="container mt-5">
     <div class="card">
         <div class="card-body">
@@ -14,19 +83,23 @@
                 <input type="hidden" asp-for="TestId" />
                 <input type="hidden" asp-for="Token" />
 
-                <div class="form-group mb-3">
+                <div class="mb-3">
                     <label asp-for="FirstName" class="form-label">First Name</label>
                     <input asp-for="FirstName" class="form-control" required />
                     <span asp-validation-for="FirstName" class="text-danger"></span>
                 </div>
 
-                <div class="form-group mb-3">
+                <div class="mb-3">
                     <label asp-for="LastName" class="form-label">Last Name</label>
                     <input asp-for="LastName" class="form-control" required />
                     <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary">Start Test</button>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-play-circle me-2"></i>Start Test
+                    </button>
+                </div>
             </form>
         </div>
     </div>
