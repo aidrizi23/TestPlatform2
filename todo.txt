@@ -29,3 +29,7 @@
 // add the ability to only show a certain amount of questions based on their type.
 
 // ADD TEST LOCKING FEATURE
+
+
+// MAKE IT SO THAT THE TEST ALREADY HAS ANY ATTEMPTS THAT HAVE BEEN MADE ON IT THE TEACHER CAN NOT DELETE THE QUESTIONS ANYMORE
+// Make it so that the user can not send a test invite if the test does not have any questions  ==> DONE

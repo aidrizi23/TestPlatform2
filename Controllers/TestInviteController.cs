@@ -13,20 +13,28 @@ public class TestInviteController : Controller
     private readonly ITestInviteRepository _inviteRepository;
     private readonly IEmailService _emailService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ITestRepository _testRepository;
 
     public TestInviteController(
         ITestInviteRepository inviteRepository,
         IEmailService emailService,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ITestRepository testRepository)
     {
         _inviteRepository = inviteRepository;
         _emailService = emailService;
         _httpContextAccessor = httpContextAccessor;
+        _testRepository = testRepository;
     }
 
     [HttpPost]
     public async Task<IActionResult> SendInvites(string testId, [FromBody] List<string> emails)
     {
+        
+        // first let's get the test
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null) return NotFound();
+        if(test.Questions.Count == 0  || !test.Questions.Any()) return BadRequest("Test has no questions");
         foreach (var email in emails)
         {
             var invite = new TestInvite
