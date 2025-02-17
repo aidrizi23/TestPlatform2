@@ -9,6 +9,7 @@ public interface ITestAttemptRepository
 {
     Task<IEnumerable<TestAttempt?>> GetAttemptsByTestIdAsync(string testId);
     Task<IEnumerable<TestAttempt?>> GetFinishedAttemptsByTestIdAsync(string testId);
+    Task<IEnumerable<TestAttempt?>> GetUnfinishedAttemptsByTestIdAsync(string testId);
     Task<TestAttempt?> GetAttemptByIdAsync(string attemptId);
     Task Create(TestAttempt attempt);
     Task Update(TestAttempt attempt);
@@ -44,6 +45,15 @@ public class TestAttemptRepository : ITestAttemptRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<TestAttempt?>> GetUnfinishedAttemptsByTestIdAsync(string testId)
+    {
+        return await _context.TestAttempts
+            .Where(a => a.TestId == testId && a.IsCompleted == false)
+            .Include(a => a.Answers)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
     public async Task<TestAttempt?> GetAttemptByIdAsync(string attemptId)
     {
         return await _context.TestAttempts

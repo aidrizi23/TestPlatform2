@@ -284,4 +284,28 @@ public class TestController : Controller
         
         return View(submissions);
     }
+    
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> UnfinnishedAttempts(string testId)
+    {
+        // get the user
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+        
+        // get the test by id
+        var test = await _testRepository.GetTestByIdAsync(testId);
+
+        if (test is null)
+            return NotFound();
+        if(test.User != user)
+            return Unauthorized();
+        
+        // get all the submissions of the test that are finished
+        var submissions = await _testAttemptRepository.GetUnfinishedAttemptsByTestIdAsync(testId);
+        
+        return View(submissions);
+    }
+    
 }
