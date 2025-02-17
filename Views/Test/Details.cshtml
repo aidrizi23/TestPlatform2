@@ -476,6 +476,10 @@
                 <button type="button" class="btn btn-danger" onclick="deleteTest('@Model.Id')">
                     <i class="fas fa-trash"></i> Delete Test
                 </button>
+
+                <a asp-action="AllAttempts" asp-route-testId="@Model.Id" class="btn btn-warning me-2">
+                    <i class="fas fa-edit"></i> All Attempts
+                </a>
             </div>
         </div>
     </div>
