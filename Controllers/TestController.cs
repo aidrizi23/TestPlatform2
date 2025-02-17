@@ -200,7 +200,6 @@ public class TestController : Controller
         return RedirectToAction("Index");
     }
     
-    // method to direclty delete test
     
     [HttpGet]
     [Authorize]
@@ -237,77 +236,6 @@ public class TestController : Controller
     }
     
     
-    // // get method to get all the current submissions of the test
-    // [HttpGet]
-    // [Authorize]
-    // public async Task<IActionResult> AllAttempts(string testId)
-    // {
-    //     // get and authenticate the user
-    //     var user = await _userManager.GetUserAsync(User);
-    //     if(user is null)
-    //         return RedirectToAction("Login", "Account");
-    //     
-    //     // get the test by id
-    //     var test = await _testRepository.GetTestByIdAsync(testId);
-    //
-    //     if (test is null)
-    //         return NotFound();
-    //     if (test.User != user)
-    //         return Unauthorized();
-    //     
-    //     // get all the submissions of the test
-    //     var submissions = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
-    //     
-    //     return View(submissions);
-    // }
-    //
-    //
-    // [HttpGet]
-    // [Authorize]
-    // public async Task<IActionResult> FinnishedAttempts(string testId)
-    // {
-    //     // get the user
-    //     var user = await _userManager.GetUserAsync(User);
-    //     if (user is null)
-    //         return RedirectToAction("Login", "Account");
-    //     
-    //     // get the test by id
-    //     var test = await _testRepository.GetTestByIdAsync(testId);
-    //
-    //     if (test is null)
-    //         return NotFound();
-    //     if(test.User != user)
-    //         return Unauthorized();
-    //     
-    //     // get all the submissions of the test that are finished
-    //     var submissions = await _testAttemptRepository.GetFinishedAttemptsByTestIdAsync(testId);
-    //     
-    //     return View(submissions);
-    // }
-    //
-    // [HttpGet]
-    // [Authorize]
-    // public async Task<IActionResult> UnfinnishedAttempts(string testId)
-    // {
-    //     // get the user
-    //     var user = await _userManager.GetUserAsync(User);
-    //     if (user is null)
-    //         return RedirectToAction("Login", "Account");
-    //     
-    //     // get the test by id
-    //     var test = await _testRepository.GetTestByIdAsync(testId);
-    //
-    //     if (test is null)
-    //         return NotFound();
-    //     if(test.User != user)
-    //         return Unauthorized();
-    //     
-    //     // get all the submissions of the test that are finished
-    //     var submissions = await _testAttemptRepository.GetUnfinishedAttemptsByTestIdAsync(testId);
-    //     
-    //     return View(submissions);
-    // }
-    //
     
    
     [HttpGet]

@@ -48,9 +48,6 @@ public class QuestionController : Controller
     }
     
     
-    // now for the creation of the tests
-    
-    // firstly i will create the truefalse question 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> CreateTrueFalse(string testId)

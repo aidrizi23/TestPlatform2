@@ -59,6 +59,8 @@ public class TestAttemptController : Controller
         if (test == null)
             return NotFound();
 
+        if(test.Questions.Count == 0 || !test.Questions.Any())
+            return BadRequest("Test has no questions");
         // Create a new test attempt
         var attempt = new TestAttempt
         {
