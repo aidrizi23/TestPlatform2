@@ -13,11 +13,13 @@ public class TestController : Controller
 {
     private readonly ITestRepository _testRepository;
     private readonly UserManager<User> _userManager;
+    private readonly ITestAttemptRepository _testAttemptRepository;
     
-    public TestController(ITestRepository testRepository, UserManager<User> userManager)
+    public TestController(ITestRepository testRepository, UserManager<User> userManager, ITestAttemptRepository testAttemptRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
+        _testAttemptRepository = testAttemptRepository;
     }
     
     // GET: /Test/Index
@@ -233,5 +235,31 @@ public class TestController : Controller
         // Redirect to the Index action to show the list of tests
         return RedirectToAction("Index");
     }
+    
+    
+    // get method to get all the current submissions of the test
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> AllAttempts(string testId)
+    {
+        // get and authenticate the user
+        var user = await _userManager.GetUserAsync(User);
+        if(user is null)
+            return RedirectToAction("Login", "Account");
+        
+        // get the test by id
+        var test = await _testRepository.GetTestByIdAsync(testId);
+
+        if (test is null)
+            return NotFound();
+        if (test.User != user)
+            return Unauthorized();
+        
+        // get all the submissions of the test
+        var submissions = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        
+        return View(submissions);
+    }
+    
     
 }

@@ -23,7 +23,6 @@
         
 
 
-// add view when test is finnished.
 // view to see all submissions
 // view to edit a submission and it's points
 // add the ability to only show a certain amount of questions based on their type.
