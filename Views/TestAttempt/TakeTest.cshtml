@@ -570,6 +570,7 @@
 
 
 @section Scripts {
+
     <script>
         // Initialize variables
         let timeRemaining = @Model.Test.TimeLimit * 60;
@@ -606,10 +607,14 @@
             document.getElementById('testForm').submit();
         }
 
+        // Flag to prevent multiple decrements
+        let isAttemptDecremented = false;
+
         // Decrement attempts with modal notification
         async function decrementAttempts(showWarning = true) {
-            if (remainingAttempts <= 0) return;
+            if (remainingAttempts <= 0 || isAttemptDecremented) return;
 
+            isAttemptDecremented = true; // Set flag to prevent multiple calls
             remainingAttempts--;
             document.getElementById('remainingAttempts').value = remainingAttempts;
             document.getElementById('remainingAttemptsCounter').textContent = remainingAttempts;
@@ -622,7 +627,7 @@
                 });
 
                 if (!response.ok) throw new Error('Failed to update attempts');
-                
+
                 if (remainingAttempts <= 0) {
                     submitForm();
                 } else if (showWarning) {
@@ -631,14 +636,33 @@
             } catch (error) {
                 console.error('Error:', error);
                 remainingAttempts++; // Rollback on error
+            } finally {
+                // Reset the flag after a short delay to allow future decrements
+                setTimeout(() => {
+                    isAttemptDecremented = false;
+                }, 1000); // 1-second delay
             }
         }
 
-        // Page visibility detection
-        document.addEventListener('visibilitychange', () => {
+        // Enhanced visibility detection
+        function handleVisibilityChange() {
             if (document.visibilityState === 'hidden') {
                 decrementAttempts(true);
             }
+        }
+
+        // Enhanced focus/blur detection
+        function handleFocusChange() {
+            if (!document.hasFocus()) {
+                decrementAttempts(true);
+            }
+        }
+
+        // Attach event listeners
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleFocusChange);
+        window.addEventListener('focus', () => {
+            // Reset any flags or states if needed
         });
 
         // Navigation/closing detection
