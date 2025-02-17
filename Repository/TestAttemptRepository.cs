@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections;
+using Microsoft.EntityFrameworkCore;
 using TestPlatform2.Data;
 
 namespace TestPlatform2.Repository;
@@ -7,6 +8,7 @@ namespace TestPlatform2.Repository;
 public interface ITestAttemptRepository
 {
     Task<IEnumerable<TestAttempt?>> GetAttemptsByTestIdAsync(string testId);
+    Task<IEnumerable<TestAttempt?>> GetFinishedAttemptsByTestIdAsync(string testId);
     Task<TestAttempt?> GetAttemptByIdAsync(string attemptId);
     Task Create(TestAttempt attempt);
     Task Update(TestAttempt attempt);
@@ -28,6 +30,15 @@ public class TestAttemptRepository : ITestAttemptRepository
     {
         return await _context.TestAttempts
             .Where(a => a.TestId == testId)
+            .Include(a => a.Answers)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+    
+    public async Task<IEnumerable <TestAttempt?>> GetFinishedAttemptsByTestIdAsync(string testId)
+    {
+        return await _context.TestAttempts
+            .Where(a => a.TestId == testId && a.IsCompleted == true)
             .Include(a => a.Answers)
             .AsNoTracking()
             .ToListAsync();
