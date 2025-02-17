@@ -175,7 +175,7 @@
                                 </td>
                                 <td>@attempt.Score</td>
                                 <td>
-                                    <a asp-action="Details" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Details</a>
+                                    <a asp-controller="TestAttempt" asp-action="Delete" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Delete</a>
                                 </td>
                             </tr>
                         }

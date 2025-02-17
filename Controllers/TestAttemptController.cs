@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Models;
@@ -12,17 +14,20 @@ public class TestAttemptController : Controller
     private readonly ITestInviteRepository _inviteRepository;
     private readonly ITestAttemptRepository _attemptRepository;
     private readonly IAnswerRepository _answerRepository;
+    private readonly UserManager<User> _userManager;
 
     public TestAttemptController(
         ITestRepository testRepository,
         ITestInviteRepository inviteRepository,
         ITestAttemptRepository attemptRepository,
-        IAnswerRepository answerRepository)
+        IAnswerRepository answerRepository,
+        UserManager<User> userManager)
     {
         _testRepository = testRepository;
         _inviteRepository = inviteRepository;
         _attemptRepository = attemptRepository;
-        _answerRepository = answerRepository; 
+        _answerRepository = answerRepository;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -249,5 +254,33 @@ public class TestAttemptController : Controller
 
         return View(viewModel);
     }   
+    
+    // method to delete test attempt.
+    public async Task<IActionResult> Delete(string id)
+    {
+        // take the attempt by id
+        var attempt = await _attemptRepository.GetAttemptUntrackedByIdAsync(id);
+        if (attempt is null) return NotFound();
+        
+        // get the current user
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null) return RedirectToAction("Login", "Account");
+        
+        
+        
+        // check if the attempt has finished or not
+        if (attempt.EndTime is null || !attempt.IsCompleted) return BadRequest("Can not delete an ongoing attempt");
+        
+        // now delete all the answers of the attempt. to do this we need to get the answers
+        var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
+        // now let's bulk delete the answers
+
+        await _answerRepository.BulkDelete(answers);
+        
+        // now we need to delete the attempt itself.
+        await _attemptRepository.Delete(attempt);
+
+        return RedirectToAction("AllAttempts", "Test", new { testId = attempt.TestId });
+    }
     
 }

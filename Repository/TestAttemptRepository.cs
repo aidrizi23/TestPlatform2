@@ -11,6 +11,7 @@ public interface ITestAttemptRepository
     Task<IEnumerable<TestAttempt?>> GetFinishedAttemptsByTestIdAsync(string testId);
     Task<IEnumerable<TestAttempt?>> GetUnfinishedAttemptsByTestIdAsync(string testId);
     Task<TestAttempt?> GetAttemptByIdAsync(string attemptId);
+    Task<TestAttempt?> GetAttemptUntrackedByIdAsync(string attemptId);
     Task Create(TestAttempt attempt);
     Task Update(TestAttempt attempt);
     Task Delete(TestAttempt attempt);
@@ -59,6 +60,16 @@ public class TestAttemptRepository : ITestAttemptRepository
         return await _context.TestAttempts
             .Include(a => a.Answers)
             .Include(a => a.Test)
+            .FirstOrDefaultAsync(a => a.Id == attemptId);
+    }
+
+    public async Task<TestAttempt?> GetAttemptUntrackedByIdAsync(string attemptId)
+    {
+        return await _context.TestAttempts
+            // .Include(a => a.Answers)
+            // .Include(a => a.Test)
+            // .ThenInclude(t => t.User)
+            // .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == attemptId);
     }
 
