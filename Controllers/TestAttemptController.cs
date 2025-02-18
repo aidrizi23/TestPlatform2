@@ -43,6 +43,7 @@ public class TestAttemptController : Controller
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test == null)
             return NotFound();
+        if (test.IsLocked) return BadRequest("tesst is locked");
 
         // Show the start test view
         return View(new StartTestViewModel
@@ -63,6 +64,7 @@ public class TestAttemptController : Controller
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test == null)
             return NotFound();
+        if (test.IsLocked) return BadRequest("tesst is locked");
 
         if(test.Questions.Count == 0 || !test.Questions.Any())
             return BadRequest("Test has no questions");
@@ -99,6 +101,7 @@ public class TestAttemptController : Controller
         var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
         if (test == null)
             return NotFound();
+        if (test.IsLocked) return BadRequest("tesst is locked");
         
         if(attempt.RemainingAttempts <= 0)
             return RedirectToAction("TestCompleted");

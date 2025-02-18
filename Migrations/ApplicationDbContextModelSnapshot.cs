@@ -225,6 +225,9 @@ namespace TestPlatform2.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("MaxAttempts")
                         .HasColumnType("integer");
 

@@ -476,6 +476,9 @@
                 <button type="button" class="btn btn-danger" onclick="deleteTest('@Model.Id')">
                     <i class="fas fa-trash"></i> Delete Test
                 </button>
+                <button type="button" class="btn btn-primary" id="lockTestButton" onclick="lockTest('@Model.Id')">
+                    <i class="fas fa-lock"></i> @(Model.IsLocked ? "Unlock Test" : "Lock Test")
+                </button>
 
                 <a asp-action="AllAttempts" asp-route-testId="@Model.Id" class="btn btn-warning me-2">
                     <i class="fas fa-edit"></i> All Attempts
@@ -583,6 +586,32 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
     <script>
+        // function to toggle the lock status of the test
+        function lockTest(id) {
+            $.ajax({
+                url: '/Test/LockTest/' + id,
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.success) {
+                        var button = document.getElementById('lockTestButton');
+                        if (data.isLocked) {
+                            button.innerHTML = '<i class="fas fa-lock"></i> Unlock Test';
+                        } else {
+                            button.innerHTML = '<i class="fas fa-lock"></i> Lock Test';
+                        }
+                    } else {
+                        alert(data.message || 'Error locking/unlocking test.'); // Display the error message from the server
+                        console.log(data.message || 'Error locking/unlocking test.')
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error: " + status + " - " + error);  // Log the error to the console
+                    alert('Error locking/unlocking test.  Check the console for details.'); // Provide a generic error message
+                }
+            });
+        }
+        
         // Function to confirm question deletion
         function confirmDeleteQuestion(id) {
             if (confirm('Are you sure you want to delete this question?')) {
@@ -698,5 +727,6 @@
                     alert('Error sending invites.');
                 });
         }
+    
     </script>
 }

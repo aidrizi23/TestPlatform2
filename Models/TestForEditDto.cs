@@ -21,5 +21,7 @@ public class TestForEditDto
     [Required(ErrorMessage = "Max attempts is required")]
     [Range(1, 10, ErrorMessage = "Max attempts must be between 1-10")]
     public int MaxAttempts { get; set; }
+    
+    public bool IsLocked { get; set; }
 
 }

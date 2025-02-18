@@ -9,6 +9,7 @@ public class TestViewModel
     public bool RandomizeQuestions { get; set; }
     public int TimeLimit { get; set; }
     public int MaxAttempts { get; set; }
+    public bool IsLocked { get; set; }
     public User Creator { get; set; }
     
 }

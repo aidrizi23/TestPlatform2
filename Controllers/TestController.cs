@@ -147,7 +147,8 @@ public class TestController : Controller
             Description = test.Description,
             RandomizeQuestions = test.RandomizeQuestions,
             TimeLimit = test.TimeLimit,
-            MaxAttempts = test.MaxAttempts
+            MaxAttempts = test.MaxAttempts,
+            IsLocked = test.IsLocked,
         };
         
         return View(testForEditDto);
@@ -189,6 +190,7 @@ public class TestController : Controller
         test.RandomizeQuestions = dto.RandomizeQuestions;
         test.TimeLimit = dto.TimeLimit;
         test.MaxAttempts = dto.MaxAttempts;
+        test.IsLocked = dto.IsLocked;
         
         // Save the test to the database
         await _testRepository.Update(test);
@@ -272,4 +274,25 @@ public class TestController : Controller
         return View(viewModel);
     }
     
+    
+    [HttpPost]
+    public async Task<IActionResult> LockTest(string id)
+    {
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test == null)
+        {
+            return NotFound();
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user!.Id != test.UserId)
+        {
+            return Unauthorized();
+        }
+
+        test.IsLocked = !test.IsLocked;
+        await _testRepository.Update(test);
+
+        return Json(new { success = true, isLocked = test.IsLocked });
+    }
 }

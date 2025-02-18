@@ -34,6 +34,7 @@ public class TestInviteController : Controller
         // first let's get the test
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test is null) return NotFound();
+        if (test.IsLocked) return BadRequest("Test is locked");
         if(test.Questions.Count == 0  || !test.Questions.Any()) return BadRequest("Test has no questions");
         foreach (var email in emails)
         {
