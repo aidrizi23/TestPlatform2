@@ -49,9 +49,11 @@ public class TestInviteController : Controller
             var testUrl = UrlHelper.GenerateTestUrl(HttpContext, testId, invite.UniqueToken);
 
             // Send the email
-            await _emailService.SendEmailAsync(email, "Test Invite", $"Click here to start the test: {testUrl}");
+            await _emailService.SendEmailAsync(email, "Test Invite", $"Click here to start the test: {testUrl} \n\n You can also enter the following code in the app: {invite.UniqueToken}");
         }
 
         return Ok();
     }
+   
+    
 }

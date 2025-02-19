@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+﻿
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
@@ -29,8 +29,7 @@ public class TestAttemptController : Controller
         _answerRepository = answerRepository;
         _userManager = userManager;
     }
-
-    [HttpGet]
+    
     [HttpGet]
     public async Task<IActionResult> StartTest(string testId, string token)
     {
@@ -52,6 +51,10 @@ public class TestAttemptController : Controller
             Token = token
         });
     }
+    
+    // method to start the test by providing just the token in a field
+    
+    
 
     [HttpPost]
     public async Task<IActionResult> StartTest(StartTestViewModel model)
@@ -88,6 +91,40 @@ public class TestAttemptController : Controller
         return RedirectToAction("TakeTest", new { attemptId = attempt.Id });
     }
 
+
+
+
+    [HttpPost]
+    public async Task<IActionResult> EnterToken(string token)
+    {
+        if (string.IsNullOrEmpty(token))
+        {
+            TempData["ErrorMessage"] = "Token cannot be empty.";
+            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+        }
+
+        var trimmedToken = token.Trim();
+        // Validate the invite token
+        var invite = await _inviteRepository.GetInviteByTokenAsync(trimmedToken);
+        if (invite == null || invite.IsUsed)
+        {
+            TempData["ErrorMessage"] = "Invalid or used token.";
+            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+        }
+
+        // Get the test ID associated with the invite.
+        var testId = invite.TestId;
+        if (string.IsNullOrEmpty(testId))
+        {
+            TempData["ErrorMessage"] = "Test ID not found for this invite.";
+            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+        }
+
+        // Redirect to the StartTest method with the testId and token
+        return RedirectToAction("StartTest", new { testId = testId, token = trimmedToken });
+    }
+    
+    
     
     [HttpGet]
     public async Task<IActionResult> TakeTest(string attemptId)

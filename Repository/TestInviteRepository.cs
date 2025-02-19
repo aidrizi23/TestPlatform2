@@ -27,7 +27,7 @@ public class TestInviteRepository : ITestInviteRepository
     public async Task<TestInvite?> GetInviteByTokenAsync(string token)
     {
         return await _context.TestInvites
-            .Include(i => i.Test)
+            // .Include(i => i.Test)
             .FirstOrDefaultAsync(i => i.UniqueToken == token);
     }
 

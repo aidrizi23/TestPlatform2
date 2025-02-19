@@ -1,13 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using TestPlatform2.Data.Questions;
+﻿using TestPlatform2.Data.Questions;
 
 namespace TestPlatform2.Data;
 
 public class Test
 {
+
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    public string TestName { get; set; }
+    public required string TestName { get; set; }
     public string Description { get; set; }
     public bool RandomizeQuestions { get; set; }
     public int TimeLimit { get; set; }
@@ -21,9 +21,6 @@ public class Test
     
     public List<TestInvite> InvitedStudents { get; set; } = new();
     public List<TestAttempt> Attempts { get; set; } = new();
-    public bool IsLocked { get; set; } = false;
-    
-    
-    
+    public bool IsLocked { get; set; } = false; // Default values
     
 }

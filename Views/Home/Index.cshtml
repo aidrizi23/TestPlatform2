@@ -1,8 +1,21 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home Page"; // Or whatever your title should be
 }
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p>Enter your token to start the test.</p>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <form asp-action="EnterToken" asp-controller="TestAttempt" method="post">
+        <div class="form-group">
+            <label for="token">Token:</label>
+            <input type="text" id="token" name="token" class="form-control" />
+        </div>
+        <button type="submit" class="btn btn-primary">Start Test</button>
+    </form>
 </div>
