@@ -33,3 +33,9 @@
 
 // MAKE IT SO THAT THE TEST ALREADY HAS ANY ATTEMPTS THAT HAVE BEEN MADE ON IT THE TEACHER CAN NOT DELETE THE QUESTIONS ANYMORE
 // Make it so that the user can not send a test invite if the test does not have any questions  ==> DONE
+
+
+
+
+// Add the details of the attempts that are completed to the attempts page of the test. make it so that the teacher can see the questions that the student had and also the 
+// amswers to the questions. Also make it so that the teacher can see the score of the student on the test. 

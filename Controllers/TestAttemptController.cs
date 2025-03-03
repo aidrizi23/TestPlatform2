@@ -323,4 +323,21 @@ public class TestAttemptController : Controller
         return RedirectToAction("AllAttempts", "Test", new { testId = attempt.TestId });
     }
     
+    
+    
+    
+    
+    
+    // method to get all the answers and equivalent questions from testattempt id
+    [HttpGet()]
+    public async Task<IActionResult> Details(string id)
+    {
+        // first we get the test AttemptById
+        var testAttempt = await _attemptRepository.GetAttemptByIdAsync(id);
+        
+        // now get all the answers by the test id
+        var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
+        
+        return View(answers);
+    }
 }

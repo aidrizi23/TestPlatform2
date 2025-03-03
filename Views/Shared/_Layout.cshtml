@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - TestPlatform2</title>
+    <title>@ViewData["Title"] - UniTest</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <!-- Custom CSS -->
@@ -31,7 +31,11 @@
         <nav class="navbar navbar-expand-lg navbar-light glass-effect fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand text-accent fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="fas fa-graduation-cap me-2"></i>TestPlatform2
+                    <i class="fas fa-graduation-cap me-2"></i>Unitest
+                </a>
+
+                <a class="navbar-brand text-accent fw-bold" asp-area="" asp-controller="Test" asp-action="Index">
+                    <i class="fas me-1"></i>Tests
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                         aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,16 +66,6 @@
             @RenderBody()
         </main>
     </div>
-
-    <!-- Footer -->
-    @* <footer class="footer glass-effect text-center py-4"> *@
-    @*     <div class="container"> *@
-    @*         <small class="text-white"> *@
-    @*             &copy; 2025 - TestPlatform2 |  *@
-    @*             <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-accent">Privacy</a> *@
-    @*         </small> *@
-    @*     </div> *@
-    @* </footer> *@
 
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

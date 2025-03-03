@@ -1,0 +1,46 @@
+@model IEnumerable<TestPlatform2.Data.Answer>
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Details</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Response)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PointsAwarded)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Question)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Attempt)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Response)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PointsAwarded)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Question.Text)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Attempt.Id)
+            </td>
+
+        </tr>
+}
+    </tbody>
+</table>

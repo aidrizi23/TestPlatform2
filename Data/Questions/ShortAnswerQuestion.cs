@@ -10,7 +10,7 @@ public class ShortAnswerQuestion : Question
         if (answer is not string ans) return false;
         
         return CaseSensitive 
-            ? ans == ExpectedAnswer
+            ? ans.Trim() == ExpectedAnswer.Trim()
             : ans.Equals(ExpectedAnswer, StringComparison.OrdinalIgnoreCase);
     }
 }
