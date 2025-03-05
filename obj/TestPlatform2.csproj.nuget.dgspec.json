@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj": {}
+    "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj": {}
   },
   "projects": {
-    "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj": {
+    "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj",
+        "projectUniqueName": "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj",
         "projectName": "TestPlatform2",
-        "projectPath": "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj",
+        "projectPath": "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj",
         "packagesPath": "/home/albi/.nuget/packages/",
-        "outputPath": "/home/albi/RiderProjects/TestPlatform2/obj/",
+        "outputPath": "/home/albi/RiderProjects/TestPlatform3/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/albi/.nuget/NuGet/NuGet.Config"

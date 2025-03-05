@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "u8d+8MYnMPg=",
+  "dgSpecHash": "LDYJ9tin6oA=",
   "success": true,
-  "projectFilePath": "/home/albi/RiderProjects/TestPlatform2/TestPlatform2.csproj",
+  "projectFilePath": "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj",
   "expectedPackageFiles": [
     "/home/albi/.nuget/packages/azure.core/1.35.0/azure.core.1.35.0.nupkg.sha512",
     "/home/albi/.nuget/packages/azure.identity/1.10.3/azure.identity.1.10.3.nupkg.sha512",

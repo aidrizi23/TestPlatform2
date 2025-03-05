@@ -1,4 +1,4 @@
-/* General Reset */
+/* General Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -10,109 +10,186 @@
     --secondary-bg: #1e1e1e;
     --accent-green: #4caf50;
     --accent-purple: #6a1b9a;
+    --accent-blue: #3498db;
     --text-primary: #ffffff;
     --text-secondary: #b3b3b3;
+    --shadow-subtle: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-elevated: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', 'Roboto', sans-serif;
     background-color: var(--primary-bg);
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
+    background: linear-gradient(135deg, var(--primary-bg) 0%, #0f0f1a 100%);
+    background-attachment: fixed;
 }
 
-/* Top Color Bar */
+/* Top Color Bar with Enhanced Styling */
 .top-bar {
     background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
     color: var(--text-primary);
     font-size: 0.9rem;
-    padding: 0.5rem 0;
+    padding: 0.75rem 0;
+    box-shadow: var(--shadow-subtle);
+    animation: topBarPulse 3s infinite alternate;
+}
+
+@keyframes topBarPulse {
+    0% { opacity: 0.9; }
+    100% { opacity: 1; }
 }
 
 .top-bar i {
     font-size: 1rem;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
+    color: rgba(255,255,255,0.8);
 }
 
 /* Utility Classes */
 .container {
-    max-width: 1200px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 0 1rem;
+    padding: 0 1.5rem;
 }
 
 .rounded {
-    border-radius: 8px;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-/* Navbar */
+.glass-effect {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced Navbar */
 .navbar {
-    background-color: var(--secondary-bg);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-subtle);
+    transition: all 0.3s ease;
+}
+
+.navbar:hover {
+    box-shadow: var(--shadow-elevated);
 }
 
 .navbar-brand {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--accent-green) !important;
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, var(--accent-green), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
 }
 
 .navbar-nav .nav-link {
     color: var(--text-primary) !important;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    font-weight: 500;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 50%;
+    background-color: var(--accent-green);
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 100%;
+    left: 0;
 }
 
 .navbar-nav .nav-link:hover {
     color: var(--accent-green) !important;
+    transform: translateY(-3px);
 }
 
-.navbar-toggler-icon {
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255, 255, 255, 0.8)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
-}
-
-/* Main Content */
+/* Main Content with Enhanced Styling */
 .main-content {
-    margin-top: 60px;
-    padding: 2rem 0;
+    margin-top: 80px;
+    padding: 2.5rem 0;
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 16px;
+    box-shadow: var(--shadow-elevated);
 }
 
-/* Footer */
+/* Footer with Modern Touch */
 .footer {
-    background-color: var(--secondary-bg);
+    background-color: rgba(30, 30, 30, 0.7);
+    backdrop-filter: blur(15px);
     color: var(--text-secondary);
-    padding: 1rem 0;
+    padding: 2rem 0;
     text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer a {
     color: var(--accent-green);
     text-decoration: none;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    font-weight: 500;
 }
 
 .footer a:hover {
     color: var(--accent-purple);
+    transform: translateY(-2px);
 }
 
-/* Buttons */
+/* Enhanced Buttons */
 .btn-primary {
-    background-color: var(--accent-green);
+    background: linear-gradient(45deg, var(--accent-green), var(--accent-blue));
     border: none;
     color: var(--text-primary);
     font-weight: bold;
     padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-subtle);
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: all 0.5s ease;
+}
+
+.btn-primary:hover::before {
+    left: 100%;
 }
 
 .btn-primary:hover {
-    background-color: var(--accent-purple);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-elevated);
 }
 
-/* Accent Colors */
+/* Accent Colors and Text Effects */
 .text-accent {
-    color: var(--accent-green);
+    background: linear-gradient(45deg, var(--accent-green), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .bg-accent {
@@ -120,17 +197,37 @@ body {
     color: var(--text-primary);
 }
 
-/* Responsive Design */
+/* Responsive Design Adjustments */
 @media (max-width: 768px) {
     .navbar-brand {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
     }
 
     .navbar-nav .nav-link {
-        font-size: 0.9rem;
+        font-size: 1rem;
+        text-align: center;
     }
 
     .main-content {
-        margin-top: 56px;
+        margin-top: 70px;
+        padding: 1.5rem 0.5rem;
     }
+}
+
+/* Scrollbar Styling for Modern Look */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--secondary-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, var(--accent-green), var(--accent-blue));
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, var(--accent-purple), var(--accent-blue));
 }

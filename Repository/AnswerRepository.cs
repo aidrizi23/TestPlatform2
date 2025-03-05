@@ -30,6 +30,7 @@ public class AnswerRepository : IAnswerRepository
         return await _context.Answers
             .Where(a => a.AttemptId == attemptId)
             .Include(a => a.Question)
+            .Include(x => x.Attempt)
             .AsNoTracking()
             .ToListAsync();
     }
