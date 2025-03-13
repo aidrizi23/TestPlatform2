@@ -1,21 +1,51 @@
 ﻿@{
-    ViewData["Title"] = "Home Page"; // Or whatever your title should be
+    ViewData["Title"] = "Test Access";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Enter your token to start the test.</p>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="main-content glass-effect rounded">
+                <div class="p-4">
+                    <div class="text-center mb-4">
+                        <h1 class="display-5 text-accent mb-3">Test Entry</h1>
+                        <p class="text-secondary">Please enter your access token to begin</p>
+                    </div>
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
-    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert bg-accent rounded mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            @TempData["ErrorMessage"]
+                        </div>
+                    }
 
-    <form asp-action="EnterToken" asp-controller="TestAttempt" method="post">
-        <div class="form-group">
-            <label for="token">Token:</label>
-            <input type="text" id="token" name="token" class="form-control" />
+                    <form asp-action="EnterToken" asp-controller="TestAttempt" method="post">
+                        <div class="mb-3">
+                            <input type="text" 
+                                   id="token" 
+                                   name="token" 
+                                   class="form-control bg-secondary text-primary border-0 rounded p-3" 
+                                   placeholder="Enter your access token" 
+                                   required 
+                                   autofocus />
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-play-circle me-2"></i>Start Test
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <small class="text-secondary">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Need help? Contact support
+                </small>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">Start Test</button>
-    </form>
+    </div>
 </div>

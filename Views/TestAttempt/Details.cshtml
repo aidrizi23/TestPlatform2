@@ -5,6 +5,116 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    /* General Styles */
+    body {
+        background-color: var(--primary-bg);
+        color: var(--text-primary);
+    }
+
+    .card {
+        background-color: var(--secondary-bg);
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
+        color: var(--text-primary);
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        padding: 20px;
+    }
+
+    .card-body {
+        padding: 30px;
+    }
+
+    .btn {
+        border: none;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        padding: 10px 20px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Custom Button Colors */
+    .btn-primary { background-color: var(--accent-green); color: var(--text-primary); }
+    .btn-primary:hover { background-color: var(--accent-purple); }
+    .btn-secondary { background-color: #6c757d; color: var(--text-primary); }
+    .btn-warning { background-color: #ffc107; color: #000; }
+    .btn-danger { background-color: #dc3545; color: var(--text-primary); }
+    .btn-info { background-color: #17a2b8; color: var(--text-primary); }
+    .btn-success { background-color: #28a745; color: var(--text-primary); }
+
+    /* Table Styles */
+    .table {
+        color: var(--text-primary);
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+
+    .table thead th {
+        background-color: var(--secondary-bg);
+        border: none;
+        padding: 15px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table tbody td {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: none;
+        padding: 15px;
+        vertical-align: middle;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    /* Modified hover styles to maintain text color */
+    .table tbody tr:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: var(--text-primary) !important;
+    }
+
+    .table tbody tr:hover td {
+        color: var(--text-primary);
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Filter Buttons */
+    .filter-buttons {
+        margin-bottom: 20px;
+    }
+
+    .filter-buttons .btn {
+        margin-right: 10px;
+    }
+
+    /* Status Badge */
+    .badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .badge-success { background-color: #28a745; }
+    .badge-warning { background-color: #ffc107; color: #000; }
+</style>
+
 <h1>Details</h1>
 <table class="table">
     <thead>
