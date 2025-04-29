@@ -31,7 +31,7 @@ public class AnswerRepository : IAnswerRepository
             .Where(a => a.AttemptId == attemptId)
             .Include(a => a.Question)
             .Include(x => x.Attempt)
-            .AsNoTracking()
+            // .AsNoTracking()
             .ToListAsync();
     }
 
