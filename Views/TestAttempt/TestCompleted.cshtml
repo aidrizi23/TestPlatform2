@@ -1,155 +1,158 @@
 @model TestPlatform2.Models.TestCompletedViewModel
 @{
-    ViewData["Title"] = "Test Completed";
+ViewData["Title"] = "Test Completed";
 }
 
-<style>
-    /* General Styles - pulling from other views */
-    body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
-    }
-
-    .card {
-        background-color: var(--secondary-bg);
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        color: var(--text-primary);
-        border-bottom: none;
-    }
-
-    .btn {
-        border: none;
-        border-radius: 4px;
-        transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-
-    .list-group-item {
-        background-color: var(--secondary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .badge {
-        font-weight: 500;
-    }
-
-    /* Custom Button Colors */
-    .btn-primary {
-        background-color: var(--accent-green);
-        color: var(--text-primary);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--accent-purple);
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: var(--text-primary);
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        color: #000;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        color: var(--text-primary);
-    }
-
-    .btn-info {
-        background-color: #17a2b8;
-        color: var(--text-primary);
-    }
-
-    .btn-success {
-        background-color: #28a745;
-        color: var(--text-primary);
-    }
-
-    /* Form Styles */
-    .form-control {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .form-control:focus {
-        background-color: var(--primary-bg);
-        border-color: var(--accent-green);
-        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        color: var(--text-primary);
-    }
-
-    /* Specific to this page */
-    .completed-header {
-        background: linear-gradient(90deg, var(--accent-green), var(--accent-purple));
-        color: var(--text-primary);
-    }
-
-    .alert-primary, .alert-info, .alert-light {
-        background-color: var(--secondary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .display-4 {
-        color: var(--accent-green);
-    }
-</style>
-
-<div class="container mt-5">
-    <div class="card shadow">
-        <div class="card-header completed-header">
-            <h2 class="mb-0"><i class="fas fa-check-circle"></i> Test Submitted Successfully</h2>
+<div class="container">
+    <!-- Celebration Animation -->
+    <div class="text-center mb-5">
+        <div class="completion-badge mb-4">
+            <i class="fas fa-check-circle fa-5x text-success"></i>
         </div>
-        <div class="card-body">
-            <!-- Test Details -->
-            <div class="mb-4">
-                <h4>@Model.TestName</h4>
-                <p class="text-muted">@Model.Description</p>
-            </div>
+        <h1 class="display-4 mb-3 text-gradient">Test Completed!</h1>
+        <p class="lead mb-0">Thank you for completing the test.</p>
+        <p class="text-muted">Your responses have been submitted successfully.</p>
+    </div>
 
-            <!-- Score and Time -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="alert alert-primary">
-                        <h5>Your Score</h5>
-                        <p class="display-4">@Model.Score.ToString("0.00") / @Model.TotalPoints.ToString("0.00")</p>
+    <!-- Test Results Card -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Test Summary</h3>
+                </div>
+
+                <div class="card-body">
+                    <!-- Test Info -->
+                    <div class="mb-4">
+                        <h4 class="mb-3">@Model.TestName</h4>
+                        <p>@Model.Description</p>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Score Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="card h-100">
+                                <div class="card-header text-center">
+                                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Your Score</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="score-display">
+                                        @{
+                                        var percentScore = (Model.Score / Model.TotalPoints) * 100;
+                                        var scoreClass = percentScore >= 80 ? "text-success" :
+                                        percentScore >= 60 ? "text-info" :
+                                        percentScore >= 40 ? "text-warning" : "text-danger";
+                                        }
+                                        <h2 class="display-1 @scoreClass mb-0">@Model.Score.ToString("0.00")</h2>
+                                        <h5 class="text-muted">out of @Model.TotalPoints.ToString("0.00")</h5>
+                                        <div class="progress mt-3" style="height: 10px;">
+                                            <div class="progress-bar @(scoreClass.Replace("text", "bg"))" role="progressbar"
+                                                 style="width: @percentScore.ToString("0.00")%;"
+                                                 aria-valuenow="@percentScore.ToString("0.00")" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        <p class="mt-2 mb-0">@percentScore.ToString("0.00")%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header text-center">
+                                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Test Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-user me-2"></i>Student</span>
+                                            <span>@Model.FirstName @Model.LastName</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-envelope me-2"></i>Email</span>
+                                            <span>@Model.StudentEmail</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-clock me-2"></i>Time Taken</span>
+                                            <span>@(Model.TimeTaken.Hours > 0 ? $"{Model.TimeTaken.Hours}h " : "")@Model.TimeTaken.Minutes min @Model.TimeTaken.Seconds sec</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><i class="fas fa-calendar-check me-2"></i>Completed On</span>
+                                            <span>@Model.EndTime.ToString("MMM d, yyyy HH:mm")</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="alert alert-info">
-                        <h5>Time Taken</h5>
-                        <p class="lead">
-                            @($"{Model.TimeTaken.Minutes}m {Model.TimeTaken.Seconds}s")
-                        </p>
-                    </div>
+
+                <div class="card-footer text-center">
+                    <h5 class="mb-3">Thank you for taking this test!</h5>
+                    <a href="/" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Return to Home
+                    </a>
                 </div>
             </div>
-
-            <!-- Student Info -->
-            <div class="alert alert-light">
-                <p class="mb-1"><strong>Name:</strong> @Model.FirstName @Model.LastName</p>
-                <p class="mb-1"><strong>Email:</strong> @Model.StudentEmail</p>
-                <p class="mb-0"><strong>Submitted at:</strong> @Model.EndTime.ToString("MMMM dd, yyyy hh:mm tt")</p>
-            </div>
-            
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <!-- No JavaScript required for this view -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Celebration animation for score display
+        const scoreDisplay = document.querySelector('.score-display');
+
+        if (scoreDisplay) {
+            scoreDisplay.style.opacity = '0';
+            scoreDisplay.style.transform = 'scale(0.9)';
+            scoreDisplay.style.transition = 'all 0.5s ease';
+
+            setTimeout(() => {
+                scoreDisplay.style.opacity = '1';
+                scoreDisplay.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        // Badge animation
+        const badge = document.querySelector('.completion-badge');
+
+        if (badge) {
+            badge.style.opacity = '0';
+            badge.style.transform = 'scale(0.5)';
+            badge.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+
+            setTimeout(() => {
+                badge.style.opacity = '1';
+                badge.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Percentage counter animation
+        const scoreValue = parseFloat(document.querySelector('.progress-bar').getAttribute('aria-valuenow'));
+        const scoreElement = document.querySelector('.progress-bar').nextElementSibling;
+
+        if (scoreElement) {
+            let count = 0;
+            const duration = 1500; // ms
+            const interval = 20; // ms
+            const increment = scoreValue / (duration / interval);
+
+            const counter = setInterval(() => {
+                count += increment;
+
+                if (count >= scoreValue) {
+                    count = scoreValue;
+                    clearInterval(counter);
+                }
+
+                scoreElement.textContent = count.toFixed(2) + '%';
+            }, interval);
+        }
+    });
+</script>
 }

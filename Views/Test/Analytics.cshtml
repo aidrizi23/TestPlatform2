@@ -1,0 +1,485 @@
+@model TestPlatform2.Models.TestAnalyticsViewModel
+@{
+    ViewData["Title"] = "Test Analytics";
+}
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-0">
+                <i class="fas fa-chart-line me-2 text-primary"></i>Analytics Dashboard
+            </h1>
+            <p class="lead text-muted">@Model.TestName</p>
+            <p class="text-muted">@Model.Description</p>
+        </div>
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <a asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Test
+            </a>
+        </div>
+    </div>
+    
+    <!-- Summary Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Total Attempts</h5>
+                        <span class="badge bg-primary rounded-pill">@Model.TotalAttempts</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Completed</span>
+                        <span>@Model.CompletedAttempts</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>In Progress</span>
+                        <span>@Model.InProgressAttempts</span>
+                    </div>
+                    <div class="progress mt-3" style="height: 8px;">
+                        @{
+                            var completedPercentage = Model.TotalAttempts > 0 
+                                ? (double)Model.CompletedAttempts / Model.TotalAttempts * 100 
+                                : 0;
+                            var inProgressPercentage = Model.TotalAttempts > 0 
+                                ? (double)Model.InProgressAttempts / Model.TotalAttempts * 100 
+                                : 0;
+                        }
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             style="width: @completedPercentage%;" 
+                             aria-valuenow="@completedPercentage" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                        <div class="progress-bar bg-warning" role="progressbar" 
+                             style="width: @inProgressPercentage%;" 
+                             aria-valuenow="@inProgressPercentage" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Average Score</h5>
+                        <div class="text-primary fw-bold">
+                            @Model.AverageScore.ToString("0.00")
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Highest</span>
+                        <span>@Model.HighestScore.ToString("0.00")</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Lowest</span>
+                        <span>@Model.LowestScore.ToString("0.00")</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Median</span>
+                        <span>@Model.MedianScore.ToString("0.00")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Passing Rate</h5>
+                        <div class="text-success fw-bold">
+                            @Model.PassingRate.ToString("0.0")%
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Standard Deviation</span>
+                        <span>@Model.StandardDeviation.ToString("0.00")</span>
+                    </div>
+                    
+                    @{
+                        string passRateColor = Model.PassingRate >= 80 ? "bg-success" :
+                                              Model.PassingRate >= 60 ? "bg-info" :
+                                              Model.PassingRate >= 40 ? "bg-warning" : "bg-danger";
+                    }
+                    
+                    <div class="progress mt-3" style="height: 8px;">
+                        <div class="progress-bar @passRateColor" role="progressbar" 
+                             style="width: @Model.PassingRate%;" 
+                             aria-valuenow="@Model.PassingRate" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">Average Time</h5>
+                        <div class="text-info fw-bold">
+                            @Model.AverageCompletionTime.ToString(@"hh\:mm\:ss")
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Fastest</span>
+                        <span>@Model.FastestCompletionTime.ToString(@"hh\:mm\:ss")</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Slowest</span>
+                        <span>@Model.SlowestCompletionTime.ToString(@"hh\:mm\:ss")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Score Distribution Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Score Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="scoreDistributionChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question Success Rate Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Question Success Rates</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="questionSuccessChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Question Performance Table -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Question Performance</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Type</th>
+                            <th>Points</th>
+                            <th>Avg. Points</th>
+                            <th>Success Rate</th>
+                            <th>Correct/Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var question in Model.QuestionPerformance)
+                        {
+                            var successClass = question.SuccessRate >= 70 ? "text-success" :
+                                              question.SuccessRate >= 40 ? "text-warning" : "text-danger";
+                            
+                            <tr>
+                                <td>@(question.Position + 1)</td>
+                                <td>
+                                    <span title="@question.QuestionText">
+                                        @(question.QuestionText.Length > 50 
+                                            ? question.QuestionText.Substring(0, 47) + "..." 
+                                            : question.QuestionText)
+                                    </span>
+                                </td>
+                                <td>@question.QuestionType</td>
+                                <td>@question.Points</td>
+                                <td>@question.AveragePoints.ToString("0.00")</td>
+                                <td class="@successClass fw-bold">@question.SuccessRate.ToString("0.0")%</td>
+                                <td>@question.CorrectAnswers/@(question.CorrectAnswers + question.IncorrectAnswers)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Performance Section -->
+    <div class="row mb-4">
+        <!-- Top Performers -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Top Performers</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Score</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TopPerformers?.Any() == true)
+                                {
+                                    foreach (var student in Model.TopPerformers)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div>@student.StudentName</div>
+                                                <small class="text-muted">@student.StudentEmail</small>
+                                            </td>
+                                            <td class="text-success fw-bold">@student.ScorePercentage.ToString("0.0")%</td>
+                                            <td>@student.CompletionTime.ToString(@"hh\:mm\:ss")</td>
+                                            <td>@student.CompletionDate.ToString("MMM d, yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center">No data available</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Struggling Students -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Struggling Students</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Score</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.StrugglingSudents?.Any() == true)
+                                {
+                                    foreach (var student in Model.StrugglingSudents)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div>@student.StudentName</div>
+                                                <small class="text-muted">@student.StudentEmail</small>
+                                            </td>
+                                            <td class="text-danger fw-bold">@student.ScorePercentage.ToString("0.0")%</td>
+                                            <td>@student.CompletionTime.ToString(@"hh\:mm\:ss")</td>
+                                            <td>@student.CompletionDate.ToString("MMM d, yyyy")</td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center">No data available</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Attempts -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Recent Attempts</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.RecentAttempts?.Any() == true)
+                        {
+                            foreach (var attempt in Model.RecentAttempts)
+                            {
+                                <tr>
+                                    <td>
+                                        <div>@attempt.StudentName</div>
+                                        <small class="text-muted">@attempt.StudentEmail</small>
+                                    </td>
+                                    <td>
+                                        @if (attempt.IsCompleted)
+                                        {
+                                            <span class="fw-bold">@attempt.ScorePercentage.ToString("0.0")%</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not completed</span>
+                                        }
+                                    </td>
+                                    <td>@attempt.CompletionDate.ToString("MMM d, yyyy")</td>
+                                    <td>
+                                        @if (attempt.IsCompleted)
+                                        {
+                                            <span class="badge bg-success">Completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark">In Progress</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-controller="TestAttempt" asp-action="Details" asp-route-id="@attempt.AttemptId" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center">No recent attempts</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Score Distribution Chart
+            const scoreDistributionCtx = document.getElementById('scoreDistributionChart').getContext('2d');
+            new Chart(scoreDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Json.Serialize(Model.ScoreRanges),
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: @Json.Serialize(Model.ScoreDistribution),
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    return tooltipItems[0].label + ' score range';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Question Success Rate Chart
+            const questionSuccessData = @Json.Serialize(Model.QuestionPerformance
+                .Select(q => new { number = q.Position + 1, rate = q.SuccessRate }));
+                
+            const questionSuccessCtx = document.getElementById('questionSuccessChart').getContext('2d');
+            new Chart(questionSuccessCtx, {
+                type: 'bar',
+                data: {
+                    labels: questionSuccessData.map(q => 'Q' + q.number),
+                    datasets: [{
+                        label: 'Success Rate (%)',
+                        data: questionSuccessData.map(q => q.rate),
+                        backgroundColor: questionSuccessData.map(q => {
+                            if (q.rate >= 70) return 'rgba(22, 163, 74, 0.7)'; // Green
+                            if (q.rate >= 40) return 'rgba(245, 158, 11, 0.7)'; // Amber
+                            return 'rgba(220, 38, 38, 0.7)'; // Red
+                        }),
+                        borderColor: questionSuccessData.map(q => {
+                            if (q.rate >= 70) return 'rgba(22, 163, 74, 1)';
+                            if (q.rate >= 40) return 'rgba(245, 158, 11, 1)';
+                            return 'rgba(220, 38, 38, 1)';
+                        }),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const questionIndex = tooltipItems[0].dataIndex;
+                                    const questionPosition = questionSuccessData[questionIndex].number;
+                                    return 'Question ' + questionPosition;
+                                },
+                                label: function(context) {
+                                    return 'Success Rate: ' + context.raw.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

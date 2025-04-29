@@ -1,220 +1,143 @@
-@* @model IEnumerable<TestPlatform2.Data.Test> *@
-@* *@
-@* @{ *@
-@*     ViewData["Title"] = "My Tests"; *@
-@* } *@
-@* *@
-@* <div class="container mt-4"> *@
-@*     <h2>My Tests</h2> *@
-@*     <p> *@
-@*         <a asp-action="Create" class="btn btn-primary">Create New Test</a> *@
-@*     </p> *@
-@* *@
-@*     @if (!Model.Any()) *@
-@*     { *@
-@*         <div class="alert alert-info">No tests found. Create your first test!</div> *@
-@*     } *@
-@*     else *@
-@*     { *@
-@*         <table class="table table-striped"> *@
-@*             <thead> *@
-@*             <tr> *@
-@*                 <th>Test Name</th> *@
-@*                 <th>Description</th> *@
-@*                 <th>Time Limit (mins)</th> *@
-@*                 <th>Max Attempts</th> *@
-@*                 <th>Actions</th> *@
-@*             </tr> *@
-@*             </thead> *@
-@*             <tbody> *@
-@*             @foreach (var test in Model) *@
-@*             { *@
-@*                 <tr> *@
-@*                     <td>@test.TestName</td> *@
-@*                     <td>@test.Description</td> *@
-@*                     <td>@test.TimeLimit</td> *@
-@*                     <td>@test.MaxAttempts</td> *@
-@*                     <td> *@
-@*                         <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning">Edit</a> *@
-@*                         <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info">Details</a> *@
-@*                         <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger">Delete</a> *@
-@*                     </td> *@
-@*                 </tr> *@
-@*             } *@
-@*             </tbody> *@
-@*         </table> *@
-@*     } *@
-@* </div> *@
-@* *@
-@* @section Scripts { *@
-@*     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} *@
-@* } *@
 @model IEnumerable<TestPlatform2.Data.Test>
 @{
     ViewData["Title"] = "My Tests";
 }
 
-<style>
-    /* Page Title Styling */
-    h2 {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: var(--text-primary);
-        text-align: center;
-        margin-bottom: 3rem;
-        position: relative;
-    }
-
-    h2::after {
-        content: '';
-        display: block;
-        width: 80px;
-        height: 3px;
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        margin: 1rem auto 0;
-    }
-
-    /* Create New Test Button */
-    .btn-primary {
-        background: var(--accent-green);
-        border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        background-color: var(--accent-purple);
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    /* No Tests Found Alert */
-    .alert-info {
-        background: var(--secondary-bg);
-        border: 1px solid var(--accent-green);
-        color: var(--text-primary);
-        font-size: 1.2rem;
-        font-weight: 500;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Card Styling */
-    .card {
-        background-color: var(--secondary-bg);
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .card-header {
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        border-radius: 8px 8px 0 0;
-        color: var(--text-primary);
-        font-size: 1.2rem;
-        font-weight: bold;
-    }
-
-    /* List Group Styling */
-    .list-group-item {
-        background-color: var(--secondary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .list-group-item:hover {
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-
-    /* Action Buttons */
-    .btn-group .btn {
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        transition: background-color 0.2s ease, box-shadow 0.2s ease;
-        padding: 0.5rem 0.75rem;
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        border: none;
-        color: #000;
-    }
-
-    .btn-info {
-        background-color: var(--accent-green);
-        border: none;
-        color: var(--text-primary);
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        border: none;
-        color: var(--text-primary);
-    }
-
-    .btn-group .btn:hover {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    .text-muted {
-        color: var(--text-secondary) !important;
-    }
-</style>
-
-<div class="container mt-5">
-    <!-- Page Title -->
-    <h2>My Tests</h2>
-
-    <!-- Create New Test Button -->
-    <div class="d-flex justify-content-end mb-4">
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Create New Test
-        </a>
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-clipboard-list me-2"></i>My Tests
+                <small class="text-muted d-block mt-2 fs-6">Manage your tests and view student results</small>
+            </h1>
+        </div>
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create New Test
+            </a>
+        </div>
     </div>
-
-    <!-- No Tests Found Alert -->
+    
+    <!-- Success Message from TempData -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+            <i class="fas fa-check-circle me-2"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    
+    <!-- Test List Section -->
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center" role="alert">
-            <i class="fas fa-info-circle me-2"></i>No tests found. Create your first test!
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                    <h3>No Tests Yet</h3>
+                    <p class="text-muted">You haven't created any tests yet. Get started by creating your first test!</p>
+                </div>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create First Test
+                </a>
+            </div>
         </div>
     }
     else
     {
-        <!-- Tests List -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">Test List</h5>
-            </div>
-            <div class="card-body">
-                <div class="list-group">
-                    @foreach (var test in Model)
-                    {
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5 class="mb-1">@test.TestName</h5>
-                                <p class="mb-1 text-muted">@test.Description</p>
-                                <small class="text-muted">
-                                    Time Limit: @test.TimeLimit mins | Max Attempts: @test.MaxAttempts
-                                </small>
-                            </div>
-                            <div class="btn-group">
-                                <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning" title="Edit">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                                <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info" title="Details">
-                                    <i class="fas fa-eye"></i> Details
-                                </a>
-                                <a asp-action="Delete" asp-route-id="@test.Id" class="btn btn-sm btn-danger" title="Delete">
-                                    <i class="fas fa-trash"></i> Delete
-                                </a>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            @foreach (var test in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-truncate" title="@test.TestName">@test.TestName</h5>
+                            <span class="badge @(test.IsLocked ? "bg-danger" : "bg-success")">
+                                @(test.IsLocked ? "Locked" : "Active")
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">@(string.IsNullOrEmpty(test.Description) ? "No description" : test.Description)</p>
+                            <div class="d-flex flex-wrap my-3 gap-2">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-question-circle me-1"></i>
+                                    @(test.Questions?.Count ?? 0) Questions
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-clock me-1"></i>
+                                    @test.TimeLimit min
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-redo me-1"></i>
+                                    @test.MaxAttempts @(test.MaxAttempts == 1 ? "Attempt" : "Attempts")
+                                </span>
+                                @if (test.RandomizeQuestions)
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-random me-1"></i>
+                                        Randomized
+                                    </span>
+                                }
                             </div>
                         </div>
-                    }
+                        <div class="card-footer">
+                            <div class="btn-group d-flex">
+                                <a asp-action="Details" asp-route-id="@test.Id" class="btn btn-sm btn-info flex-fill">
+                                    <i class="fas fa-eye me-1"></i> Details
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@test.Id" class="btn btn-sm btn-warning flex-fill">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-danger flex-fill" 
+                                        onclick="confirmDelete('@test.Id', '@test.TestName')">
+                                    <i class="fas fa-trash me-1"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     }
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the test "<span id="testNameToDelete"></span>"?</p>
+                <p class="text-danger">This action cannot be undone and will delete all questions and student attempts.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Delete Test
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function confirmDelete(id, name) {
+            // Set the test name in the modal
+            document.getElementById('testNameToDelete').textContent = name;
+            
+            // Set the delete link
+            document.getElementById('confirmDeleteBtn').href = '@Url.Action("Delete", "Test")/' + id;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+    </script>
 }

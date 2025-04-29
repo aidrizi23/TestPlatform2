@@ -1,0 +1,338 @@
+@model TestPlatform2.Models.QuestionAnalyticsViewModel  
+@using TestPlatform2.Data.Questions
+@{
+    ViewData["Title"] = "Question Analytics";
+    
+    // Determine question type for specific rendering
+    bool isMultipleChoice = Model.Question is MultipleChoiceQuestion;
+    bool isTrueFalse = Model.Question is TrueFalseQuestion;
+    bool isShortAnswer = Model.Question is ShortAnswerQuestion;
+    
+    // Cast to specific type if needed
+    MultipleChoiceQuestion mcQuestion = isMultipleChoice ? (MultipleChoiceQuestion)Model.Question : null;
+    TrueFalseQuestion tfQuestion = isTrueFalse ? (TrueFalseQuestion)Model.Question : null;
+    ShortAnswerQuestion saQuestion = isShortAnswer ? (ShortAnswerQuestion)Model.Question : null;
+}
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-0">
+                <i class="fas fa-question-circle me-2 text-primary"></i>Question Analytics
+            </h1>
+            <p class="lead text-muted">Test: @Model.TestName</p>
+        </div>
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <a asp-action="Analytics" asp-route-id="@Model.TestId" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Analytics
+            </a>
+        </div>
+    </div>
+    
+    <!-- Question Card -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Question Details</h5>
+                <span class="badge bg-primary">Question @(Model.Question.Position + 1)</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="question-text mb-4">
+                <h4>@Model.Question.Text</h4>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="fw-bold">Type:</span> 
+                        <span class="badge bg-info">@Model.Analytics.QuestionType</span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bold">Points:</span> @Model.Question.Points
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bold">Average Points Earned:</span> 
+                        <span class="@(Model.Analytics.AveragePoints >= (Model.Question.Points * 0.7) ? "text-success" : "text-danger")">
+                            @Model.Analytics.AveragePoints.ToString("0.00")
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <span class="fw-bold">Success Rate:</span> 
+                        <span class="@(Model.Analytics.SuccessRate >= 70 ? "text-success" : Model.Analytics.SuccessRate >= 40 ? "text-warning" : "text-danger")">
+                            @Model.Analytics.SuccessRate.ToString("0.0")%
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bold">Correct Answers:</span> @Model.Analytics.CorrectAnswers
+                    </div>
+                    <div class="mb-3">
+                        <span class="fw-bold">Incorrect Answers:</span> @Model.Analytics.IncorrectAnswers
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Type Specific Content -->
+            @if (isMultipleChoice)
+            {
+                <hr class="my-4">
+                <h5 class="mb-3">Answer Options</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="list-group">
+                            @foreach (var option in mcQuestion.Options)
+                            {
+                                var isCorrect = mcQuestion.CorrectAnswers.Contains(option);
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        @option
+                                        @if (isCorrect)
+                                        {
+                                            <i class="fas fa-check text-success ms-2"></i>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="mt-2 small text-muted">
+                            @if (mcQuestion.AllowMultipleSelections)
+                            {
+                                <span><i class="fas fa-info-circle me-1"></i>Multiple selections allowed</span>
+                            }
+                            else
+                            {
+                                <span><i class="fas fa-info-circle me-1"></i>Single selection only</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Answer Distribution</h6>
+                                <canvas id="answerDistributionChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (isTrueFalse)
+            {
+                <hr class="my-4">
+                <h5 class="mb-3">Answer Options</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="list-group">
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    True
+                                    @if (tfQuestion.CorrectAnswer)
+                                    {
+                                        <i class="fas fa-check text-success ms-2"></i>
+                                    }
+                                </div>
+                            </div>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    False
+                                    @if (!tfQuestion.CorrectAnswer)
+                                    {
+                                        <i class="fas fa-check text-success ms-2"></i>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">Answer Distribution</h6>
+                                <canvas id="answerDistributionChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (isShortAnswer)
+            {
+                <hr class="my-4">
+                <h5 class="mb-3">Correct Answer</h5>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>@saQuestion.ExpectedAnswer
+                </div>
+                <div class="mb-2 small text-muted">
+                    @if (saQuestion.CaseSensitive)
+                    {
+                        <span><i class="fas fa-info-circle me-1"></i>Case sensitive matching</span>
+                    }
+                    else
+                    {
+                        <span><i class="fas fa-info-circle me-1"></i>Case insensitive matching</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Performance Chart -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Success Rate Comparison</h5>
+        </div>
+        <div class="card-body">
+            <canvas id="successRateChart" height="100"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup colors
+            const successColor = 'rgba(22, 163, 74, 0.7)';
+            const successBorder = 'rgba(22, 163, 74, 1)';
+            const dangerColor = 'rgba(220, 38, 38, 0.7)';
+            const dangerBorder = 'rgba(220, 38, 38, 1)';
+            
+            // Answer Distribution Chart for Multiple Choice or True/False
+            @if (isMultipleChoice || isTrueFalse)
+            {
+                <text>
+                // Get answer distribution data
+                const answerDistributionData = @Json.Serialize(Model.Analytics.AnswerDistribution);
+                
+                // For multiple choice, we want to display each option with its count
+                // For true/false, just display True and False counts
+                let labels = [];
+                let data = [];
+                let backgroundColor = [];
+                let borderColor = [];
+                
+                @if (isMultipleChoice)
+                {
+                    <text>
+                    // Ensure all options are included, even if no one selected them
+                    @foreach (var option in mcQuestion.Options)
+                    {
+                        <text>
+                        labels.push('@option');
+                        const count = answerDistributionData['@option'] || 0;
+                        data.push(count);
+                        
+                        // Check if this option is a correct answer
+                        const isCorrect = @Json.Serialize(mcQuestion.CorrectAnswers.Contains(option));
+                        backgroundColor.push(isCorrect ? successColor : dangerColor);
+                        borderColor.push(isCorrect ? successBorder : dangerBorder);
+                        </text>
+                    }
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    // True/False - handle the two options
+                    labels = ['True', 'False'];
+                    data = [
+                        answerDistributionData['True'] || 0,
+                        answerDistributionData['False'] || 0
+                    ];
+                    
+                    // Correctly mark which option is correct
+                    const correctAnswer = @Json.Serialize(tfQuestion.CorrectAnswer);
+                    backgroundColor = [
+                        correctAnswer ? successColor : dangerColor,
+                        !correctAnswer ? successColor : dangerColor
+                    ];
+                    borderColor = [
+                        correctAnswer ? successBorder : dangerBorder,
+                        !correctAnswer ? successBorder : dangerBorder
+                    ];
+                    </text>
+                }
+                
+                // Create the chart
+                const answerDistributionCtx = document.getElementById('answerDistributionChart').getContext('2d');
+                new Chart(answerDistributionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Number of Responses',
+                            data: data,
+                            backgroundColor: backgroundColor,
+                            borderColor: borderColor,
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+                </text>
+            }
+            
+            // Success Rate Horizontal Bar Chart comparing this question to overall average
+            const successRateCtx = document.getElementById('successRateChart').getContext('2d');
+            new Chart(successRateCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['This Question', 'Test Average'],
+                    datasets: [{
+                        axis: 'y',
+                        label: 'Success Rate (%)',
+                        data: [@Model.Analytics.SuccessRate, @Model.Analytics.SuccessRate], // Replace second value with test average when available
+                        backgroundColor: [
+                            @Model.Analytics.SuccessRate >= 70 ? 'successColor' : 
+                            @Model.Analytics.SuccessRate >= 40 ? 'rgba(245, 158, 11, 0.7)' : 'dangerColor',
+                            'rgba(37, 99, 235, 0.7)'
+                        ],
+                        borderColor: [
+                            @Model.Analytics.SuccessRate >= 70 ? 'successBorder' : 
+                            @Model.Analytics.SuccessRate >= 40 ? 'rgba(245, 158, 11, 1)' : 'dangerBorder',
+                            'rgba(37, 99, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

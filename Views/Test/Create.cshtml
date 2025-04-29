@@ -1,114 +1,126 @@
-<style>
-    body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
-    }
-
-    .container {
-        max-width: 800px;
-    }
-
-    .card {
-        background-color: var(--secondary-bg);
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-    }
-
-    .card-body {
-        padding: 1.5rem;
-    }
-
-    .form-control, .form-select {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .form-control:focus, .form-select:focus {
-        background-color: var(--primary-bg);
-        border-color: var(--accent-green);
-        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        color: var(--text-primary);
-    }
-
-    .form-check-input {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-
-    .form-check-input:checked {
-        background-color: var(--accent-green);
-        border-color: var(--accent-green);
-    }
-
-    .btn-primary {
-        background-color: var(--accent-green);
-        border: none;
-        color: var(--text-primary);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--accent-purple);
-    }
-
-    .text-danger {
-        color: #dc3545 !important;
-    }
-</style>
-
 @model TestForCreationDto
 
-<div class="container mt-4">
-    <h2 class="mb-4">Create New Test</h2>
+@{
+ViewData["Title"] = "Create Test";
+}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="fas fa-plus-circle me-2"></i>Create New Test
+                <small class="text-muted d-block mt-2 fs-6">Enter the details for your new test</small>
+            </h1>
+        </div>
+        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Tests
+            </a>
+        </div>
+    </div>
 
     <div class="card">
-        <div class="card-body">
-            <form asp-action="Create" method="post">
-                <!-- Validation Summary at the top for visibility -->
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="card-header">
+            <h4 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Test Information</h4>
+        </div>
+        <div class="card-body p-4">
+            <!-- Validation Summary -->
+            @if (!ViewData.ModelState.IsValid)
+            {
+            <div class="alert alert-danger">
+                <div asp-validation-summary="ModelOnly" class="mb-0"></div>
+            </div>
+            }
 
+            <form asp-action="Create" method="post">
                 <!-- Test Title -->
-                <div class="mb-3">
-                    <label asp-for="Title" class="form-label fw-bold"></label>
-                    <input asp-for="Title" class="form-control" required />
+                <div class="mb-4">
+                    <label asp-for="Title" class="form-label">Test Title</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                        <input asp-for="Title" class="form-control" placeholder="Enter a descriptive title for your test" required />
+                    </div>
                     <span asp-validation-for="Title" class="text-danger"></span>
                 </div>
 
                 <!-- Description -->
-                <div class="mb-3">
-                    <label asp-for="Description" class="form-label fw-bold"></label>
-                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <div class="mb-4">
+                    <label asp-for="Description" class="form-label">Description</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                        <textarea asp-for="Description" class="form-control" rows="3"
+                                  placeholder="Enter instructions or details about the test"></textarea>
+                    </div>
                     <span asp-validation-for="Description" class="text-danger"></span>
                 </div>
 
-                <!-- Randomize Questions -->
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="RandomizeQuestions" id="randomizeQuestions" />
-                    <label class="form-check-label" for="randomizeQuestions">Randomize Questions</label>
-                </div>
-
-                <!-- Time Limit -->
-                <div class="mb-3">
-                    <label asp-for="TimeLimit" class="form-label fw-bold"></label>
-                    <div class="input-group">
-                        <input asp-for="TimeLimit" class="form-control" type="number" min="1" required />
-                        <span class="input-group-text">minutes</span>
+                <!-- Test Settings -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="TimeLimit" class="form-label">Time Limit (minutes)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                            <input asp-for="TimeLimit" class="form-control" type="number" min="1" max="180" required />
+                        </div>
+                        <span asp-validation-for="TimeLimit" class="text-danger"></span>
                     </div>
-                    <span asp-validation-for="TimeLimit" class="text-danger"></span>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="MaxAttempts" class="form-label">Max Attempts</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-redo"></i></span>
+                            <input asp-for="MaxAttempts" class="form-control" type="number" min="1" max="10" required />
+                        </div>
+                        <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <div class="form-check form-switch">
+                            <input asp-for="RandomizeQuestions" class="form-check-input" type="checkbox" role="switch" id="randomizeQuestions" />
+                            <label asp-for="RandomizeQuestions" class="form-check-label">
+                                <i class="fas fa-random me-2"></i>Randomize Questions
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Max Attempts -->
-                <div class="mb-3">
-                    <label asp-for="MaxAttempts" class="form-label fw-bold"></label>
-                    <input asp-for="MaxAttempts" class="form-control" type="number" min="1" required />
-                    <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+                <!-- Test Preview -->
+                <div class="card mt-4 mb-4 bg-light border-0">
+                    <div class="card-body">
+                        <h5 class="mb-3"><i class="fas fa-eye me-2"></i>Test Preview</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="test-preview-item">
+                                    <span class="preview-label">Title:</span>
+                                    <span id="preview-title" class="preview-value">@(string.IsNullOrEmpty(Model.Title) ? "Your test title" : Model.Title)</span>
+                                </div>
+                                <div class="test-preview-item">
+                                    <span class="preview-label">Description:</span>
+                                    <span id="preview-description" class="preview-value">@(string.IsNullOrEmpty(Model.Description) ? "Test description will appear here" : Model.Description)</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="test-preview-item">
+                                    <span class="preview-label">Time Limit:</span>
+                                    <span id="preview-timeLimit" class="preview-value">@Model.TimeLimit minutes</span>
+                                </div>
+                                <div class="test-preview-item">
+                                    <span class="preview-label">Max Attempts:</span>
+                                    <span id="preview-maxAttempts" class="preview-value">@Model.MaxAttempts</span>
+                                </div>
+                                <div class="test-preview-item">
+                                    <span class="preview-label">Randomize Questions:</span>
+                                    <span id="preview-randomize" class="preview-value">@(Model.RandomizeQuestions ? "Yes" : "No")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="d-grid gap-2">
+                <!-- Submit Button -->
+                <div class="d-flex justify-content-end mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-plus-circle me-2"></i>Create Test
+                        <i class="fas fa-save me-2"></i>Create Test
                     </button>
                 </div>
             </form>
@@ -117,5 +129,60 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus the title field when the page loads
+        document.getElementById('Title').focus();
+
+        // Live preview update
+        const titleInput = document.getElementById('Title');
+        const descriptionInput = document.getElementById('Description');
+        const timeLimitInput = document.getElementById('TimeLimit');
+        const maxAttemptsInput = document.getElementById('MaxAttempts');
+        const randomizeInput = document.getElementById('randomizeQuestions');
+
+        const previewTitle = document.getElementById('preview-title');
+        const previewDescription = document.getElementById('preview-description');
+        const previewTimeLimit = document.getElementById('preview-timeLimit');
+        const previewMaxAttempts = document.getElementById('preview-maxAttempts');
+        const previewRandomize = document.getElementById('preview-randomize');
+
+        // Update title preview
+        if (titleInput && previewTitle) {
+            titleInput.addEventListener('input', function() {
+                previewTitle.textContent = this.value || 'Your test title';
+            });
+        }
+
+        // Update description preview
+        if (descriptionInput && previewDescription) {
+            descriptionInput.addEventListener('input', function() {
+                previewDescription.textContent = this.value || 'Test description will appear here';
+            });
+        }
+
+        // Update time limit preview
+        if (timeLimitInput && previewTimeLimit) {
+            timeLimitInput.addEventListener('input', function() {
+                previewTimeLimit.textContent = this.value + ' minutes';
+            });
+        }
+
+        // Update max attempts preview
+        if (maxAttemptsInput && previewMaxAttempts) {
+            maxAttemptsInput.addEventListener('input', function() {
+                previewMaxAttempts.textContent = this.value;
+            });
+        }
+
+        // Update randomize preview
+        if (randomizeInput && previewRandomize) {
+            randomizeInput.addEventListener('change', function() {
+                previewRandomize.textContent = this.checked ? 'Yes' : 'No';
+            });
+        }
+    });
+</script>
 }

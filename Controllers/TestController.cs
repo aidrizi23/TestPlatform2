@@ -14,12 +14,18 @@ public class TestController : Controller
     private readonly ITestRepository _testRepository;
     private readonly UserManager<User> _userManager;
     private readonly ITestAttemptRepository _testAttemptRepository;
+    private readonly ITestAnalyticsRepository _testAnalyticsRepository;
     
-    public TestController(ITestRepository testRepository, UserManager<User> userManager, ITestAttemptRepository testAttemptRepository)
+    public TestController(
+        ITestRepository testRepository, 
+        UserManager<User> userManager, 
+        ITestAttemptRepository testAttemptRepository,
+        ITestAnalyticsRepository testAnalyticsRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
         _testAttemptRepository = testAttemptRepository;
+        _testAnalyticsRepository = testAnalyticsRepository;
     }
     
     // GET: /Test/Index
@@ -294,5 +300,79 @@ public class TestController : Controller
         await _testRepository.Update(test);
 
         return Json(new { success = true, isLocked = test.IsLocked });
+    }
+    
+    
+    
+    
+    
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Analytics(string id)
+    {
+        // Get and authenticate the user
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        // Get the test by id
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return NotFound("Test not found");
+                
+        // Verify the user owns this test
+        if (test.User != user)
+            return Unauthorized("You do not have permission to view analytics for this test");
+
+        // Get the analytics data
+        var analyticsData = await _testAnalyticsRepository.GetTestAnalyticsAsync(id);
+        if (analyticsData is null)
+            return NotFound("Could not generate analytics for this test");
+
+        return View(analyticsData);
+    }
+    
+    
+    
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> QuestionAnalytics(string testId, string questionId)
+    {
+        // Get and authenticate the user
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        // Get the test by id
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+        
+        // Verify the user owns this test
+        if (test.User != user)
+            return Unauthorized("You do not have permission to view analytics for this test");
+    
+        // Get the question
+        var question = test.Questions.FirstOrDefault(q => q.Id == questionId);
+        if (question is null)
+            return NotFound("Question not found");
+    
+        // Get the question analytics data
+        var questionAnalytics = (await _testAnalyticsRepository.GetQuestionPerformanceDataAsync(testId))
+            .FirstOrDefault(q => q.QuestionId == questionId);
+    
+        if (questionAnalytics is null)
+            return NotFound("Could not generate analytics for this question");
+    
+        // Pass both the question and its analytics to the view
+        var viewModel = new QuestionAnalyticsViewModel
+        {
+            TestId = testId,
+            TestName = test.TestName,
+            Question = question,
+            Analytics = questionAnalytics
+        };
+    
+        return View(viewModel);
     }
 }

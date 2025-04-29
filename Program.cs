@@ -41,6 +41,9 @@ public class Program
         builder.Services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         
+        builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
+
+        
 
         var app = builder.Build();
 

@@ -4,395 +4,559 @@
 @using TestPlatform2.Models
 
 @{
-    ViewData["Title"] = "Take Test";
+ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
 }
 
-<style>
-    /* General Styles - pulling from other views */
-    body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
-    }
-
-    .card {
-        background-color: var(--secondary-bg);
-        border: none;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        color: var(--text-primary);
-        border-bottom: none;
-    }
-
-    .btn {
-        border: none;
-        border-radius: 4px;
-        transition: background-color 0.3s ease, transform 0.3s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-
-    .list-group-item {
-        background-color: var(--secondary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .badge {
-        font-weight: 500;
-    }
-
-    /* Custom Button Colors */
-    .btn-primary {
-        background-color: var(--accent-green);
-        color: var(--text-primary);
-    }
-
-    .btn-primary:hover {
-        background-color: var(--accent-purple);
-    }
-
-    .btn-secondary {
-        background-color: #6c757d;
-        color: var(--text-primary);
-    }
-
-    .btn-warning {
-        background-color: #ffc107;
-        color: #000;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        color: var(--text-primary);
-    }
-
-    .btn-info {
-        background-color: #17a2b8;
-        color: var(--text-primary);
-    }
-
-    .btn-success {
-        background-color: #28a745;
-        color: var(--text-primary);
-    }
-
-    /* Form Styles */
-    .form-control {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
-    }
-
-    .form-control:focus {
-        background-color: var(--primary-bg);
-        border-color: var(--accent-green);
-        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        color: var(--text-primary);
-    }
-
-    /* Specific to this page */
-    .card-title, .card-text, .form-group h5 {
-        user-select: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-    }
-
-    /* Allow selection in input fields */
-    input, textarea {
-        user-select: auto !important;
-    }
-
-    #attemptWarningModal .modal-content {
-        background-color: var(--secondary-bg);
-        color: var(--text-primary);
-    }
-
-    #attemptWarningModal .modal-header {
-        background-color: #ffc107;  /* Using Bootstrap's warning color as the theme */
-        border-color: #ffeeba;
-    }
-
-    #attemptWarningModal .modal-title {
-        color: #212529;  /* Darken the title for better contrast */
-    }
-
-    #remainingAttemptsCounter {
-        font-weight: bold;
-        color: #dc3545;
-    }
-
-    /* Pagination Styles */
-    .question-container {
-        display: none; /* Initially hide all questions */
-    }
-
-    .question-container:first-child {
-        display: block; /* Show the first question */
-    }
-</style>
-
-<div class="container mt-5">
-    <div class="card">
+<div class="container">
+    <!-- Test Header -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                <h3 class="mb-0"><i class="fas fa-edit me-2"></i>@Model.Test.TestName</h3>
+                <div class="d-flex align-items-center">
+                    <div class="timer-display me-2">
+                        <i class="fas fa-clock me-2"></i>
+                        <span id="timer" class="badge bg-primary p-2">@($"{Model.Test.TimeLimit:00}:00")</span>
+                    </div>
+                    <div class="attempts-display">
+                        <i class="fas fa-redo me-2"></i>
+                        <span class="badge bg-info p-2">Attempts: <span id="remainingAttemptsCounter">@Model.RemainingAttempts</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
-            <h2 class="card-title">Test: @Model.Test.TestName</h2>
-            <p class="card-text">@Model.Test.Description</p>
+            @if (!string.IsNullOrEmpty(Model.Test.Description))
+            {
+            <p>@Model.Test.Description</p>
+            }
 
-            <div class="alert alert-info">
-                Time Remaining: <span id="timer">@($"{Model.Test.TimeLimit:00}:00")</span>
+            <div class="progress mb-3" style="height: 10px;">
+                <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"
+                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                </div>
             </div>
 
-            <form id="testForm" asp-action="SubmitAnswers" method="post">
-                <input type="hidden" asp-for="AttemptId" />
-                <input type="hidden" id="remainingAttempts" value="@Model.RemainingAttempts" />
+            <div class="d-flex justify-content-between mb-2">
+                <div><strong>Question: <span id="currentQuestionNumber">1</span>/<span id="totalQuestions">@Model.Questions.Count</span></strong></div>
+                <div id="questionTypeBadge" class="badge bg-primary"></div>
+            </div>
+        </div>
+    </div>
 
-                @if (Model.Questions != null && Model.Questions.Any())
+    <!-- Test Form -->
+    <form id="testForm" asp-action="SubmitAnswers" method="post">
+        <input type="hidden" asp-for="AttemptId" />
+        <input type="hidden" id="remainingAttempts" value="@Model.RemainingAttempts" />
+
+        @if (Model.Questions != null && Model.Questions.Any())
+        {
+        <!-- Question Container -->
+        <div class="card mb-4">
+            <div class="card-body">
+                @for (int i = 0; i < Model.Questions.Count; i++)
                 {
-                    @for (int i = 0; i < Model.Questions.Count; i++)
-                    {
-                        var question = Model.Questions[i];
-                        <div class="question-container" data-question-index="@i">  <!-- Added container -->
-                            <div class="form-group mb-4">
-                                <h5>Question @(i + 1): @question.Text</h5>
-                                <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" />
+                var question = Model.Questions[i];
+                <div class="question-container" data-question-index="@i" data-question-type="@question.GetType().Name.Replace("Question", "")" style="display: none;">
+                    <div class="form-group mb-4">
+                        <h4 class="mb-4">@question.Text</h4>
+                        <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" />
 
-                                @switch (question)
-                                {
-                                    case MultipleChoiceQuestion mcq:
-                                        foreach (var option in mcq.Options)
-                                        {
-                                            <div class="form-check">
-                                                <input class="form-check-input mc-option" type="radio"
-                                                       name="answers[@i].Response"
-                                                       value="@option" data-question-index="@i" />
-                                                <label class="form-check-label">@option</label>
-                                            </div>
-                                        }
-                                        break;
-
-                                    case TrueFalseQuestion tfq:
-                                        <div class="form-check">
-                                            <input class="form-check-input tf-option" type="radio"
-                                                   name="answers[@i].Response"
-                                                   value="True" data-question-index="@i" />
-                                            <label class="form-check-label">True</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input tf-option" type="radio"
-                                                   name="answers[@i].Response"
-                                                   value="False" data-question-index="@i" />
-                                            <label class="form-check-label">False</label>
-                                        </div>
-                                        break;
-
-                                    case ShortAnswerQuestion saq:
-                                        <input class="form-control sa-answer" type="text"
-                                               name="answers[@i].Response" autocomplete="off" data-question-index="@i" />
-                                        break;
-
-                                    default:
-                                        <p class="text-danger">Unsupported question type</p>
-                                        break;
-                                }
+                        @switch (question)
+                        {
+                        case MultipleChoiceQuestion mcq:
+                        <div class="multiple-choice-options">
+                            @for (int j = 0; j < mcq.Options.Count; j++)
+                            {
+                            <div class="form-check custom-option mb-3">
+                                <input class="form-check-input" type="@(mcq.AllowMultipleSelections ? "checkbox" : "radio")"
+                                       name="answers[@i].Response" id="option-@i-@j" value="@mcq.Options[j]"
+                                       data-question-index="@i" />
+                                <label class="form-check-label custom-option-label" for="option-@i-@j">
+                                    @mcq.Options[j]
+                                </label>
                             </div>
-                        </div>  <!-- End of question container -->
-                    }
+                            }
+
+                            @if (mcq.AllowMultipleSelections)
+                            {
+                            <div class="form-text text-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                You can select multiple answers for this question.
+                            </div>
+                            }
+                        </div>
+                        break;
+
+                        case TrueFalseQuestion tfq:
+                        <div class="true-false-options d-flex gap-3">
+                            <div class="form-check custom-option">
+                                <input class="form-check-input" type="radio" name="answers[@i].Response"
+                                       id="true-@i" value="True" data-question-index="@i" />
+                                <label class="form-check-label custom-option-label" for="true-@i">
+                                    <i class="fas fa-check text-success me-2"></i>True
+                                </label>
+                            </div>
+                            <div class="form-check custom-option">
+                                <input class="form-check-input" type="radio" name="answers[@i].Response"
+                                       id="false-@i" value="False" data-question-index="@i" />
+                                <label class="form-check-label custom-option-label" for="false-@i">
+                                    <i class="fas fa-times text-danger me-2"></i>False
+                                </label>
+                            </div>
+                        </div>
+                        break;
+
+                        case ShortAnswerQuestion saq:
+                        <div class="mb-3">
+                            <input class="form-control sa-answer" type="text" name="answers[@i].Response"
+                                   placeholder="Type your answer here..." autocomplete="off"
+                                   data-question-index="@i" />
+                            <div class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Type your answer in the field above. Be precise and check your spelling.
+                            </div>
+                        </div>
+                        break;
+
+                        default:
+                        <p class="text-danger">Unsupported question type</p>
+                        break;
+                        }
+                    </div>
+                </div>
                 }
-                else
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="d-flex justify-content-between mb-5">
+            <button type="button" id="prevBtn" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Previous
+            </button>
+
+            <div class="d-flex gap-2">
+                <button type="button" id="nextBtn" class="btn btn-primary">
+                    Next<i class="fas fa-arrow-right ms-2"></i>
+                </button>
+                <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">
+                    <i class="fas fa-check-circle me-2"></i>Submit Test
+                </button>
+            </div>
+        </div>
+        }
+        else
+        {
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            No questions available for this test.
+        </div>
+        }
+    </form>
+
+    <!-- Question Navigation -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-map me-2"></i>Question Navigation</h5>
+        </div>
+        <div class="card-body">
+            <div class="question-nav d-flex flex-wrap gap-2">
+                @for (int i = 0; i < Model.Questions.Count; i++)
                 {
-                    <p class="text-danger">No questions available for this test.</p>
+                <button type="button" class="btn btn-sm btn-outline-secondary question-nav-btn"
+                        data-question-index="@i" onclick="goToQuestion(@i)">
+                    @(i + 1)
+                </button>
                 }
-
-                <!-- Navigation Buttons -->
-                <button type="button" id="prevBtn" class="btn btn-secondary">Previous</button>
-                <button type="button" id="nextBtn" class="btn btn-primary">Next</button>
-
-                <!-- Submit Button (Initially Hidden) -->
-                <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">Submit Test</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Add this modal at the bottom of your TakeTest view -->
+<!-- Attempt Warning Modal -->
 <div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="attemptWarningLabel">Warning!</h5>
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title" id="attemptWarningLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Warning!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>You have <span id="remainingAttemptsCounter">@Model.RemainingAttempts</span> attempt(s) remaining.</p>
-                <p class="text-danger">Leaving the page or using restricted features will reduce your remaining attempts.</p>
+                <p>You have <strong id="modalRemainingAttemptsCounter">@Model.RemainingAttempts</strong> attempt(s) remaining.</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Leaving the page or using restricted features will reduce your remaining attempts.
+                </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Continue Test</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="fas fa-check-circle me-2"></i>Continue Test
+                </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Submission Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submitConfirmLabel">
+                    <i class="fas fa-question-circle me-2"></i>Confirm Submission
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to submit your test?</p>
+                <div id="unansweredWarning" class="alert alert-warning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You have <strong id="unansweredCount">0</strong> unanswered questions!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Continue Test
+                </button>
+                <button type="button" class="btn btn-success" id="confirmSubmitBtn">
+                    <i class="fas fa-check-circle me-2"></i>Submit Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
+<script>
+    // Initialize variables
+    let timeRemaining = @Model.Test.TimeLimit * 60;
+    const timerElement = document.getElementById('timer');
+    const progressBar = document.getElementById('progressBar');
+    const currentQuestionNumber = document.getElementById('currentQuestionNumber');
+    const totalQuestions = document.getElementById('totalQuestions');
+    const questionTypeBadge = document.getElementById('questionTypeBadge');
+    let formSubmitted = false;
+    let remainingAttempts = parseInt(document.getElementById('remainingAttempts').value);
+    const attemptId = document.getElementById('AttemptId').value;
+    const modal = new bootstrap.Modal(document.getElementById('attemptWarningModal'));
+    const submitModal = new bootstrap.Modal(document.getElementById('submitConfirmModal'));
 
-    <script>
-        // Initialize variables
-        let timeRemaining = @Model.Test.TimeLimit * 60;
-        const timerElement = document.getElementById('timer');
-        let formSubmitted = false;
-        let remainingAttempts = parseInt(document.getElementById('remainingAttempts').value);
-        const attemptId = document.getElementById('AttemptId').value;
-        const modal = new bootstrap.Modal(document.getElementById('attemptWarningModal'));
+    // Question navigation
+    const questionContainers = document.querySelectorAll('.question-container');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const questionNavBtns = document.querySelectorAll('.question-nav-btn');
+    let currentQuestionIndex = 0;
 
-        // Timer logic
-        function updateTimer() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    // Track answered questions
+    const questionStatus = new Array(questionContainers.length).fill(false);
 
-            if (timeRemaining <= 0) {
-                submitForm();
+    // Timer logic
+    function updateTimer() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        // Change color based on time remaining
+        if (timeRemaining <= 300) { // 5 minutes
+            timerElement.classList.remove('bg-primary');
+            timerElement.classList.add('bg-warning');
+        }
+
+        if (timeRemaining <= 120) { // 2 minutes
+            timerElement.classList.remove('bg-warning');
+            timerElement.classList.add('bg-danger', 'animate-pulse');
+        }
+
+        if (timeRemaining <= 0) {
+            submitForm();
+        } else {
+            timeRemaining--;
+        }
+    }
+
+    // Start timer
+    let timerInterval;
+    if (timeRemaining > 0) {
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    // Form submission handler
+    function submitForm() {
+        if (formSubmitted) return;
+        formSubmitted = true;
+        clearInterval(timerInterval);
+        document.getElementById('testForm').submit();
+    }
+
+    // Show question
+    function showQuestion(index) {
+        // Hide all questions
+        questionContainers.forEach(container => container.style.display = 'none');
+
+        // Show the current question
+        questionContainers[index].style.display = 'block';
+
+        // Update navigation buttons
+        prevBtn.disabled = index === 0;
+        nextBtn.style.display = index === questionContainers.length - 1 ? 'none' : 'block';
+        submitBtn.style.display = index === questionContainers.length - 1 ? 'block' : 'none';
+
+        // Update progress indicator
+        currentQuestionNumber.textContent = index + 1;
+        progressBar.style.width = `${((index + 1) / questionContainers.length) * 100}%`;
+        progressBar.setAttribute('aria-valuenow', ((index + 1) / questionContainers.length) * 100);
+
+        // Update question type badge
+        const questionType = questionContainers[index].dataset.questionType;
+        let badgeClass = 'bg-primary';
+        let icon = '';
+
+        switch(questionType) {
+            case 'MultipleChoice':
+                badgeClass = 'bg-primary';
+                icon = 'list-ul';
+                break;
+            case 'TrueFalse':
+                badgeClass = 'bg-success';
+                icon = 'check-circle';
+                break;
+            case 'ShortAnswer':
+                badgeClass = 'bg-info';
+                icon = 'pen';
+                break;
+        }
+
+        questionTypeBadge.className = `badge ${badgeClass}`;
+        questionTypeBadge.innerHTML = `<i class="fas fa-${icon} me-1"></i>${questionType.replace(/([A-Z])/g, ' $1').trim()}`;
+
+        // Update question navigation
+        questionNavBtns.forEach(btn => {
+            btn.classList.remove('active', 'btn-primary', 'btn-outline-secondary', 'btn-success');
+
+            const btnIndex = parseInt(btn.dataset.questionIndex);
+            if (btnIndex === index) {
+                btn.classList.add('active', 'btn-primary');
+            } else if (questionStatus[btnIndex]) {
+                btn.classList.add('btn-success');
             } else {
-                timeRemaining--;
+                btn.classList.add('btn-outline-secondary');
             }
+        });
+
+        // Set current index
+        currentQuestionIndex = index;
+    }
+
+    // Go to specific question
+    function goToQuestion(index) {
+        showQuestion(index);
+    }
+
+    // Navigation button handlers
+    prevBtn.addEventListener('click', () => {
+        if (currentQuestionIndex > 0) {
+            showQuestion(currentQuestionIndex - 1);
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentQuestionIndex < questionContainers.length - 1) {
+            showQuestion(currentQuestionIndex + 1);
+        }
+    });
+
+    // Monitor answer changes
+    function updateQuestionStatus() {
+        questionContainers.forEach((container, index) => {
+            const questionType = container.dataset.questionType;
+            let isAnswered = false;
+
+            switch(questionType) {
+                case 'MultipleChoice':
+                    const mcOptions = container.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+                    isAnswered = Array.from(mcOptions).some(option => option.checked);
+                    break;
+                case 'TrueFalse':
+                    const tfOptions = container.querySelectorAll('input[type="radio"]');
+                    isAnswered = Array.from(tfOptions).some(option => option.checked);
+                    break;
+                case 'ShortAnswer':
+                    const saInput = container.querySelector('input[type="text"]');
+                    isAnswered = saInput && saInput.value.trim() !== '';
+                    break;
+            }
+
+            questionStatus[index] = isAnswered;
+
+            // Update navigation button
+            const navBtn = document.querySelector(`.question-nav-btn[data-question-index="${index}"]`);
+            if (navBtn) {
+                navBtn.classList.remove('btn-success', 'btn-outline-secondary');
+                navBtn.classList.add(isAnswered ? 'btn-success' : 'btn-outline-secondary');
+            }
+        });
+    }
+
+    // Listen for input changes
+    document.querySelectorAll('input[type="radio"], input[type="checkbox"], input[type="text"]').forEach(input => {
+        input.addEventListener('change', updateQuestionStatus);
+
+        // For text inputs, listen for keyup as well
+        if (input.type === 'text') {
+            input.addEventListener('keyup', updateQuestionStatus);
+        }
+    });
+
+    // Submit button handler
+    submitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Count unanswered questions
+        const unansweredCount = questionStatus.filter(status => !status).length;
+
+        const unansweredWarning = document.getElementById('unansweredWarning');
+        const unansweredCountElement = document.getElementById('unansweredCount');
+
+        if (unansweredCount > 0) {
+            unansweredWarning.style.display = 'block';
+            unansweredCountElement.textContent = unansweredCount;
+        } else {
+            unansweredWarning.style.display = 'none';
         }
 
-        // Start timer if needed
-        let timerInterval;
-        if (timeRemaining > 0) {
-            timerInterval = setInterval(updateTimer, 1000);
-        }
+        // Show the confirmation modal
+        submitModal.show();
+    });
 
-        // Form submission handler
-        function submitForm() {
-            if (formSubmitted) return;
-            formSubmitted = true;
-            clearInterval(timerInterval);
-            document.getElementById('testForm').submit();
-        }
+    // Confirm submit handler
+    document.getElementById('confirmSubmitBtn').addEventListener('click', () => {
+        submitForm();
+    });
 
-        // Flag to prevent multiple decrements
-        let isAttemptDecremented = false;
+    // Flag to prevent multiple decrements
+    let isAttemptDecremented = false;
 
-        // Decrement attempts with modal notification
-        async function decrementAttempts(showWarning = true) {
-            if (remainingAttempts <= 0 || isAttemptDecremented) return;
+    // Decrement attempts with modal notification
+    async function decrementAttempts(showWarning = true) {
+        if (remainingAttempts <= 0 || isAttemptDecremented) return;
 
-            isAttemptDecremented = true; // Set flag to prevent multiple calls
-            remainingAttempts--;
-            document.getElementById('remainingAttempts').value = remainingAttempts;
+        isAttemptDecremented = true; // Set flag to prevent multiple calls
+        remainingAttempts--;
+        document.getElementById('remainingAttempts').value = remainingAttempts;
+        document.getElementById('remainingAttemptsCounter').textContent = remainingAttempts;
+        document.getElementById('modalRemainingAttemptsCounter').textContent = remainingAttempts;
+
+        try {
+            const response = await fetch('/TestAttempt/UpdateRemainingAttempts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attemptId, remainingAttempts })
+            });
+
+            if (!response.ok) throw new Error('Failed to update attempts');
+
+            if (remainingAttempts <= 0) {
+                submitForm();
+            } else if (showWarning) {
+                modal.show();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            remainingAttempts++; // Rollback on error
             document.getElementById('remainingAttemptsCounter').textContent = remainingAttempts;
-
-            try {
-                const response = await fetch('/TestAttempt/UpdateRemainingAttempts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ attemptId, remainingAttempts })
-                });
-
-                if (!response.ok) throw new Error('Failed to update attempts');
-
-                if (remainingAttempts <= 0) {
-                    submitForm();
-                } else if (showWarning) {
-                    modal.show();
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                remainingAttempts++; // Rollback on error
-            } finally {
-                // Reset the flag after a short delay to allow future decrements
-                setTimeout(() => {
-                    isAttemptDecremented = false;
-                }, 1000); // 1-second delay
-            }
+        } finally {
+            // Reset the flag after a short delay to allow future decrements
+            setTimeout(() => {
+                isAttemptDecremented = false;
+            }, 1000); // 1-second delay
         }
+    }
 
-        // Enhanced visibility detection
-        function handleVisibilityChange() {
-            if (document.visibilityState === 'hidden') {
-                decrementAttempts(true);
-            }
+    // Enhanced visibility detection
+    function handleVisibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            decrementAttempts(true);
         }
+    }
 
-        // Enhanced focus/blur detection
-        function handleFocusChange() {
-            if (!document.hasFocus()) {
-                decrementAttempts(true);
-            }
+    // Enhanced focus/blur detection
+    function handleFocusChange() {
+        if (!document.hasFocus()) {
+            decrementAttempts(true);
         }
+    }
 
-        // Attach event listeners
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('blur', handleFocusChange);
-        window.addEventListener('focus', () => {
-            // Reset any flags or states if needed
-        });
+    // Attach event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleFocusChange);
+    window.addEventListener('focus', () => {
+        // Reset any flags or states if needed
+    });
 
-        // Navigation/closing detection
-        window.addEventListener('beforeunload', (e) => {
-            if (!formSubmitted) {
-                e.preventDefault();
-                e.returnValue = 'Are you sure you want to leave? Your remaining attempts will be decremented.';
-                decrementAttempts(false);
-            }
-        });
+    // Navigation/closing detection
+    window.addEventListener('beforeunload', (e) => {
+        if (!formSubmitted) {
+            e.preventDefault();
+            e.returnValue = 'Are you sure you want to leave? Your remaining attempts will be decremented.';
+            decrementAttempts(false);
+        }
+    });
 
-        // Prevent refreshing
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
-                e.preventDefault();
-                decrementAttempts(true);
-            }
-        });
-
-        // Prevent inspecting elements
-        document.addEventListener('contextmenu', (e) => {
+    // Prevent refreshing
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
             e.preventDefault();
             decrementAttempts(true);
-        });
+        }
+    });
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-                e.preventDefault();
-                decrementAttempts(true);
-            }
-        });
+    // Prevent inspecting elements
+    document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        decrementAttempts(true);
+    });
 
-        // Pagination Logic
-        const questionContainers = document.querySelectorAll('.question-container');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        const submitBtn = document.getElementById('submitBtn');
-        let currentQuestionIndex = 0;
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            e.preventDefault();
+            decrementAttempts(true);
+        }
+    });
 
-        function showQuestion(index) {
-            questionContainers.forEach(container => container.style.display = 'none'); // Hide all
-            questionContainers[index].style.display = 'block'; // Show current
+    // Initialize - show the first question
+    showQuestion(0);
+    updateQuestionStatus();
 
-            // Update button visibility
-            prevBtn.style.display = index === 0 ? 'none' : 'inline-block';
-            nextBtn.style.display = index === questionContainers.length - 1 ? 'none' : 'inline-block';
-            submitBtn.style.display = index === questionContainers.length - 1 ? 'inline-block' : 'none';
+    // Add keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        // Only respond to arrow keys if not in an input field
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+            return;
         }
 
-        prevBtn.addEventListener('click', () => {
-            currentQuestionIndex--;
-            showQuestion(currentQuestionIndex);
-        });
+        if (e.key === 'ArrowLeft' && currentQuestionIndex > 0) {
+            showQuestion(currentQuestionIndex - 1);
+        } else if (e.key === 'ArrowRight' && currentQuestionIndex < questionContainers.length - 1) {
+            showQuestion(currentQuestionIndex + 1);
+        }
+    });
 
-        nextBtn.addEventListener('click', () => {
-            currentQuestionIndex++;
-            showQuestion(currentQuestionIndex);
-        });
+    // Custom radio/checkbox styling
+    document.querySelectorAll('.custom-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'INPUT') {
+                const input = this.querySelector('input');
+                input.checked = !input.checked;
 
-        // Initialize - show the first question
-        showQuestion(currentQuestionIndex);
-    </script>
+                // Trigger change event for tracking answered status
+                const event = new Event('change');
+                input.dispatchEvent(event);
+            }
+        });
+    });
+</script>
 }
