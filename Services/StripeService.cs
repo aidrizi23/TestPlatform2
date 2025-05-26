@@ -1,10 +1,14 @@
 using Stripe;
 using Stripe.Checkout;
+using Stripe.BillingPortal;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TestPlatform2.Data;
+using Session = Stripe.Checkout.Session;
+using SessionCreateOptions = Stripe.Checkout.SessionCreateOptions;
+using SessionService = Stripe.Checkout.SessionService;
 
 namespace TestPlatform2.Services
 {
@@ -17,10 +21,11 @@ namespace TestPlatform2.Services
         Task<Stripe.Subscription> GetSubscriptionAsync(string subscriptionId);
         Task<Customer> GetCustomerAsync(string customerId);
         Task<Session> GetCheckoutSessionAsync(string sessionId);
-        Task<PortalSession> CreateCustomerPortalSessionAsync(string customerId, string returnUrl);
+        Task<Stripe.BillingPortal.Session> CreateCustomerPortalSessionAsync(string customerId, string returnUrl);
         Task<List<PaymentMethod>> GetPaymentMethodsAsync(string customerId);
         Task<PaymentMethod> AttachPaymentMethodAsync(string paymentMethodId, string customerId);
         Task<Customer> UpdateDefaultPaymentMethodAsync(string customerId, string paymentMethodId);
+        Event ConstructEvent(string json, string signature);
     }
 
     public class StripeService : IStripeService
@@ -130,7 +135,7 @@ namespace TestPlatform2.Services
             return await service.GetAsync(sessionId);
         }
 
-        public async Task<PortalSession> CreateCustomerPortalSessionAsync(string customerId, string returnUrl)
+        public async Task<Stripe.BillingPortal.Session> CreateCustomerPortalSessionAsync(string customerId, string returnUrl)
         {
             var options = new Stripe.BillingPortal.SessionCreateOptions
             {

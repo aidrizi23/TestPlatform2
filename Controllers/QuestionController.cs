@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Repository;
-using TestPlatform2.Services;
 
 namespace TestPlatform2.Controllers;
 
@@ -13,29 +12,29 @@ public class QuestionController : Controller
     private readonly IQuestionRepository _questionRepository;
     private readonly UserManager<User> _userManager;
     private readonly ITestRepository _testRepository;
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly ISubscriptionRepository _subscriptionRepository;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
-        ISubscriptionService subscriptionService)
+        ISubscriptionRepository subscriptionRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
-        _subscriptionService = subscriptionService;
+        _subscriptionRepository = subscriptionRepository;
     }
     
     // Helper method to check if user can create questions
     private async Task<IActionResult> CheckQuestionLimit(string userId)
     {
-        var canCreate = await _subscriptionService.CanCreateQuestionAsync(userId);
+        var canCreate = await _subscriptionRepository.CanUserCreateQuestionAsync(userId);
         if (!canCreate)
         {
-            var remainingQuestions = await _subscriptionService.GetRemainingQuestionsAsync(userId);
-            TempData["ErrorMessage"] = $"You have reached your question limit. Upgrade to Pro for unlimited questions!";
-            return RedirectToAction("Plans", "Subscription");
+            var remainingQuestions = await _subscriptionRepository.GetRemainingQuestionsAsync(userId);
+            TempData["ErrorMessage"] = $"You have reached your question limit. Upgrade to Pro for unlimited questions! Remaining: {remainingQuestions}";
+            return RedirectToAction("Index", "Home"); // Change this to your subscription page when you create it
         }
         return null;
     }
@@ -138,7 +137,7 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionService.IncrementQuestionCountAsync(user.Id);
+        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }
@@ -207,7 +206,7 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionService.IncrementQuestionCountAsync(user.Id);
+        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }
@@ -267,7 +266,7 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionService.IncrementQuestionCountAsync(user.Id);
+        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }

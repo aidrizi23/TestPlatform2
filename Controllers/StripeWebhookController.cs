@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using TestPlatform2.Data;
+using TestPlatform2.Repository;
 using TestPlatform2.Services;
 
 namespace TestPlatform2.Controllers
@@ -20,22 +21,22 @@ namespace TestPlatform2.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<StripeWebhookController> _logger;
-        private readonly ISubscriptionService _subscriptionService;
+        private readonly ISubscriptionRepository _subscriptionRepository;
         private readonly UserManager<User> _userManager;
-        private readonly string _webhookSecret;
+        private readonly IStripeService _stripeService;
 
         public StripeWebhookController(
             IConfiguration configuration,
             ILogger<StripeWebhookController> logger,
-            ISubscriptionService subscriptionService,
-            UserManager<User> userManager)
+            ISubscriptionRepository subscriptionRepository,
+            UserManager<User> userManager,
+            IStripeService stripeService)
         {
             _configuration = configuration;
             _logger = logger;
-            _subscriptionService = subscriptionService;
+            _subscriptionRepository = subscriptionRepository;
             _userManager = userManager;
-            _webhookSecret = _configuration["Stripe:WebhookSecret"];
-            StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+            _stripeService = stripeService;
         }
 
         [HttpPost("webhook")]
@@ -45,10 +46,9 @@ namespace TestPlatform2.Controllers
 
             try
             {
-                var stripeEvent = EventUtility.ConstructEvent(
-                    json,
-                    Request.Headers["Stripe-Signature"],
-                    _webhookSecret
+                var stripeEvent = _stripeService.ConstructEvent(
+                    json, 
+                    Request.Headers["Stripe-Signature"]
                 );
 
                 _logger.LogInformation($"Stripe webhook received: {stripeEvent.Type}");
@@ -56,22 +56,22 @@ namespace TestPlatform2.Controllers
                 // Handle the event
                 switch (stripeEvent.Type)
                 {
-                    case Events.CustomerSubscriptionCreated:
+                    case "customer.subscription.created":
                         await HandleSubscriptionCreated(stripeEvent);
                         break;
-                    case Events.CustomerSubscriptionUpdated:
+                    case "customer.subscription.updated":
                         await HandleSubscriptionUpdated(stripeEvent);
                         break;
-                    case Events.CustomerSubscriptionDeleted:
+                    case "customer.subscription.deleted":
                         await HandleSubscriptionDeleted(stripeEvent);
                         break;
-                    case Events.InvoicePaymentSucceeded:
+                    case "invoice.payment_succeeded":
                         await HandleInvoicePaymentSucceeded(stripeEvent);
                         break;
-                    case Events.InvoicePaymentFailed:
+                    case "invoice.payment_failed":
                         await HandleInvoicePaymentFailed(stripeEvent);
                         break;
-                    case Events.CheckoutSessionCompleted:
+                    case "checkout.session.completed":
                         await HandleCheckoutSessionCompleted(stripeEvent);
                         break;
                     default:
@@ -112,7 +112,7 @@ namespace TestPlatform2.Controllers
             var tier = GetTierFromPriceId(subscription.Items.Data[0].Price.Id);
 
             // Create subscription record
-            await _subscriptionService.CreateSubscriptionAsync(
+            await _subscriptionRepository.CreateUserSubscriptionAsync(
                 user.Id,
                 subscription.CustomerId,
                 subscription.Id,
@@ -130,12 +130,20 @@ namespace TestPlatform2.Controllers
 
             var status = MapStripeStatusToSubscriptionStatus(subscription.Status);
             
-            await _subscriptionService.UpdateSubscriptionStatusAsync(subscription.Id, status);
-            await _subscriptionService.UpdateSubscriptionPeriodAsync(
-                subscription.Id,
-                subscription.CurrentPeriodStart,
-                subscription.CurrentPeriodEnd
-            );
+            await _subscriptionRepository.UpdateSubscriptionStatusAsync(subscription.Id, status);
+            
+            // Convert Unix timestamps to DateTime - handle nullable values
+            if (subscription.CurrentPeriodStart.HasValue && subscription.CurrentPeriodEnd.HasValue)
+            {
+                var periodStart = DateTimeOffset.FromUnixTimeSeconds(subscription.CurrentPeriodStart.Value).DateTime;
+                var periodEnd = DateTimeOffset.FromUnixTimeSeconds(subscription.CurrentPeriodEnd.Value).DateTime;
+                
+                await _subscriptionRepository.UpdateSubscriptionPeriodAsync(
+                    subscription.Id,
+                    periodStart,
+                    periodEnd
+                );
+            }
         }
 
         private async Task HandleSubscriptionDeleted(Event stripeEvent)
@@ -145,7 +153,7 @@ namespace TestPlatform2.Controllers
 
             _logger.LogInformation($"Subscription deleted: {subscription.Id}");
 
-            await _subscriptionService.UpdateSubscriptionStatusAsync(
+            await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                 subscription.Id, 
                 SubscriptionStatus.Canceled
             );
@@ -160,7 +168,7 @@ namespace TestPlatform2.Controllers
 
             if (!string.IsNullOrEmpty(invoice.SubscriptionId))
             {
-                await _subscriptionService.UpdateSubscriptionStatusAsync(
+                await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                     invoice.SubscriptionId,
                     SubscriptionStatus.Active
                 );
@@ -176,7 +184,7 @@ namespace TestPlatform2.Controllers
 
             if (!string.IsNullOrEmpty(invoice.SubscriptionId))
             {
-                await _subscriptionService.UpdateSubscriptionStatusAsync(
+                await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                     invoice.SubscriptionId,
                     SubscriptionStatus.PastDue
                 );
@@ -185,7 +193,7 @@ namespace TestPlatform2.Controllers
 
         private async Task HandleCheckoutSessionCompleted(Event stripeEvent)
         {
-            var session = stripeEvent.Data.Object as Session;
+            var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
             if (session == null) return;
 
             _logger.LogInformation($"Checkout session completed: {session.Id}");
@@ -194,8 +202,7 @@ namespace TestPlatform2.Controllers
             if (session.Mode == "subscription" && !string.IsNullOrEmpty(session.SubscriptionId))
             {
                 // Get the subscription details
-                var subscriptionService = new SubscriptionService();
-                var subscription = await subscriptionService.GetAsync(session.SubscriptionId);
+                var subscription = await _stripeService.GetSubscriptionAsync(session.SubscriptionId);
 
                 if (subscription != null)
                 {
@@ -204,7 +211,7 @@ namespace TestPlatform2.Controllers
                     {
                         var tier = GetTierFromPriceId(subscription.Items.Data[0].Price.Id);
                         
-                        await _subscriptionService.CreateSubscriptionAsync(
+                        await _subscriptionRepository.CreateUserSubscriptionAsync(
                             user.Id,
                             subscription.CustomerId,
                             subscription.Id,
