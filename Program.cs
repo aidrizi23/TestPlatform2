@@ -34,16 +34,22 @@ public class Program
 
         builder.Services.AddControllersWithViews();
 
+        // Repository services
         builder.Services.AddScoped<ITestRepository, TestRepository>();
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
         builder.Services.AddTransient<IEmailService, SmtpEmailService>();
         builder.Services.AddScoped<IAnswerRepository, AnswerRepository>();
         builder.Services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
-        
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
-
         
+        // Subscription and payment services
+        builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+        builder.Services.AddScoped<IStripeService, StripeService>();
+
+        // Add HttpContextAccessor for accessing HttpContext in services
+        builder.Services.AddHttpContextAccessor();
 
         var app = builder.Build();
 
