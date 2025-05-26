@@ -12,32 +12,18 @@ public class QuestionController : Controller
     private readonly IQuestionRepository _questionRepository;
     private readonly UserManager<User> _userManager;
     private readonly ITestRepository _testRepository;
-    private readonly ISubscriptionRepository _subscriptionRepository;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
-        ITestRepository testRepository,
-        ISubscriptionRepository subscriptionRepository)
+        ITestRepository testRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
-        _subscriptionRepository = subscriptionRepository;
     }
     
-    // Helper method to check if user can create questions
-    private async Task<IActionResult> CheckQuestionLimit(string userId)
-    {
-        var canCreate = await _subscriptionRepository.CanUserCreateQuestionAsync(userId);
-        if (!canCreate)
-        {
-            var remainingQuestions = await _subscriptionRepository.GetRemainingQuestionsAsync(userId);
-            TempData["ErrorMessage"] = $"You have reached your question limit. Upgrade to Pro for unlimited questions! Remaining: {remainingQuestions}";
-            return RedirectToAction("Index", "Home"); // Change this to your subscription page when you create it
-        }
-        return null;
-    }
+   
     
     // method to delete question
     [HttpPost]
@@ -83,10 +69,8 @@ public class QuestionController : Controller
             return Unauthorized();
         }
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
-        
+       
+       
         // now we create the view model
         var model = new CreateTrueFalseQuestionViewModel()
         {
@@ -111,9 +95,7 @@ public class QuestionController : Controller
             return Unauthorized();
         }
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
+       
         
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test is null)
@@ -137,7 +119,7 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
+       
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }
@@ -159,8 +141,8 @@ public class QuestionController : Controller
         }
         
         // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
+     
+       
         
         var model = new CreateMultipleChoiceQuestionViewModel()
         {
@@ -189,9 +171,7 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
+
         
         var question = new MultipleChoiceQuestion()
         {
@@ -206,7 +186,7 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
+       
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }
@@ -223,9 +203,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
 
         var model = new CreateShortAnswerQuestionViewModel()
         {
@@ -250,9 +227,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user!.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimit(user.Id);
-        if (limitCheck != null) return limitCheck;
 
         var question = new ShortAnswerQuestion()
         {
@@ -266,7 +240,6 @@ public class QuestionController : Controller
         };
         
         await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementUserQuestionCountAsync(user.Id);
         
         return RedirectToAction("Details", "Test", new { id = test.Id });
     }

@@ -20,9 +20,7 @@ namespace TestPlatform2.Data
         public DbSet<TestAttempt> TestAttempts { get; set; }
         public DbSet<Answer> Answers { get; set; }
         
-        // Subscription related
-        public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+      
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -67,60 +65,7 @@ namespace TestPlatform2.Data
                 .HasForeignKey(a => a.AttemptId)
                 .OnDelete(DeleteBehavior.Restrict); // Restrict cascading delete for attempts
                 
-            // Subscription relationships
-            modelBuilder.Entity<Subscription>()
-                .HasOne(s => s.User)
-                .WithOne(u => u.Subscription)
-                .HasForeignKey<Subscription>(s => s.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
-            // Subscription indexes
-            modelBuilder.Entity<Subscription>()
-                .HasIndex(s => s.StripeCustomerId)
-                .IsUnique();
-                
-            modelBuilder.Entity<Subscription>()
-                .HasIndex(s => s.StripeSubscriptionId)
-                .IsUnique();
-                
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.StripeCustomerId)
-                .IsUnique()
-                .HasFilter("[StripeCustomerId] IS NOT NULL");
-                
-            // Seed subscription plans
-            modelBuilder.Entity<SubscriptionPlan>().HasData(
-                new SubscriptionPlan
-                {
-                    Id = "free-plan",
-                    Name = "Free",
-                    Description = "Basic features for getting started",
-                    Tier = SubscriptionTier.Free,
-                    Price = 0,
-                    Currency = "usd",
-                    StripePriceId = null,
-                    MaxQuestionsPerTest = 30,
-                    MaxTestsPerMonth = 5,
-                    MaxStudentsPerTest = 50,
-                    AdvancedAnalytics = false,
-                    PrioritySupport = false
-                },
-                new SubscriptionPlan
-                {
-                    Id = "pro-plan",
-                    Name = "Pro",
-                    Description = "Unlimited questions and advanced features",
-                    Tier = SubscriptionTier.Pro,
-                    Price = 5.00m,
-                    Currency = "usd",
-                    StripePriceId = "price_xxxxx", // You'll need to update this with your actual Stripe price ID
-                    MaxQuestionsPerTest = -1, // -1 means unlimited
-                    MaxTestsPerMonth = -1,
-                    MaxStudentsPerTest = -1,
-                    AdvancedAnalytics = true,
-                    PrioritySupport = true
-                }
-            );
+            
         }
 
         public enum QuestionType

@@ -43,11 +43,7 @@ public class Program
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
         
-        // Subscription repository (no service needed)
-        builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         
-        // Stripe service
-        builder.Services.AddScoped<IStripeService, StripeService>();
 
         // Add HttpContextAccessor for accessing HttpContext in services
         builder.Services.AddHttpContextAccessor();
