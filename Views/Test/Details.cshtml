@@ -2,323 +2,500 @@
 @using TestPlatform2.Data.Questions
 @model TestPlatform2.Data.Test
 @{
-ViewData["Title"] = "Test Details";
+    ViewData["Title"] = "Test Details";
 }
 
-<div class="container">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>
-                <i class="fas fa-clipboard-check me-2"></i>@Model.TestName
-                <span class="badge ms-2 @(Model.IsLocked ? "bg-danger" : "bg-success")">
-                    @(Model.IsLocked ? "Locked" : "Active")
-                </span>
-            </h1>
-            <p>@Model.Description</p>
+<div class="test-details-container">
+    <!-- Header Section -->
+    <div class="test-header">
+        <div class="header-content">
+            <div class="header-main">
+                <div class="breadcrumb-nav">
+                    <a asp-action="Index" class="breadcrumb-link">
+                        <i class="fas fa-arrow-left me-2"></i>My Tests
+                    </a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Test Details</span>
+                </div>
+                
+                <div class="test-title-section">
+                    <h1 class="test-title">
+                        @Model.TestName
+                        <span class="status-indicator @(Model.IsLocked ? "status-locked" : "status-active")">
+                            <i class="fas @(Model.IsLocked ? "fa-lock" : "fa-unlock")"></i>
+                            @(Model.IsLocked ? "Locked" : "Active")
+                        </span>
+                    </h1>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="test-description">@Model.Description</p>
+                    }
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="action-buttons">
+                    <button id="lockTestButton" class="btn @(Model.IsLocked ? "btn-success" : "btn-warning")" onclick="lockTest('@Model.Id')">
+                        <i class="fas @(Model.IsLocked ? "fa-lock-open" : "fa-lock") me-2"></i>
+                        @(Model.IsLocked ? "Unlock" : "Lock") Test
+                    </button>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Test
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="col-md-4 text-md-end d-flex flex-wrap justify-content-md-end gap-2 mt-3 mt-md-0">
-            <a asp-action="Index" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Tests
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.Questions.Count</div>
+                <div class="stat-label">Questions</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.InvitedStudents.Count</div>
+                <div class="stat-label">Invitations Sent</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.Attempts.Count</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.TimeLimit</div>
+                <div class="stat-label">Minutes</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Configuration -->
+    <div class="config-section">
+        <h2 class="section-title">
+            <i class="fas fa-cog me-2"></i>Test Configuration
+        </h2>
+        <div class="config-grid">
+            <div class="config-item">
+                <div class="config-icon">
+                    <i class="fas fa-random"></i>
+                </div>
+                <div class="config-content">
+                    <div class="config-title">Question Order</div>
+                    <div class="config-value @(Model.RandomizeQuestions ? "text-success" : "text-muted")">
+                        @(Model.RandomizeQuestions ? "Randomized" : "Sequential")
+                    </div>
+                </div>
+            </div>
+            
+            <div class="config-item">
+                <div class="config-icon">
+                    <i class="fas fa-redo"></i>
+                </div>
+                <div class="config-content">
+                    <div class="config-title">Maximum Attempts</div>
+                    <div class="config-value">@Model.MaxAttempts</div>
+                </div>
+            </div>
+            
+            <div class="config-item">
+                <div class="config-icon">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <div class="config-content">
+                    <div class="config-title">Time Limit</div>
+                    <div class="config-value">@Model.TimeLimit minutes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="actions-grid">
+            <a asp-action="AllAttempts" asp-route-testId="@Model.Id" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">View Results</div>
+                    <div class="action-subtitle">See all student attempts and scores</div>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
             </a>
-            <button id="lockTestButton" class="btn @(Model.IsLocked ? "btn-success" : "btn-warning")" onclick="lockTest('@Model.Id')">
-                <i class="fas @(Model.IsLocked ? "fa-lock-open" : "fa-lock") me-2"></i>
-                @(Model.IsLocked ? "Unlock Test" : "Lock Test")
+            
+            <a asp-action="Analytics" asp-route-id="@Model.Id" class="action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title">Analytics</div>
+                    <div class="action-subtitle">Detailed performance insights</div>
+                </div>
+                <div class="action-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </a>
+            
+            <button type="button" class="action-card action-button" onclick="confirmDelete('@Model.Id')">
+                <div class="action-icon text-danger">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <div class="action-content">
+                    <div class="action-title text-danger">Delete Test</div>
+                    <div class="action-subtitle">Permanently remove this test</div>
+                </div>
+                <div class="action-arrow text-danger">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
             </button>
         </div>
     </div>
 
-    <!-- Test Information Card -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Test Information</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-random me-2"></i>Randomize Questions</span>
-                                    <span class="badge @(Model.RandomizeQuestions ? "bg-success" : "bg-secondary")">
-                                        @(Model.RandomizeQuestions ? "Yes" : "No")
-                                    </span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-clock me-2"></i>Time Limit</span>
-                                    <span class="badge bg-primary">@Model.TimeLimit minutes</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-redo me-2"></i>Max Attempts</span>
-                                    <span class="badge bg-info">@Model.MaxAttempts</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6 mt-3 mt-md-0">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-question-circle me-2"></i>Questions</span>
-                                    <span class="badge bg-primary">@Model.Questions.Count</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-users me-2"></i>Invitations</span>
-                                    <span class="badge bg-info">@Model.InvitedStudents.Count</span>
-                                </li>
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-clipboard-list me-2"></i>Attempts</span>
-                                    <span class="badge bg-success">@Model.Attempts.Count</span>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-12 d-flex justify-content-center gap-2">
-                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
-                                <i class="fas fa-edit me-2"></i>Edit Test
-                            </a>
-                            <a asp-action="AllAttempts" asp-route-testId="@Model.Id" class="btn btn-info">
-                                <i class="fas fa-clipboard-list me-2"></i>View Attempts
-                            </a>
-                            <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-info">
-                                <i class="fas fa-chart-line me-2"></i>View Analytics
-                            </a>
-
-                            <button type="button" class="btn btn-danger" onclick="confirmDelete('@Model.Id')">
-                                <i class="fas fa-trash me-2"></i>Delete Test
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabs for Questions and Invites -->
-    <ul class="nav nav-tabs mb-4" id="testDetailsTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions"
-                    type="button" role="tab" aria-controls="questions" aria-selected="true">
-                <i class="fas fa-question-circle me-2"></i>Questions
+    <!-- Main Content Tabs -->
+    <div class="content-tabs">
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="questions">
+                <i class="fas fa-question-circle me-2"></i>
+                Questions <span class="tab-count">@Model.Questions.Count</span>
             </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="invites-tab" data-bs-toggle="tab" data-bs-target="#invites"
-                    type="button" role="tab" aria-controls="invites" aria-selected="false">
-                <i class="fas fa-envelope me-2"></i>Send Invites
+            <button class="tab-btn" data-tab="invites">
+                <i class="fas fa-envelope me-2"></i>
+                Send Invites <span class="tab-count">@Model.InvitedStudents.Count</span>
             </button>
-        </li>
-    </ul>
+        </nav>
 
-    <div class="tab-content" id="testDetailsTabsContent">
         <!-- Questions Tab -->
-        <div class="tab-pane fade show active" id="questions" role="tabpanel" aria-labelledby="questions-tab">
-            <!-- Add Questions Section -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Questions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 mb-3 mb-md-0">
-                            <a asp-controller="Question" asp-action="CreateMultipleChoice" asp-route-testId="@Model.Id"
-                               class="btn btn-primary d-flex flex-column align-items-center justify-content-center p-4 h-100 w-100">
-                                <i class="fas fa-list-ul fa-2x mb-2"></i>
-                                <span>Multiple Choice</span>
-                            </a>
-                        </div>
-                        <div class="col-md-4 mb-3 mb-md-0">
-                            <a asp-controller="Question" asp-action="CreateTrueFalse" asp-route-testId="@Model.Id"
-                               class="btn btn-success d-flex flex-column align-items-center justify-content-center p-4 h-100 w-100">
-                                <i class="fas fa-check-circle fa-2x mb-2"></i>
-                                <span>True/False</span>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a asp-controller="Question" asp-action="CreateShortAnswer" asp-route-testId="@Model.Id"
-                               class="btn btn-info d-flex flex-column align-items-center justify-content-center p-4 h-100 w-100">
-                                <i class="fas fa-pen fa-2x mb-2"></i>
-                                <span>Short Answer</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Questions List -->
+        <div class="tab-content active" id="questions">
             @if (Model.Questions?.Any() == true)
             {
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Questions List</h5>
-                    <span class="badge bg-primary">@Model.Questions.Count Questions</span>
+                <!-- Add Question Actions -->
+                <div class="add-questions-section">
+                    <h3 class="subsection-title">Add New Questions</h3>
+                    <div class="question-types-grid">
+                        <a asp-controller="Question" asp-action="CreateMultipleChoice" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon multiple-choice">
+                                <i class="fas fa-list-ul"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">Multiple Choice</div>
+                                <div class="question-type-desc">Single or multiple selections</div>
+                            </div>
+                        </a>
+                        
+                        <a asp-controller="Question" asp-action="CreateTrueFalse" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon true-false">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">True/False</div>
+                                <div class="question-type-desc">Binary choice questions</div>
+                            </div>
+                        </a>
+                        
+                        <a asp-controller="Question" asp-action="CreateShortAnswer" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon short-answer">
+                                <i class="fas fa-pen"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">Short Answer</div>
+                                <div class="question-type-desc">Text-based responses</div>
+                            </div>
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
+
+                <!-- Questions List -->
+                <div class="questions-section">
+                    <div class="section-header">
+                        <h3 class="subsection-title">Questions List</h3>
+                        <div class="section-meta">
+                            <span class="total-points">
+                                Total Points: <strong>@Model.Questions.Sum(q => q.Points)</strong>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="questions-list">
                         @foreach (var question in Model.Questions.OrderBy(q => q.Position))
                         {
-                        <div class="list-group-item question-list-item">
-                            <div class="question-info">
-                                <span class="badge bg-secondary">@(question.Position + 1)</span>
-                                <span class="question-text">@question.Text</span>
-                                <span class="badge bg-primary">@question.Points pts</span>
-                                @{
-                                var questionType = question switch
-                                {
+                            var questionType = question switch
+                            {
                                 TrueFalseQuestion => "True/False",
-                                MultipleChoiceQuestion => "Multiple Choice",
+                                MultipleChoiceQuestion => "Multiple Choice", 
                                 ShortAnswerQuestion => "Short Answer",
                                 _ => "Unknown"
-                                };
+                            };
 
-                                var badgeClass = questionType switch
-                                {
-                                "True/False" => "bg-success",
-                                "Multiple Choice" => "bg-primary",
-                                "Short Answer" => "bg-info",
-                                _ => "bg-secondary"
-                                };
-                                }
-                                <span class="badge @badgeClass">@questionType</span>
+                            var typeClass = questionType.ToLower().Replace("/", "-").Replace(" ", "-");
+
+                            <div class="question-item">
+                                <div class="question-number">
+                                    @(question.Position + 1)
+                                </div>
+                                
+                                <div class="question-content">
+                                    <div class="question-header">
+                                        <div class="question-meta">
+                                            <span class="question-type-badge @typeClass">
+                                                @switch (question)
+                                                {
+                                                    case TrueFalseQuestion:
+                                                        <i class="fas fa-check-circle me-1"></i>
+                                                        break;
+                                                    case MultipleChoiceQuestion:
+                                                        <i class="fas fa-list-ul me-1"></i>
+                                                        break;
+                                                    case ShortAnswerQuestion:
+                                                        <i class="fas fa-pen me-1"></i>
+                                                        break;
+                                                }
+                                                @questionType
+                                            </span>
+                                            <span class="question-points">
+                                                <i class="fas fa-star me-1"></i>
+                                                @question.Points pts
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="question-text">
+                                        @question.Text
+                                    </div>
+
+                                    @switch (question)
+                                    {
+                                        case MultipleChoiceQuestion mcq:
+                                            <div class="question-preview">
+                                                <div class="options-preview">
+                                                    @foreach (var option in mcq.Options.Take(3))
+                                                    {
+                                                        <div class="option-preview @(mcq.CorrectAnswers.Contains(option) ? "correct" : "")">
+                                                            @if (mcq.CorrectAnswers.Contains(option))
+                                                            {
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                            }
+                                                            @option
+                                                        </div>
+                                                    }
+                                                    @if (mcq.Options.Count > 3)
+                                                    {
+                                                        <div class="option-preview more">
+                                                            +@(mcq.Options.Count - 3) more options
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            break;
+                                        case TrueFalseQuestion tfq:
+                                            <div class="question-preview">
+                                                <div class="tf-preview">
+                                                    <span class="tf-option @(tfq.CorrectAnswer ? "correct" : "")">
+                                                        @if (tfq.CorrectAnswer)
+                                                        {
+                                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                                        }
+                                                        True
+                                                    </span>
+                                                    <span class="tf-option @(!tfq.CorrectAnswer ? "correct" : "")">
+                                                        @if (!tfq.CorrectAnswer)
+                                                        {
+                                                            <i class="fas fa-check-circle text-success me-1"></i>
+                                                        }
+                                                        False
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            break;
+                                        case ShortAnswerQuestion saq:
+                                            <div class="question-preview">
+                                                <div class="answer-preview">
+                                                    <strong>Expected Answer:</strong> @saq.ExpectedAnswer
+                                                    @if (saq.CaseSensitive)
+                                                    {
+                                                        <span class="case-sensitive">(Case Sensitive)</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            break;
+                                    }
+                                </div>
+                                
+                                <div class="question-actions">
+                                    <div class="action-buttons">
+                                        <a asp-action="QuestionAnalytics" asp-route-questionId="@question.Id" asp-route-testId="@Model.Id" class="btn btn-sm btn-outline-info" title="View Analytics">
+                                            <i class="fas fa-chart-line"></i>
+                                        </a>
+                                        <a href="#" class="btn btn-sm btn-outline-warning" title="Edit Question">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Question" onclick="confirmDeleteQuestion('@question.Id')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="question-actions">
-                                <a href="#" class="btn btn-sm btn-info" title="View Details">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a asp-controller="Question" asp-action="Edit" asp-route-id="@question.Id"
-                                   class="btn btn-sm btn-warning" title="Edit Question">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a asp-controller="Test" asp-action="QuestionAnalytics" asp-route-questionId="@question.Id" asp-route-testId="@Model.Id"
-                                   class="btn btn-sm btn-warning" title="Edit Question">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button type="button" class="btn btn-sm btn-danger" title="Delete Question"
-                                        onclick="confirmDeleteQuestion('@question.Id')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
                         }
                     </div>
                 </div>
-            </div>
             }
             else
             {
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                No questions have been added to this test. Use the buttons above to add questions.
-            </div>
+                <!-- Empty Questions State -->
+                <div class="empty-questions-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3 class="empty-title">No Questions Yet</h3>
+                    <p class="empty-description">
+                        Get started by adding your first question. Choose from multiple question types to create engaging tests.
+                    </p>
+                    
+                    <div class="question-types-grid">
+                        <a asp-controller="Question" asp-action="CreateMultipleChoice" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon multiple-choice">
+                                <i class="fas fa-list-ul"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">Multiple Choice</div>
+                                <div class="question-type-desc">Single or multiple selections</div>
+                            </div>
+                        </a>
+                        
+                        <a asp-controller="Question" asp-action="CreateTrueFalse" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon true-false">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">True/False</div>
+                                <div class="question-type-desc">Binary choice questions</div>
+                            </div>
+                        </a>
+                        
+                        <a asp-controller="Question" asp-action="CreateShortAnswer" asp-route-testId="@Model.Id" class="question-type-card">
+                            <div class="question-type-icon short-answer">
+                                <i class="fas fa-pen"></i>
+                            </div>
+                            <div class="question-type-content">
+                                <div class="question-type-title">Short Answer</div>
+                                <div class="question-type-desc">Text-based responses</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             }
         </div>
 
         <!-- Invites Tab -->
-        <div class="tab-pane fade" id="invites" role="tabpanel" aria-labelledby="invites-tab">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Send Invites to Students</h5>
-                </div>
-                <div class="card-body">
-                    @if(Model.Questions.Count == 0)
-                    {
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        You need to add at least one question before sending invites.
-                    </div>
-                    }
-                    else if(Model.IsLocked)
-                    {
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        The test is currently locked. Unlock it to send invites.
-                    </div>
-                    }
-                    else
-                    {
-                    <!-- Form to Specify Number of Emails -->
-                    <form id="emailForm" class="mb-4">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="emailCount" class="form-label">Number of students to invite:</label>
-                                    <input type="number" id="emailCount" name="emailCount" class="form-control"
-                                           min="1" placeholder="Enter number" required>
-                                    <div class="form-text text-muted">Enter the number of email fields to generate</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <div class="d-flex gap-2 w-100">
-                                    <button type="button" class="btn btn-primary flex-grow-1" onclick="generateEmailFields()">
-                                        <i class="fas fa-plus-circle me-2"></i>Generate Fields
-                                    </button>
-                                    <button type="button" class="btn btn-secondary flex-grow-1" onclick="addSingleField()">
-                                        <i class="fas fa-plus me-2"></i>Add Single Field
-                                    </button>
-                                </div>
+        <div class="tab-content" id="invites">
+            <div class="invites-section">
+                <h3 class="subsection-title">Send Test Invitations</h3>
+                
+                @if(Model.Questions.Count == 0)
+                {
+                    <div class="alert alert-warning border-0">
+                        <div class="alert-content">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <div>
+                                <strong>Questions Required</strong>
+                                <p class="mb-0 mt-1">You need to add at least one question before sending invites to students.</p>
                             </div>
                         </div>
-                    </form>
-
-                    <!-- Dynamic Email Input Fields -->
-                    <div id="emailInputsContainer" style="display: none;" class="email-inputs-container">
-                        <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i>Student Email Addresses</h5>
-                        <form id="emailInputsForm" novalidate>
-                            <div id="emailInputs" class="mb-3"></div>
-                            <button type="button" class="btn btn-success" onclick="sendInvites('@Model.Id')">
-                                <i class="fas fa-paper-plane me-2"></i>Send Invites
-                            </button>
-                        </form>
                     </div>
-                    }
+                }
+                else if(Model.IsLocked)
+                {
+                    <div class="alert alert-warning border-0">
+                        <div class="alert-content">
+                            <i class="fas fa-lock me-2"></i>
+                            <div>
+                                <strong>Test Locked</strong>
+                                <p class="mb-0 mt-1">This test is currently locked. Unlock it to send invitations to students.</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Email Input Form -->
+                    <div class="invite-form">
+                        <div class="form-section">
+                            <label class="form-label">Number of Students</label>
+                            <div class="input-group">
+                                <input type="number" id="emailCount" class="form-control" min="1" max="50" placeholder="Enter number of students">
+                                <button type="button" class="btn btn-outline-primary" onclick="generateEmailFields()">
+                                    <i class="fas fa-plus me-2"></i>Generate Fields
+                                </button>
+                            </div>
+                            <div class="form-text">Enter how many email fields you need (max 50)</div>
+                        </div>
+
+                        <!-- Dynamic Email Fields -->
+                        <div id="emailFieldsContainer" class="email-fields-container" style="display: none;">
+                            <div class="section-header">
+                                <h4 class="subsection-title">Student Email Addresses</h4>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addSingleField()">
+                                    <i class="fas fa-plus me-1"></i>Add Field
+                                </button>
+                            </div>
+                            
+                            <div id="emailFields" class="email-fields"></div>
+                            
+                            <div class="invite-actions">
+                                <button type="button" class="btn btn-success btn-lg" onclick="sendInvites('@Model.Id')">
+                                    <i class="fas fa-paper-plane me-2"></i>Send Invitations
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Test Modal -->
+<div class="modal fade" id="deleteTestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Delete Test
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to delete this test?</p>
+                <div class="alert alert-danger border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This action cannot be undone and will permanently delete all questions and student attempts.
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Question Confirmation Modal -->
-<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete Question</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this question?</p>
-                <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <form id="deleteQuestionForm" method="post">
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-2"></i>Delete Question
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Test Confirmation Modal -->
-<div class="modal fade" id="deleteTestModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete Test</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete this test?</p>
-                <p class="text-danger">This action cannot be undone and will delete all questions and student attempts associated with this test.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <a id="deleteTestLink" href="#" class="btn btn-danger">
                     <i class="fas fa-trash me-2"></i>Delete Test
                 </a>
@@ -327,8 +504,864 @@ ViewData["Title"] = "Test Details";
     </div>
 </div>
 
+<!-- Delete Question Modal -->
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Delete Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this question?</p>
+                <p class="text-muted small">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteQuestionForm" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Test Details Specific Styles */
+.test-details-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Header Section */
+.test-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e9ecef;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-link {
+    color: #2563eb;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: #1d4ed8;
+}
+
+.breadcrumb-separator {
+    margin: 0 0.5rem;
+    color: #6b7280;
+}
+
+.breadcrumb-current {
+    color: #6b7280;
+}
+
+.test-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-active {
+    background-color: rgba(22, 163, 74, 0.1);
+    color: #16a34a;
+}
+
+.status-locked {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+.test-description {
+    color: #6b7280;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f0f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 1.5rem;
+}
+
+.stat-number {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Configuration Section */
+.config-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.config-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.config-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: #e0e7ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3730a3;
+}
+
+.config-title {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.config-value {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Quick Actions */
+.quick-actions {
+    margin-bottom: 2rem;
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.action-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.action-button {
+    border: none;
+    width: 100%;
+    text-align: left;
+    background: white;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-color: #2563eb;
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #f0f4ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.action-content {
+    flex: 1;
+}
+
+.action-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.action-subtitle {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.action-arrow {
+    color: #d1d5db;
+    transition: all 0.2s ease;
+}
+
+.action-card:hover .action-arrow {
+    color: #2563eb;
+    transform: translateX(4px);
+}
+
+/* Content Tabs */
+.content-tabs {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.tab-nav {
+    display: flex;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-btn {
+    padding: 1rem 1.5rem;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.tab-btn:hover {
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.tab-btn.active {
+    color: #2563eb;
+    background: white;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #2563eb;
+}
+
+.tab-count {
+    background: #e5e7eb;
+    color: #374151;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.tab-btn.active .tab-count {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.tab-content {
+    display: none;
+    padding: 2rem;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Questions Section */
+.add-questions-section {
+    margin-bottom: 2rem;
+}
+
+.subsection-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.question-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.question-type-card {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+}
+
+.question-type-card:hover {
+    border-color: #2563eb;
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: inherit;
+}
+
+.question-type-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: white;
+}
+
+.question-type-icon.multiple-choice {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.question-type-icon.true-false {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.question-type-icon.short-answer {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+.question-type-title {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.question-type-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Questions List */
+.questions-section .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.section-meta .total-points {
+    color: #374151;
+    font-size: 0.875rem;
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.question-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.question-item:hover {
+    background: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.question-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.question-content {
+    flex: 1;
+}
+
+.question-header {
+    margin-bottom: 0.75rem;
+}
+
+.question-meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.question-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.question-type-badge.multiple-choice {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+}
+
+.question-type-badge.true-false {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.question-type-badge.short-answer {
+    background: rgba(14, 165, 233, 0.1);
+    color: #0284c7;
+}
+
+.question-points {
+    display: inline-flex;
+    align-items: center;
+    color: #f59e0b;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.question-text {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.question-preview {
+    margin-top: 0.75rem;
+}
+
+.options-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.option-preview {
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+
+.option-preview.correct {
+    background: rgba(22, 163, 74, 0.05);
+}
+
+.option-preview.more {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.tf-preview {
+    display: flex;
+    gap: 1rem;
+}
+
+.tf-option {
+    padding: 0.5rem 0.75rem;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+}
+
+.tf-option.correct {
+    background: rgba(22, 163, 74, 0.05);
+}
+
+.answer-preview {
+    padding: 0.75rem;
+    background: white;
+    border-radius: 6px;
+    font-size: 0.875rem;
+}
+
+.case-sensitive {
+    color: #f59e0b;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.question-actions {
+    display: flex;
+    align-items: center;
+}
+
+.question-actions .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Empty Questions State */
+.empty-questions-state {
+    text-align: center;
+    padding: 3rem 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1.5rem;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.empty-description {
+    color: #6b7280;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Invites Section */
+.invites-section {
+    max-width: 800px;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 2rem;
+}
+
+.alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+.invite-form {
+    max-width: 600px;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-group .form-control {
+    flex: 1;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.email-fields-container {
+    margin-top: 2rem;
+}
+
+.email-fields-container .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.email-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+
+.email-field-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.email-field-group .form-control {
+    flex: 1;
+}
+
+.invite-actions {
+    display: flex;
+    justify-content: center;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive Design */
+@@media (max-width: 1024px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@@media (max-width: 768px) {
+    .test-header {
+        padding: 1.5rem;
+    }
+
+    .test-title {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tab-nav {
+        flex-direction: column;
+    }
+
+    .tab-btn {
+        padding: 0.75rem 1rem;
+    }
+
+    .tab-content {
+        padding: 1.5rem;
+    }
+
+    .question-types-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .question-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .question-number {
+        align-self: flex-start;
+    }
+
+    .question-actions {
+        align-self: stretch;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+}
+
+@@media (max-width: 576px) {
+    .test-header {
+        padding: 1rem;
+    }
+
+    .breadcrumb-nav {
+        font-size: 0.75rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .question-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .tf-preview {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+}
+</style>
+
 @section Scripts {
 <script>
+    // Tab functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetTab = this.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                tabButtons.forEach(b => b.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                this.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+    });
+
     // Lock/Unlock Test
     function lockTest(id) {
         fetch('/Test/LockTest/' + id, {
@@ -337,140 +1370,128 @@ ViewData["Title"] = "Test Details";
                 'Content-Type': 'application/json'
             }
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const button = document.getElementById('lockTestButton');
-                    const icon = button.querySelector('i');
-
-                    if (data.isLocked) {
-                        button.innerHTML = '<i class="fas fa-lock-open me-2"></i>Unlock Test';
-                        button.classList.remove('btn-warning');
-                        button.classList.add('btn-success');
-                        showToast('Test has been locked successfully', 'success');
-                    } else {
-                        button.innerHTML = '<i class="fas fa-lock me-2"></i>Lock Test';
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-warning');
-                        showToast('Test has been unlocked successfully', 'success');
-                    }
-
-                    // Reload the page to refresh all status indicators
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const button = document.getElementById('lockTestButton');
+                
+                if (data.isLocked) {
+                    button.innerHTML = '<i class="fas fa-lock-open me-2"></i>Unlock Test';
+                    button.classList.remove('btn-warning');
+                    button.classList.add('btn-success');
                 } else {
-                    showToast(data.message || 'Error updating test status', 'error');
+                    button.innerHTML = '<i class="fas fa-lock me-2"></i>Lock Test';
+                    button.classList.remove('btn-success');
+                    button.classList.add('btn-warning');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('An error occurred while updating the test', 'error');
-            });
+                
+                // Show success message
+                if (typeof showToast === 'function') {
+                    showToast(data.isLocked ? 'Test locked successfully' : 'Test unlocked successfully', 'success');
+                }
+                
+                // Reload page after short delay to update status indicators
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Error updating test status', 'error');
+            }
+        });
     }
 
-    // Confirm Delete Question
-    function confirmDeleteQuestion(id) {
-        const deleteForm = document.getElementById('deleteQuestionForm');
-        deleteForm.action = '/Question/Delete/' + id;
-
-        const modal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
-        modal.show();
-    }
-
-    // Confirm Delete Test
+    // Delete confirmations
     function confirmDelete(id) {
-        const deleteLink = document.getElementById('deleteTestLink');
-        deleteLink.href = '/Test/Delete/' + id;
-
+        document.getElementById('deleteTestLink').href = '/Test/Delete/' + id;
         const modal = new bootstrap.Modal(document.getElementById('deleteTestModal'));
         modal.show();
     }
 
-    // Generate Email Fields
-    function generateEmailFields() {
-        const emailCount = parseInt(document.getElementById('emailCount').value);
+    function confirmDeleteQuestion(id) {
+        document.getElementById('deleteQuestionForm').action = '/Question/Delete/' + id;
+        const modal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
+        modal.show();
+    }
 
-        if (!emailCount || emailCount < 1) {
-            showToast('Please enter a valid number of students', 'warning');
+    // Email invitation functionality
+    function generateEmailFields() {
+        const count = parseInt(document.getElementById('emailCount').value);
+        
+        if (!count || count < 1 || count > 50) {
+            if (typeof showToast === 'function') {
+                showToast('Please enter a number between 1 and 50', 'warning');
+            }
             return;
         }
-
-        const emailInputsDiv = document.getElementById('emailInputs');
-        emailInputsDiv.innerHTML = ''; // Clear existing fields
-
-        for (let i = 1; i <= emailCount; i++) {
-            addEmailField(i);
+        
+        const container = document.getElementById('emailFields');
+        container.innerHTML = '';
+        
+        for (let i = 1; i <= count; i++) {
+            addEmailFieldAtIndex(i);
         }
-
-        document.getElementById('emailInputsContainer').style.display = 'block';
+        
+        document.getElementById('emailFieldsContainer').style.display = 'block';
     }
 
-    // Add Single Email Field
     function addSingleField() {
-        const emailInputsDiv = document.getElementById('emailInputs');
-        const emailCount = emailInputsDiv.children.length + 1;
-
-        addEmailField(emailCount);
-
-        document.getElementById('emailInputsContainer').style.display = 'block';
-    }
-
-    // Helper function to add email field
-    function addEmailField(index) {
-        const emailInputsDiv = document.getElementById('emailInputs');
-
-        const emailInputDiv = document.createElement('div');
-        emailInputDiv.className = 'input-group email-input-group mb-2';
-
-        const uniqueId = `email-${Date.now()}-${index}`;
-
-        emailInputDiv.innerHTML = `
-                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                <input type="email" id="${uniqueId}" class="form-control" placeholder="Student ${index} email" required>
-                <button type="button" class="btn btn-danger" onclick="removeEmailField(this)">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-
-        emailInputsDiv.appendChild(emailInputDiv);
-    }
-
-    // Remove Email Field
-    function removeEmailField(button) {
-        const emailInputGroup = button.closest('.email-input-group');
-
-        // Add removal animation
-        emailInputGroup.style.opacity = '0';
-        emailInputGroup.style.transform = 'translateX(20px)';
-        emailInputGroup.style.transition = 'all 0.3s ease';
-
-        setTimeout(() => {
-            emailInputGroup.remove();
-
-            // Renumber remaining fields
-            const emailGroups = document.querySelectorAll('.email-input-group');
-            emailGroups.forEach((group, index) => {
-                const input = group.querySelector('input');
-                input.placeholder = `Student ${index + 1} email`;
-            });
-
-            // Hide container if no email fields remain
-            if (emailGroups.length === 0) {
-                document.getElementById('emailInputsContainer').style.display = 'none';
+        const container = document.getElementById('emailFields');
+        const currentCount = container.children.length + 1;
+        
+        if (currentCount > 50) {
+            if (typeof showToast === 'function') {
+                showToast('Maximum 50 email fields allowed', 'warning');
             }
-        }, 300);
+            return;
+        }
+        
+        addEmailFieldAtIndex(currentCount);
+        document.getElementById('emailFieldsContainer').style.display = 'block';
     }
 
-    // Send Invites
-    function sendInvites(testId) {
-        const emailInputs = document.querySelectorAll('#emailInputs input[type="email"]');
-        const emails = [];
+    function addEmailFieldAtIndex(index) {
+        const container = document.getElementById('emailFields');
+        const fieldGroup = document.createElement('div');
+        fieldGroup.className = 'email-field-group';
+        fieldGroup.innerHTML = `
+            <input type="email" class="form-control" placeholder="Student ${index} email address" required>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeEmailField(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(fieldGroup);
+    }
 
-        // Validate form
+    function removeEmailField(button) {
+        const fieldGroup = button.parentElement;
+        fieldGroup.remove();
+        
+        // Update placeholder numbers
+        const emailFields = document.querySelectorAll('.email-field-group input');
+        emailFields.forEach((input, index) => {
+            input.placeholder = `Student ${index + 1} email address`;
+        });
+        
+        // Hide container if no fields remain
+        if (emailFields.length === 0) {
+            document.getElementById('emailFieldsContainer').style.display = 'none';
+        }
+    }
+
+    function sendInvites(testId) {
+        const emailInputs = document.querySelectorAll('.email-field-group input');
+        const emails = [];
+        
         let isValid = true;
         emailInputs.forEach(input => {
-            if (!input.checkValidity()) {
+            if (!input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            } else if (!input.checkValidity()) {
                 input.classList.add('is-invalid');
                 isValid = false;
             } else {
@@ -478,19 +1499,20 @@ ViewData["Title"] = "Test Details";
                 emails.push(input.value.trim());
             }
         });
-
+        
         if (!isValid || emails.length === 0) {
-            showToast('Please enter valid email addresses', 'warning');
+            if (typeof showToast === 'function') {
+                showToast('Please enter valid email addresses', 'warning');
+            }
             return;
         }
-
-        // Disable button and show loading state
-        const sendButton = document.querySelector('button[onclick^="sendInvites"]');
+        
+        // Show loading state
+        const sendButton = event.target;
         const originalText = sendButton.innerHTML;
         sendButton.disabled = true;
         sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
-
-        // Send invites
+        
         fetch(`/TestInvite/SendInvites?testId=${testId}`, {
             method: 'POST',
             headers: {
@@ -498,49 +1520,32 @@ ViewData["Title"] = "Test Details";
             },
             body: JSON.stringify(emails),
         })
-            .then(response => {
-                if (response.ok) {
-                    return response.json().catch(() => ({})); // Handle empty responses
-                }
-                throw new Error('Failed to send invites');
-            })
-            .then(() => {
-                showToast(`Invites sent successfully to ${emails.length} student(s)`, 'success');
-
-                // Clear the form
-                document.getElementById('emailInputs').innerHTML = '';
-                document.getElementById('emailInputsContainer').style.display = 'none';
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showToast('Error sending invites. Please try again.', 'error');
-            })
-            .finally(() => {
-                // Restore button state
-                sendButton.disabled = false;
-                sendButton.innerHTML = originalText;
-            });
-    }
-
-    // Initialize Bootstrap tabs
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set active tab based on hash
-        const hash = window.location.hash;
-        if (hash) {
-            const tab = document.querySelector(`a[href="${hash}"]`);
-            if (tab) {
-                tab.click();
+        .then(response => {
+            if (response.ok) {
+                return response.json().catch(() => ({}));
             }
-        }
-
-        // Update hash when tab changes
-        const tabLinks = document.querySelectorAll('button[data-bs-toggle="tab"]');
-        tabLinks.forEach(link => {
-            link.addEventListener('shown.bs.tab', function(e) {
-                const id = e.target.getAttribute('data-bs-target');
-                window.location.hash = id;
-            });
+            throw new Error('Failed to send invites');
+        })
+        .then(() => {
+            if (typeof showToast === 'function') {
+                showToast(`Invites sent successfully to ${emails.length} student(s)`, 'success');
+            }
+            
+            // Clear the form
+            document.getElementById('emailFields').innerHTML = '';
+            document.getElementById('emailFieldsContainer').style.display = 'none';
+            document.getElementById('emailCount').value = '';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (typeof showToast === 'function') {
+                showToast('Error sending invites. Please try again.', 'error');
+            }
+        })
+        .finally(() => {
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalText;
         });
-    });
+    }
 </script>
 }

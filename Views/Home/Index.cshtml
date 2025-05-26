@@ -1,169 +1,1125 @@
 ﻿@{
-    ViewData["Title"] = "Home";
+ViewData["Title"] = "Home";
 }
 
-<div class="container py-4">
+<div class="home-container">
     <!-- Hero Section -->
-    <div class="row mb-5">
-        <div class="col-lg-12 text-center">
-            <h1 class="display-4 mb-3">Welcome to <span class="text-primary">TestPlatform</span></h1>
-            <p class="lead text-muted mb-4">A professional platform for creating, sharing, and taking tests with ease</p>
-            <div class="d-flex justify-content-center gap-3">
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    Welcome to <span class="brand-accent">TestPlatform</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Create, share, and analyze educational assessments with our comprehensive testing platform
+                </p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">10K+</div>
+                            <div class="stat-label">Active Users</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Tests Created</div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">1M+</div>
+                            <div class="stat-label">Assessments</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-actions">
                 @if (!User.Identity.IsAuthenticated)
                 {
-                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary px-4 py-2">
-                        <i class="fas fa-user-plus me-2"></i>Create Account
-                    </a>
-                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary px-4 py-2">
-                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                    </a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg hero-cta">
+                    <i class="fas fa-rocket me-2"></i>Get Started Free
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
                 }
                 else
                 {
-                    <a asp-controller="Test" asp-action="Index" class="btn btn-primary px-4 py-2">
-                        <i class="fas fa-clipboard-list me-2"></i>My Tests
-                    </a>
-                    <a asp-controller="Test" asp-action="Create" class="btn btn-outline-primary px-4 py-2">
-                        <i class="fas fa-plus-circle me-2"></i>Create New Test
-                    </a>
+                <a asp-controller="Test" asp-action="Create" class="btn btn-primary btn-lg hero-cta">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Test
+                </a>
+                <a asp-controller="Test" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-clipboard-list me-2"></i>My Tests
+                </a>
                 }
             </div>
         </div>
-    </div>
-    
-    <!-- Test Access Card -->
-    <div class="row justify-content-center mb-5">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h4 class="mb-0 text-primary"><i class="fas fa-key me-2"></i>Test Access</h4>
+
+        <div class="hero-visual">
+            <div class="visual-card">
+                <div class="card-header">
+                    <div class="card-title">Sample Test</div>
+                    <div class="card-status active">Active</div>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <p class="text-muted">Enter your access token to begin a test</p>
+                <div class="card-content">
+                    <div class="question-preview">
+                        <div class="question-number">1</div>
+                        <div class="question-text">What is the capital of France?</div>
                     </div>
-                    
-                    @if (TempData["ErrorMessage"] != null)
-                    {
-                        <div class="alert alert-danger mb-4" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            @TempData["ErrorMessage"]
-                        </div>
-                    }
-                    
-                    <form asp-action="EnterToken" asp-controller="TestAttempt" method="post">
-                        <div class="mb-3">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-muted"></i></span>
-                                <input type="text" id="token" name="token" class="form-control border-start-0"
-                                       placeholder="Enter your access token" required autocomplete="off" />
-                            </div>
-                            <div class="form-text">The token was sent to your email by your instructor</div>
-                        </div>
-                        
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary py-2">
-                                <i class="fas fa-play-circle me-2"></i>Start Test
-                            </button>
-                        </div>
-                    </form>
+                    <div class="options-preview">
+                        <div class="option">A) London</div>
+                        <div class="option correct">B) Paris</div>
+                        <div class="option">C) Berlin</div>
+                        <div class="option">D) Madrid</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
+    </section>
+
+    <!-- Test Access Section -->
+    <section class="test-access-section">
+        <div class="access-container">
+            <div class="access-content">
+                <div class="access-header">
+                    <h2 class="access-title">
+                        <i class="fas fa-key me-3"></i>Take a Test
+                    </h2>
+                    <p class="access-description">
+                        Have an access token? Enter it below to begin your test
+                    </p>
+                </div>
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                <div class="alert alert-danger">
+                    <div class="alert-content">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span>@TempData["ErrorMessage"]</span>
+                    </div>
+                </div>
+                }
+
+                <form asp-action="EnterToken" asp-controller="TestAttempt" method="post" class="token-form">
+                    <div class="token-input-group">
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="text" id="token" name="token" class="form-control token-input"
+                                   placeholder="Enter your access token" required autocomplete="off" />
+                        </div>
+                        <button type="submit" class="btn btn-primary token-submit">
+                            <i class="fas fa-play-circle me-2"></i>Start Test
+                        </button>
+                    </div>
+                    <div class="token-help">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your instructor provided this token via email
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
     <!-- Features Section -->
-    <div class="row mt-5 mb-4">
-        <div class="col-lg-12 text-center">
-            <h2 class="mb-5">Platform Features</h2>
+    <section class="features-section">
+        <div class="features-header">
+            <h2 class="section-title">Powerful Features for Modern Education</h2>
+            <p class="section-subtitle">
+                Everything you need to create, distribute, and analyze educational assessments
+            </p>
         </div>
-    </div>
-    
-    <div class="row mb-5 g-4">
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3 text-primary">
-                        <i class="fas fa-edit fa-3x"></i>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon create">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Easy Test Creation</h3>
+                    <p class="feature-description">
+                        Build comprehensive tests with multiple question types including multiple choice,
+                        true/false, and short answer questions with our intuitive interface.
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Multiple question types
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Rich text formatting
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Flexible scoring
+                        </div>
                     </div>
-                    <h4 class="mb-3">Easy Test Creation</h4>
-                    <p class="text-muted mb-0">Create various question types including multiple choice, true/false, and short answer questions.</p>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon distribute">
+                    <i class="fas fa-share-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Seamless Distribution</h3>
+                    <p class="feature-description">
+                        Share tests effortlessly with students through secure email invitations
+                        and unique access tokens for controlled test-taking environments.
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Email invitations
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Secure access tokens
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Attempt limitations
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon analyze">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Advanced Analytics</h3>
+                    <p class="feature-description">
+                        Gain deep insights into student performance with comprehensive analytics,
+                        detailed reports, and question-level performance breakdowns.
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Performance insights
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Detailed reports
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Question analysis
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon secure">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="feature-content">
+                    <h3 class="feature-title">Secure & Reliable</h3>
+                    <p class="feature-description">
+                        Protect test integrity with advanced security features including
+                        proctoring controls, time limits, and attempt monitoring.
+                    </p>
+                    <div class="feature-highlights">
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Proctoring controls
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Time management
+                        </div>
+                        <div class="highlight-item">
+                            <i class="fas fa-check me-2"></i>Attempt tracking
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3 text-primary">
-                        <i class="fas fa-share-alt fa-3x"></i>
-                    </div>
-                    <h4 class="mb-3">Seamless Sharing</h4>
-                    <p class="text-muted mb-0">Share tests with students via email with unique access tokens for secure test taking.</p>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works-section">
+        <div class="works-header">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Get started in three simple steps</p>
+        </div>
+
+        <div class="steps-container">
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3 class="step-title">Create Your Test</h3>
+                    <p class="step-description">
+                        Build your test with our easy-to-use question builder.
+                        Add multiple choice, true/false, or short answer questions.
+                    </p>
+                </div>
+                <div class="step-visual">
+                    <i class="fas fa-edit"></i>
+                </div>
+            </div>
+
+            <div class="step-connector"></div>
+
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3 class="step-title">Invite Students</h3>
+                    <p class="step-description">
+                        Send secure invitations to your students via email.
+                        Each student receives a unique access token.
+                    </p>
+                </div>
+                <div class="step-visual">
+                    <i class="fas fa-envelope"></i>
+                </div>
+            </div>
+
+            <div class="step-connector"></div>
+
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3 class="step-title">Analyze Results</h3>
+                    <p class="step-description">
+                        Review detailed analytics and performance insights.
+                        Track student progress and identify learning gaps.
+                    </p>
+                </div>
+                <div class="step-visual">
+                    <i class="fas fa-chart-line"></i>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body text-center p-4">
-                    <div class="feature-icon mb-3 text-primary">
-                        <i class="fas fa-chart-bar fa-3x"></i>
-                    </div>
-                    <h4 class="mb-3">Detailed Results</h4>
-                    <p class="text-muted mb-0">View comprehensive results and analytics to understand student performance.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Call to Action -->
+    </section>
+
+    <!-- CTA Section -->
     @if (!User.Identity.IsAuthenticated)
     {
-        <div class="row mt-5">
-            <div class="col-lg-12">
-                <div class="card border-0 shadow-sm bg-light">
-                    <div class="card-body text-center py-5">
-                        <h3 class="mb-4 text-primary">Ready to get started?</h3>
-                        <p class="mb-4 text-muted">Create an account today and start building your first test in minutes.</p>
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg px-4">
-                            <i class="fas fa-user-plus me-2"></i>Register Now
-                        </a>
-                        <p class="mt-3 text-muted">
-                            Already have an account? 
-                            <a asp-controller="Account" asp-action="Login" class="text-primary fw-bold">Sign In</a>
-                        </p>
-                    </div>
+    <section class="cta-section">
+        <div class="cta-content">
+            <div class="cta-text">
+                <h2 class="cta-title">Ready to Transform Your Testing?</h2>
+                <p class="cta-description">
+                    Join thousands of educators who trust TestPlatform for their assessment needs.
+                    Start creating professional tests today.
+                </p>
+            </div>
+            <div class="cta-actions">
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg cta-primary">
+                    <i class="fas fa-rocket me-2"></i>Start Free Trial
+                </a>
+                <div class="cta-note">
+                    <i class="fas fa-check-circle me-2"></i>
+                    No credit card required • Free forever plan available
                 </div>
             </div>
         </div>
+    </section>
     }
 </div>
 
+<style>
+    /* Home Page Specific Styles */
+    .home-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    /* Hero Section */
+    .hero-section {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 4rem;
+        align-items: center;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+    }
+
+    .brand-accent {
+        color: #2563eb;
+        position: relative;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        max-width: 90%;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #f0f4ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 1.25rem;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.125rem;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .hero-cta {
+        padding: 1rem 2rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        transition: all 0.2s ease;
+    }
+
+    .hero-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    }
+
+    /* Hero Visual */
+    .hero-visual {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .visual-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        width: 100%;
+        max-width: 350px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .visual-card .card-header {
+        background: #f9fafb;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .card-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .card-status.active {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+    }
+
+    .visual-card .card-content {
+        padding: 1.25rem;
+    }
+
+    .question-preview {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .question-number {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .question-text {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .options-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-left: 1.5rem;
+    }
+
+    .option {
+        padding: 0.5rem;
+        background: #f9fafb;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .option.correct {
+        background: rgba(22, 163, 74, 0.1);
+        border-color: #16a34a;
+        color: #16a34a;
+        font-weight: 500;
+    }
+
+    /* Test Access Section */
+    .test-access-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        margin-bottom: 4rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .access-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .access-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .access-description {
+        font-size: 1.125rem;
+        color: #6b7280;
+        margin-bottom: 2rem;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 1.5rem;
+        text-align: left;
+    }
+
+    .alert-danger {
+        background-color: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    .alert-content {
+        display: flex;
+        align-items: center;
+    }
+
+    .token-form {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .token-input-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        z-index: 1;
+    }
+
+    .token-input {
+        padding-left: 3rem;
+        height: 56px;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .token-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .token-submit {
+        height: 56px;
+        padding: 0 1.5rem;
+        font-weight: 600;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .token-help {
+        color: #6b7280;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 4rem 0;
+        margin-bottom: 4rem;
+    }
+
+    .features-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+        font-size: 1.125rem;
+        color: #6b7280;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-card:hover::before {
+        opacity: 1;
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .feature-icon.create {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .feature-icon.distribute {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .feature-icon.analyze {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .feature-icon.secure {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+
+    .feature-description {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .feature-highlights {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .highlight-item {
+        display: flex;
+        align-items: center;
+        color: #16a34a;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    /* How It Works Section */
+    .how-it-works-section {
+        background: #f9fafb;
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .works-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .steps-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        max-width: 1000px;
+        margin: 0 auto;
+        gap: 2rem;
+    }
+
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        flex: 1;
+        max-width: 250px;
+    }
+
+    .step-number {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #2563eb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .step-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+
+    .step-description {
+        color: #6b7280;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+    }
+
+    .step-visual {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #f0f4ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 1.25rem;
+    }
+
+    .step-connector {
+        width: 60px;
+        height: 2px;
+        background: #e5e7eb;
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .step-connector::after {
+        content: '';
+        position: absolute;
+        right: -4px;
+        top: -3px;
+        width: 8px;
+        height: 8px;
+        background: #e5e7eb;
+        transform: rotate(45deg);
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        border-radius: 16px;
+        padding: 4rem 2rem;
+        text-align: center;
+        color: white;
+        margin-bottom: 2rem;
+    }
+
+    .cta-content {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .cta-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .cta-description {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .cta-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .cta-primary {
+        background: white;
+        color: #2563eb;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .cta-primary:hover {
+        background: #f8fafc;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        color: #1d4ed8;
+    }
+
+    .cta-note {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1024px) {
+    .hero-section {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+    }
+
+    .hero-stats {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .steps-container {
+        flex-direction: column;
+        gap: 3rem;
+    }
+
+    .step-connector {
+        transform: rotate(90deg);
+        width: 2px;
+        height: 60px;
+    }
+
+    .step-connector::after {
+        right: -3px;
+        top: -4px;
+    }
+    }
+
+    @@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+        max-width: 100%;
+    }
+
+    .hero-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .test-access-section {
+        padding: 2rem 1rem;
+    }
+
+    .access-title {
+        font-size: 1.5rem;
+    }
+
+    .token-input-group {
+        flex-direction: column;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .how-it-works-section {
+        padding: 3rem 1rem;
+    }
+
+    .cta-section {
+        padding: 3rem 1rem;
+    }
+
+    .cta-title {
+        font-size: 2rem;
+    }
+    }
+
+    @@media (max-width: 576px) {
+    .hero-section {
+        padding: 2rem 0;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .stat-item {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+
+    .visual-card {
+        max-width: 280px;
+    }
+
+    .access-title {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .token-help {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .feature-card {
+        padding: 1.5rem;
+    }
+
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 1.5rem;
+    }
+
+    .step-number {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+    }
+
+    .cta-actions {
+        width: 100%;
+    }
+
+    .cta-primary {
+        width: 100%;
+    }
+    }
+
+    /* Animation Enhancements */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hero-content,
+    .access-container,
+    .features-header,
+    .works-header,
+    .cta-content {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .feature-card {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .feature-card:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .step-item {
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .step-item:nth-child(1) { animation-delay: 0.1s; }
+    .step-item:nth-child(3) { animation-delay: 0.2s; }
+    .step-item:nth-child(5) { animation-delay: 0.3s; }
+</style>
+
 @section Scripts {
-    <script>
-        // Additional JS for the home page if needed
-        document.addEventListener('DOMContentLoaded', function() {
-            // Focus on the token input when page loads
-            const tokenInput = document.getElementById('token');
-            if (tokenInput) {
-                tokenInput.focus();
-            }
-            
-            // Add subtle animation to feature cards
-            const featureCards = document.querySelectorAll('.feature-icon');
-            
-            featureCards.forEach((card, index) => {
-                card.style.transform = 'translateY(10px)';
-                card.style.opacity = '0';
-                card.style.transition = 'all 0.5s ease';
-                card.style.transitionDelay = `${index * 0.2}s`;
-                
-                setTimeout(() => {
-                    card.style.transform = 'translateY(0)';
-                    card.style.opacity = '1';
-                }, 100);
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Focus on token input when page loads
+        const tokenInput = document.getElementById('token');
+        if (tokenInput) {
+            tokenInput.focus();
+        }
+
+        // Add subtle parallax effect to hero visual
+        const heroVisual = document.querySelector('.hero-visual');
+        if (heroVisual) {
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const rate = scrolled * -0.1;
+                heroVisual.style.transform = `translateY(${rate}px)`;
+            });
+        }
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.stat-number, .feature-card, .step-item').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Add hover effects to feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
             });
         });
-    </script>
+    });
+</script>
 }
