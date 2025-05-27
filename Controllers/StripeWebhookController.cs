@@ -39,6 +39,7 @@ public class StripeWebhookController : ControllerBase
         }
 
         _logger.LogInformation("Stripe webhook received with payload length: {PayloadLength}", json.Length);
+        _logger.LogDebug("Webhook payload: {Payload}", json);
 
         try
         {
@@ -55,14 +56,16 @@ public class StripeWebhookController : ControllerBase
             if (string.IsNullOrEmpty(_webhookSecret))
             {
                 _logger.LogWarning("Webhook secret not configured, parsing without verification");
-                stripeEvent = EventUtility.ParseEvent(json);
+                stripeEvent = EventUtility.ParseEvent(json, throwOnApiVersionMismatch: false);
             }
             else
             {
                 stripeEvent = EventUtility.ConstructEvent(
                     json,
                     stripeSignature,
-                    _webhookSecret
+                    _webhookSecret,
+                    tolerance: 300,
+                    throwOnApiVersionMismatch: false
                 );
             }
 
@@ -71,8 +74,11 @@ public class StripeWebhookController : ControllerBase
             switch (stripeEvent.Type)
             {
                 case "customer.subscription.created":
+                    await HandleSubscriptionCreated(stripeEvent);
+                    break;
+                    
                 case "customer.subscription.updated":
-                    await HandleSubscriptionUpdate(stripeEvent);
+                    await HandleSubscriptionUpdated(stripeEvent);
                     break;
                     
                 case "customer.subscription.deleted":
@@ -106,7 +112,80 @@ public class StripeWebhookController : ControllerBase
         }
     }
 
-    private async Task HandleSubscriptionUpdate(Event stripeEvent)
+    private async Task HandleSubscriptionCreated(Event stripeEvent)
+    {
+        try
+        {
+            var subscription = stripeEvent.Data.Object as Stripe.Subscription;
+            if (subscription == null)
+            {
+                _logger.LogWarning("Failed to cast event data object to Subscription for event {EventId}", stripeEvent.Id);
+                return;
+            }
+
+            _logger.LogInformation("Processing subscription creation for customer {CustomerId}, subscription {SubscriptionId}, status: {Status}", 
+                subscription.CustomerId, subscription.Id, subscription.Status);
+
+            // Try to find user with retry logic
+            var user = await FindUserWithRetry(subscription.CustomerId);
+            if (user == null)
+            {
+                _logger.LogError("No user found for Stripe customer id: {CustomerId} in event {EventId} after retries", 
+                    subscription.CustomerId, stripeEvent.Id);
+                return;
+            }
+
+            _logger.LogInformation("Found user {UserId} ({UserEmail}) for customer {CustomerId}", 
+                user.Id, user.Email, subscription.CustomerId);
+
+            // Update subscription status
+            bool isPro = subscription.Status == "active" || subscription.Status == "trialing";
+            await _subscriptionRepository.UpdateSubscriptionStatusAsync(
+                user.Id,
+                isPro,
+                subscription.CustomerId,
+                subscription.Id,
+                null); // No end date for new active subscription
+
+            _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}", user.Id, isPro);
+
+            // Send welcome email
+            if (isPro)
+            {
+                try
+                {
+                    _logger.LogInformation("Attempting to send welcome email to {Email}", user.Email);
+                    
+                    var emailBody = $"<h2>Welcome to TestPlatform Pro!</h2>" +
+                                   $"<p>Hi {user.FirstName},</p>" +
+                                   $"<p>Your Pro subscription is now active. You have unlimited access to:</p>" +
+                                   $"<ul>" +
+                                   $"<li>Create unlimited questions</li>" +
+                                   $"<li>Send unlimited test invites</li>" +
+                                   $"<li>Priority support</li>" +
+                                   $"</ul>" +
+                                   $"<p>Thank you for choosing TestPlatform Pro!</p>";
+
+                    await _emailService.SendEmailAsync(user.Email!, "Welcome to TestPlatform Pro!", emailBody);
+                    
+                    _logger.LogInformation("Successfully sent welcome email to user {UserId} at {Email}", user.Id, user.Email);
+                }
+                catch (Exception emailEx)
+                {
+                    _logger.LogError(emailEx, "Failed to send welcome email to user {UserId} at {Email}. Error: {Error}", 
+                        user.Id, user.Email, emailEx.Message);
+                    
+                    // Don't fail the webhook because of email issues
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling subscription creation for event {EventId}", stripeEvent.Id);
+        }
+    }
+
+    private async Task HandleSubscriptionUpdated(Event stripeEvent)
     {
         try
         {
@@ -121,13 +200,16 @@ public class StripeWebhookController : ControllerBase
             _logger.LogInformation("Processing subscription update for customer {CustomerId}, status: {Status}, cancel_at_period_end: {CancelAtPeriodEnd}, current_period_end: {CurrentPeriodEnd}", 
                 subscription.CustomerId, subscription.Status, subscription.CancelAtPeriodEnd, currentPeriodEnd);
 
-            var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(subscription.CustomerId);
+            var user = await FindUserWithRetry(subscription.CustomerId);
             if (user == null)
             {
-                _logger.LogWarning("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
+                _logger.LogError("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
                     subscription.CustomerId, stripeEvent.Id);
                 return;
             }
+
+            _logger.LogInformation("Found user {UserId} ({UserEmail}) for customer {CustomerId}", 
+                user.Id, user.Email, subscription.CustomerId);
 
             // Determine if user should be Pro based on subscription status
             bool isPro = subscription.Status == "active" || subscription.Status == "trialing";
@@ -161,60 +243,34 @@ public class StripeWebhookController : ControllerBase
             _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}, EndDate: {EndDate}", 
                 user.Id, isPro, subscriptionEndDate);
 
-            // Send appropriate emails
-            if (subscription.CancelAtPeriodEnd && stripeEvent.Type == "customer.subscription.updated")
+            // Send cancellation email if subscription was cancelled
+            if (subscription.CancelAtPeriodEnd && isPro)
             {
-                // Subscription was cancelled but still active until end of period
                 try
                 {
+                    _logger.LogInformation("Attempting to send cancellation notice email to {Email}", user.Email);
+                    
                     var endDate = subscriptionEndDate ?? currentPeriodEnd;
-                    await _emailService.SendEmailAsync(
-                        user.Email!,
-                        "TestPlatform Pro Subscription Cancelled",
-                        $"<h2>Your Pro Subscription Has Been Cancelled</h2>" +
-                        $"<p>Hi {user.FirstName},</p>" +
-                        $"<p>Your TestPlatform Pro subscription has been cancelled and will end on {endDate:MMMM dd, yyyy}.</p>" +
-                        $"<p>You'll continue to have Pro access until then, including:</p>" +
-                        $"<ul>" +
-                        $"<li>Unlimited questions</li>" +
-                        $"<li>Unlimited test invites</li>" +
-                        $"<li>Priority support</li>" +
-                        $"</ul>" +
-                        $"<p>After {endDate:MMMM dd, yyyy}, you'll be moved to the free tier.</p>" +
-                        $"<p>You can reactivate your subscription at any time before then.</p>" +
-                        $"<p><a href='https://yourdomain.com/Subscription'>Reactivate Subscription</a></p>"
-                    );
+                    var emailBody = $"<h2>Your Pro Subscription Has Been Cancelled</h2>" +
+                                   $"<p>Hi {user.FirstName},</p>" +
+                                   $"<p>Your TestPlatform Pro subscription has been cancelled and will end on {endDate:MMMM dd, yyyy}.</p>" +
+                                   $"<p>You'll continue to have Pro access until then, including:</p>" +
+                                   $"<ul>" +
+                                   $"<li>Unlimited questions</li>" +
+                                   $"<li>Unlimited test invites</li>" +
+                                   $"<li>Priority support</li>" +
+                                   $"</ul>" +
+                                   $"<p>After {endDate:MMMM dd, yyyy}, you'll be moved to the free tier.</p>" +
+                                   $"<p>You can reactivate your subscription at any time before then.</p>";
+
+                    await _emailService.SendEmailAsync(user.Email!, "TestPlatform Pro Subscription Cancelled", emailBody);
                     
-                    _logger.LogInformation("Sent cancellation notice email to user {UserId}", user.Id);
+                    _logger.LogInformation("Successfully sent cancellation notice email to user {UserId}", user.Id);
                 }
-                catch (Exception ex)
+                catch (Exception emailEx)
                 {
-                    _logger.LogError(ex, "Failed to send cancellation notice email to user {UserId}", user.Id);
-                }
-            }
-            else if (isPro && stripeEvent.Type == "customer.subscription.created")
-            {
-                try
-                {
-                    await _emailService.SendEmailAsync(
-                        user.Email!,
-                        "Welcome to TestPlatform Pro!",
-                        $"<h2>Welcome to TestPlatform Pro!</h2>" +
-                        $"<p>Hi {user.FirstName},</p>" +
-                        $"<p>Your Pro subscription is now active. You have unlimited access to:</p>" +
-                        $"<ul>" +
-                        $"<li>Create unlimited questions</li>" +
-                        $"<li>Send unlimited test invites</li>" +
-                        $"<li>Priority support</li>" +
-                        $"</ul>" +
-                        $"<p>Thank you for choosing TestPlatform Pro!</p>"
-                    );
-                    
-                    _logger.LogInformation("Sent welcome email to user {UserId}", user.Id);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to send welcome email to user {UserId}", user.Id);
+                    _logger.LogError(emailEx, "Failed to send cancellation notice email to user {UserId} at {Email}", 
+                        user.Id, user.Email);
                 }
             }
         }
@@ -237,13 +293,16 @@ public class StripeWebhookController : ControllerBase
 
             _logger.LogInformation("Processing subscription deletion for customer {CustomerId}", subscription.CustomerId);
 
-            var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(subscription.CustomerId);
+            var user = await FindUserWithRetry(subscription.CustomerId);
             if (user == null)
             {
-                _logger.LogWarning("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
+                _logger.LogError("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
                     subscription.CustomerId, stripeEvent.Id);
                 return;
             }
+
+            _logger.LogInformation("Found user {UserId} ({UserEmail}) for customer {CustomerId}", 
+                user.Id, user.Email, subscription.CustomerId);
 
             // Subscription has been deleted, revoke Pro access immediately
             await _subscriptionRepository.UpdateSubscriptionStatusAsync(
@@ -257,25 +316,25 @@ public class StripeWebhookController : ControllerBase
 
             try
             {
-                await _emailService.SendEmailAsync(
-                    user.Email!,
-                    "TestPlatform Pro Subscription Ended",
-                    $"<h2>Your Pro Subscription Has Ended</h2>" +
-                    $"<p>Hi {user.FirstName},</p>" +
-                    $"<p>Your TestPlatform Pro subscription has ended. You now have access to the free tier which includes:</p>" +
-                    $"<ul>" +
-                    $"<li>30 lifetime questions</li>" +
-                    $"<li>10 test invites per week</li>" +
-                    $"</ul>" +
-                    $"<p>You can resubscribe at any time to regain unlimited access.</p>" +
-                    $"<p><a href='https://yourdomain.com/Subscription'>Resubscribe Now</a></p>"
-                );
+                _logger.LogInformation("Attempting to send subscription ended email to {Email}", user.Email);
                 
-                _logger.LogInformation("Sent subscription ended email to user {UserId}", user.Id);
+                var emailBody = $"<h2>Your Pro Subscription Has Ended</h2>" +
+                               $"<p>Hi {user.FirstName},</p>" +
+                               $"<p>Your TestPlatform Pro subscription has ended. You now have access to the free tier which includes:</p>" +
+                               $"<ul>" +
+                               $"<li>30 lifetime questions</li>" +
+                               $"<li>10 test invites per week</li>" +
+                               $"</ul>" +
+                               $"<p>You can resubscribe at any time to regain unlimited access.</p>";
+
+                await _emailService.SendEmailAsync(user.Email!, "TestPlatform Pro Subscription Ended", emailBody);
+                
+                _logger.LogInformation("Successfully sent subscription ended email to user {UserId}", user.Id);
             }
-            catch (Exception ex)
+            catch (Exception emailEx)
             {
-                _logger.LogError(ex, "Failed to send subscription ended email to user {UserId}", user.Id);
+                _logger.LogError(emailEx, "Failed to send subscription ended email to user {UserId} at {Email}", 
+                    user.Id, user.Email);
             }
         }
         catch (Exception ex)
@@ -298,32 +357,35 @@ public class StripeWebhookController : ControllerBase
             _logger.LogInformation("Processing successful payment for customer {CustomerId}, amount: {Amount}", 
                 invoice.CustomerId, invoice.AmountPaid);
 
-            var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(invoice.CustomerId);
+            var user = await FindUserWithRetry(invoice.CustomerId);
             if (user == null)
             {
-                _logger.LogWarning("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
+                _logger.LogError("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
                     invoice.CustomerId, stripeEvent.Id);
                 return;
             }
 
+            _logger.LogInformation("Found user {UserId} ({UserEmail}) for customer {CustomerId}", 
+                user.Id, user.Email, invoice.CustomerId);
+
             try
             {
-                await _emailService.SendEmailAsync(
-                    user.Email!,
-                    "Payment Received - TestPlatform Pro",
-                    $"<h2>Payment Confirmation</h2>" +
-                    $"<p>Hi {user.FirstName},</p>" +
-                    $"<p>We've received your payment of ${invoice.AmountPaid / 100.0:F2} for TestPlatform Pro.</p>" +
-                    $"<p>Invoice Number: {invoice.Number}</p>" +
-                    $"<p>You can view and download your invoice from your Stripe customer portal.</p>" +
-                    $"<p>Thank you for your continued support!</p>"
-                );
+                _logger.LogInformation("Attempting to send payment confirmation email to {Email}", user.Email);
                 
-                _logger.LogInformation("Sent payment confirmation email to user {UserId}", user.Id);
+                var emailBody = $"<h2>Payment Confirmation</h2>" +
+                               $"<p>Hi {user.FirstName},</p>" +
+                               $"<p>We've received your payment of ${invoice.AmountPaid / 100.0:F2} for TestPlatform Pro.</p>" +
+                               $"<p>Invoice Number: {invoice.Number}</p>" +
+                               $"<p>Thank you for your continued support!</p>";
+
+                await _emailService.SendEmailAsync(user.Email!, "Payment Received - TestPlatform Pro", emailBody);
+                
+                _logger.LogInformation("Successfully sent payment confirmation email to user {UserId}", user.Id);
             }
-            catch (Exception ex)
+            catch (Exception emailEx)
             {
-                _logger.LogError(ex, "Failed to send payment confirmation email to user {UserId}", user.Id);
+                _logger.LogError(emailEx, "Failed to send payment confirmation email to user {UserId} at {Email}", 
+                    user.Id, user.Email);
             }
         }
         catch (Exception ex)
@@ -346,38 +408,85 @@ public class StripeWebhookController : ControllerBase
             _logger.LogInformation("Processing failed payment for customer {CustomerId}, amount: {Amount}", 
                 invoice.CustomerId, invoice.AmountDue);
 
-            var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(invoice.CustomerId);
+            var user = await FindUserWithRetry(invoice.CustomerId);
             if (user == null)
             {
-                _logger.LogWarning("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
+                _logger.LogError("No user found for Stripe customer id: {CustomerId} in event {EventId}", 
                     invoice.CustomerId, stripeEvent.Id);
                 return;
             }
 
+            _logger.LogInformation("Found user {UserId} ({UserEmail}) for customer {CustomerId}", 
+                user.Id, user.Email, invoice.CustomerId);
+
             try
             {
-                await _emailService.SendEmailAsync(
-                    user.Email!,
-                    "Payment Failed - TestPlatform Pro",
-                    $"<h2>Payment Failed</h2>" +
-                    $"<p>Hi {user.FirstName},</p>" +
-                    $"<p>We were unable to process your payment for TestPlatform Pro.</p>" +
-                    $"<p>Amount: ${invoice.AmountDue / 100.0:F2}</p>" +
-                    $"<p>Please update your payment method to continue enjoying unlimited access.</p>" +
-                    $"<p>If you don't update your payment method, your subscription will be cancelled.</p>" +
-                    $"<p><a href='https://yourdomain.com/Subscription/ManageSubscription'>Update Payment Method</a></p>"
-                );
+                _logger.LogInformation("Attempting to send payment failed email to {Email}", user.Email);
                 
-                _logger.LogInformation("Sent payment failed email to user {UserId}", user.Id);
+                var emailBody = $"<h2>Payment Failed</h2>" +
+                               $"<p>Hi {user.FirstName},</p>" +
+                               $"<p>We were unable to process your payment for TestPlatform Pro.</p>" +
+                               $"<p>Amount: ${invoice.AmountDue / 100.0:F2}</p>" +
+                               $"<p>Please update your payment method to continue enjoying unlimited access.</p>" +
+                               $"<p>If you don't update your payment method, your subscription will be cancelled.</p>";
+
+                await _emailService.SendEmailAsync(user.Email!, "Payment Failed - TestPlatform Pro", emailBody);
+                
+                _logger.LogInformation("Successfully sent payment failed email to user {UserId}", user.Id);
             }
-            catch (Exception ex)
+            catch (Exception emailEx)
             {
-                _logger.LogError(ex, "Failed to send payment failed email to user {UserId}", user.Id);
+                _logger.LogError(emailEx, "Failed to send payment failed email to user {UserId} at {Email}", 
+                    user.Id, user.Email);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error handling invoice payment failed for event {EventId}", stripeEvent.Id);
         }
+    }
+
+    private async Task<Data.User?> FindUserWithRetry(string stripeCustomerId, int maxRetries = 3)
+    {
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                _logger.LogInformation("Attempting to find user by StripeCustomerId: {CustomerId} (Attempt {Attempt}/{MaxRetries})", 
+                    stripeCustomerId, attempt, maxRetries);
+                
+                var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(stripeCustomerId);
+                
+                if (user != null)
+                {
+                    _logger.LogInformation("Successfully found user {UserId} ({UserEmail}) for StripeCustomerId: {CustomerId}", 
+                        user.Id, user.Email, stripeCustomerId);
+                    return user;
+                }
+                
+                _logger.LogWarning("User not found for StripeCustomerId: {CustomerId} on attempt {Attempt}", 
+                    stripeCustomerId, attempt);
+                
+                if (attempt < maxRetries)
+                {
+                    // Wait a bit before retrying (exponential backoff)
+                    var delayMs = 1000 * attempt; // 1s, 2s, 3s
+                    _logger.LogInformation("Waiting {DelayMs}ms before retry", delayMs);
+                    await Task.Delay(delayMs);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error finding user by StripeCustomerId: {CustomerId} on attempt {Attempt}", 
+                    stripeCustomerId, attempt);
+                
+                if (attempt >= maxRetries)
+                {
+                    throw;
+                }
+            }
+        }
+        
+        return null;
     }
 }

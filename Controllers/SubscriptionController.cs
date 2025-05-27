@@ -139,8 +139,8 @@ public class SubscriptionController : Controller
                     { "userId", user.Id },
                     { "userEmail", user.Email ?? "" }
                 },
-                AllowPromotionCodes = true // Allow discount codes
-                // Note: InvoiceCreation is not needed for subscription mode - invoices are created automatically
+                AllowPromotionCodes = true,
+                ClientReferenceId = user.Id // This helps identify the user
             };
 
             _logger.LogInformation("Creating Stripe session with options: {@Options}", new
@@ -149,7 +149,8 @@ public class SubscriptionController : Controller
                 Mode = options.Mode,
                 CustomerEmail = options.CustomerEmail,
                 SuccessUrl = options.SuccessUrl,
-                CancelUrl = options.CancelUrl
+                CancelUrl = options.CancelUrl,
+                ClientReferenceId = options.ClientReferenceId
             });
 
             var service = new SessionService();
@@ -187,10 +188,12 @@ public class SubscriptionController : Controller
                 return RedirectToAction("Index");
             }
 
+            _logger.LogInformation("Processing success callback for session {SessionId}", session_id);
+
             var service = new SessionService();
             var session = await service.GetAsync(session_id);
 
-            _logger.LogInformation("Processing success callback for session {SessionId}. Payment Status: {PaymentStatus}, Customer: {CustomerId}, Subscription: {SubscriptionId}", 
+            _logger.LogInformation("Retrieved session {SessionId}. Payment Status: {PaymentStatus}, Customer: {CustomerId}, Subscription: {SubscriptionId}", 
                 session_id, session.PaymentStatus, session.CustomerId, session.SubscriptionId);
 
             if (session.PaymentStatus == "paid")
@@ -198,6 +201,27 @@ public class SubscriptionController : Controller
                 var user = await _userManager.GetUserAsync(User);
                 if (user != null)
                 {
+                    _logger.LogInformation("Processing successful payment for user {UserId} ({UserEmail})", user.Id, user.Email);
+
+                    // IMPORTANT: Save the StripeCustomerId immediately to avoid race condition with webhooks
+                    if (!string.IsNullOrEmpty(session.CustomerId) && string.IsNullOrEmpty(user.StripeCustomerId))
+                    {
+                        _logger.LogInformation("Saving StripeCustomerId {CustomerId} for user {UserId}", session.CustomerId, user.Id);
+                        
+                        user.StripeCustomerId = session.CustomerId;
+                        var updateResult = await _userManager.UpdateAsync(user);
+                        
+                        if (updateResult.Succeeded)
+                        {
+                            _logger.LogInformation("Successfully saved StripeCustomerId for user {UserId}", user.Id);
+                        }
+                        else
+                        {
+                            _logger.LogError("Failed to save StripeCustomerId for user {UserId}. Errors: {Errors}", 
+                                user.Id, string.Join(", ", updateResult.Errors.Select(e => e.Description)));
+                        }
+                    }
+
                     // Verify the subscription exists in Stripe before saving
                     if (!string.IsNullOrEmpty(session.SubscriptionId))
                     {
@@ -209,7 +233,7 @@ public class SubscriptionController : Controller
                             _logger.LogInformation("Verified subscription {SubscriptionId} exists in Stripe with status: {Status}", 
                                 session.SubscriptionId, stripeSubscription.Status);
                             
-                            // Update subscription status - no end date for new active subscriptions
+                            // Update subscription status - this should happen after StripeCustomerId is saved
                             await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                                 user.Id, 
                                 true, 
@@ -220,7 +244,7 @@ public class SubscriptionController : Controller
                             _logger.LogInformation("Successfully updated subscription status for user {UserId}. Customer: {CustomerId}, Subscription: {SubscriptionId}", 
                                 user.Id, session.CustomerId, session.SubscriptionId);
                             
-                            TempData["SuccessMessage"] = "Welcome to TestPlatform Pro! You now have unlimited access.";
+                            TempData["SuccessMessage"] = "Welcome to TestPlatform Pro! You now have unlimited access. Check your email for confirmation.";
                         }
                         catch (StripeException stripeEx)
                         {
@@ -259,6 +283,7 @@ public class SubscriptionController : Controller
     [HttpGet]
     public IActionResult Cancel()
     {
+        _logger.LogInformation("User cancelled subscription checkout");
         TempData["ErrorMessage"] = "Subscription cancelled. You can subscribe anytime to unlock unlimited features.";
         return RedirectToAction("Index");
     }
@@ -274,6 +299,8 @@ public class SubscriptionController : Controller
                 TempData["ErrorMessage"] = "User not found. Please login and try again.";
                 return RedirectToAction("Index");
             }
+
+            _logger.LogInformation("User {UserId} ({UserEmail}) attempting to cancel subscription", user.Id, user.Email);
 
             if (string.IsNullOrEmpty(user.StripeSubscriptionId))
             {
@@ -338,7 +365,7 @@ public class SubscriptionController : Controller
                     user.StripeSubscriptionId,
                     periodEndDate); // Set end date
                 
-                TempData["SuccessMessage"] = $"Your subscription has been cancelled and will end on {periodEndDate:MMMM dd, yyyy}. You'll retain Pro access until then.";
+                TempData["SuccessMessage"] = $"Your subscription has been cancelled and will end on {periodEndDate:MMMM dd, yyyy}. You'll retain Pro access until then. Check your email for confirmation.";
             }
             catch (StripeException stripeEx) when (stripeEx.StripeError?.Code == "resource_missing")
             {
