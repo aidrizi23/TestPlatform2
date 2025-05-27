@@ -35,6 +35,7 @@ public class Program
         builder.Services.AddControllersWithViews();
 
         // Repository services
+        // Repository services
         builder.Services.AddScoped<ITestRepository, TestRepository>();
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
         builder.Services.AddTransient<IEmailService, SmtpEmailService>();
@@ -42,6 +43,7 @@ public class Program
         builder.Services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
+        builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         
         
 

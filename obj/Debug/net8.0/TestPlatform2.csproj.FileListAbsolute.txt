@@ -358,7 +358,6 @@
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Microsoft.VisualStudio.Web.CodeGeneration.Templating.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Microsoft.VisualStudio.Web.CodeGeneration.Utils.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Microsoft.VisualStudio.Web.CodeGenerators.Mvc.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Microsoft.Win32.SystemEvents.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Mono.TextTemplating.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Newtonsoft.Json.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Npgsql.dll
@@ -382,14 +381,11 @@
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Composition.Runtime.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Composition.TypedParts.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Configuration.ConfigurationManager.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Drawing.Common.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.IdentityModel.Tokens.Jwt.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Memory.Data.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Reflection.MetadataLoadContext.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Runtime.Caching.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Security.Cryptography.ProtectedData.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Security.Permissions.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/System.Windows.Extensions.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/af/Humanizer.resources.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/ar/Humanizer.resources.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/az/Humanizer.resources.dll
@@ -535,7 +531,6 @@
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-arm64/native/Microsoft.Data.SqlClient.SNI.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-x64/native/Microsoft.Data.SqlClient.SNI.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-x86/native/Microsoft.Data.SqlClient.SNI.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win/lib/net7.0/Microsoft.Win32.SystemEvents.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/browser-wasm/nativeassets/net8.0/e_sqlite3.a
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/linux-arm/native/libe_sqlite3.so
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/linux-arm64/native/libe_sqlite3.so
@@ -556,10 +551,7 @@
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-arm64/native/e_sqlite3.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-x64/native/e_sqlite3.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win-x86/native/e_sqlite3.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Drawing.Common.dll
 /home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win/lib/net6.0/System.Runtime.Caching.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Security.Cryptography.ProtectedData.dll
-/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/runtimes/win/lib/net7.0/System.Windows.Extensions.dll
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.csproj.AssemblyReference.cache
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.GeneratedMSBuildEditorConfig.editorconfig
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.AssemblyInfoInputs.cache
@@ -584,3 +576,4 @@
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.pdb
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.genruntimeconfig.cache
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/ref/TestPlatform2.dll
+/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/Stripe.net.dll

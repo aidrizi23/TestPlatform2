@@ -1,0 +1,141 @@
+@model TestPlatform2.Models.SubscriptionViewModel
+@{
+    ViewData["Title"] = "Subscription";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Your Subscription</h1>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Current Plan: @(Model.IsPro ? "Pro" : "Free")</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.IsPro)
+                    {
+                        <p class="text-success"><i class="bi bi-check-circle"></i> You have unlimited access!</p>
+                        <p>Subscription started: @Model.SubscriptionStartDate?.ToString("MMM dd, yyyy")</p>
+                        
+                        <form asp-action="ManageSubscription" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-primary">Manage Subscription</button>
+                        </form>
+                        
+                        <form asp-action="CancelSubscription" method="post" class="d-inline ms-2"
+                              onsubmit="return confirm('Are you sure you want to cancel your subscription?');">
+                            <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <h6>Free Plan Limits:</h6>
+                        <ul>
+                            <li>30 questions (lifetime)</li>
+                            <li>10 test invites per week</li>
+                        </ul>
+                        
+                        <h6 class="mt-3">Upgrade to Pro for:</h6>
+                        <ul>
+                            <li>Unlimited questions</li>
+                            <li>Unlimited test invites</li>
+                            <li>Priority support</li>
+                            <li>Advanced analytics</li>
+                        </ul>
+                        
+                        <form asp-action="CreateCheckoutSession" method="post">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-credit-card"></i> Upgrade to Pro - $5/month
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Usage Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Questions Created</h6>
+                        <div class="progress" style="height: 25px;">
+                            @{
+                                var questionPercent = Model.RemainingQuestions == -1 ? 100 : 
+                                    (Model.TotalQuestionsCreated / 30.0) * 100;
+                                var questionClass = Model.RemainingQuestions == -1 ? "bg-success" : 
+                                    questionPercent >= 80 ? "bg-warning" : "bg-primary";
+                            }
+                            <div class="progress-bar @questionClass" role="progressbar" 
+                                 style="width: @(Math.Min(questionPercent, 100))%">
+                                @Model.TotalQuestionsCreated / @(Model.RemainingQuestions == -1 ? "∞" : "30")
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            @if (Model.RemainingQuestions == -1)
+                            {
+                                <span>Unlimited questions available</span>
+                            }
+                            else
+                            {
+                                <span>@Model.RemainingQuestions questions remaining</span>
+                            }
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Weekly Test Invites</h6>
+                        <div class="progress" style="height: 25px;">
+                            @{
+                                var invitePercent = Model.RemainingWeeklyInvites == -1 ? 100 : 
+                                    (Model.WeeklyInvitesSent / 10.0) * 100;
+                                var inviteClass = Model.RemainingWeeklyInvites == -1 ? "bg-success" : 
+                                    invitePercent >= 80 ? "bg-warning" : "bg-primary";
+                            }
+                            <div class="progress-bar @inviteClass" role="progressbar" 
+                                 style="width: @(Math.Min(invitePercent, 100))%">
+                                @Model.WeeklyInvitesSent / @(Model.RemainingWeeklyInvites == -1 ? "∞" : "10")
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            @if (Model.RemainingWeeklyInvites == -1)
+                            {
+                                <span>Unlimited invites available</span>
+                            }
+                            else
+                            {
+                                <span>@Model.RemainingWeeklyInvites invites remaining this week</span>
+                            }
+                        </small>
+                    </div>
+                    
+                    @if (!Model.IsPro && (Model.RemainingQuestions == 0 || Model.RemainingWeeklyInvites == 0))
+                    {
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            You've reached a limit! Upgrade to Pro to continue without restrictions.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
