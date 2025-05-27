@@ -8,7 +8,7 @@ public class TestInvite
     public DateTime InviteSentDate { get; set; } = DateTime.UtcNow;
     public string UniqueToken { get; set; } = Guid.NewGuid().ToString(); // For secure URL
     
-    
+     
     public string TestId { get; set; }
     public Test Test { get; set; }
 }
