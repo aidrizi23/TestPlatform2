@@ -50,6 +50,10 @@ public class SubscriptionRepository : ISubscriptionRepository
         // Reset weekly invites if needed
         await ResetWeeklyInvitesIfNeededAsync(userId);
         
+        // Refresh user data after potential reset
+        user = await _context.Users.FindAsync(userId);
+        if (user == null) return false;
+        
         // Check if user has reached weekly limit
         return user.WeeklyInvitesSent < FREE_WEEKLY_INVITE_LIMIT;
     }
@@ -61,6 +65,8 @@ public class SubscriptionRepository : ISubscriptionRepository
         
         user.TotalQuestionsCreated++;
         user.LastQuestionCreatedAt = DateTime.UtcNow;
+        user.EnsureUtcDates();
+        
         await _context.SaveChangesAsync();
     }
 
@@ -72,7 +78,13 @@ public class SubscriptionRepository : ISubscriptionRepository
         // Reset weekly invites if needed
         await ResetWeeklyInvitesIfNeededAsync(userId);
         
+        // Refresh user data after potential reset
+        user = await _context.Users.FindAsync(userId);
+        if (user == null) return;
+        
         user.WeeklyInvitesSent++;
+        user.EnsureUtcDates();
+        
         await _context.SaveChangesAsync();
     }
 
@@ -95,6 +107,7 @@ public class SubscriptionRepository : ISubscriptionRepository
             user.SubscriptionEndDate = DateTime.UtcNow;
         }
         
+        user.EnsureUtcDates();
         await _context.SaveChangesAsync();
     }
 
@@ -109,15 +122,19 @@ public class SubscriptionRepository : ISubscriptionRepository
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return;
         
+        var now = DateTime.UtcNow;
+        
         // Calculate the start of the user's current week (from registration date)
-        var weeksSinceRegistration = (DateTime.UtcNow - user.RegistrationDate).Days / 7;
+        var daysSinceRegistration = (now - user.RegistrationDate).TotalDays;
+        var weeksSinceRegistration = (int)(daysSinceRegistration / 7);
         var currentWeekStart = user.RegistrationDate.AddDays(weeksSinceRegistration * 7);
         
-        // If we're in a new week, reset the counter
+        // If we're in a new week or no reset date is set, reset the counter
         if (user.WeeklyInviteResetDate == null || user.WeeklyInviteResetDate < currentWeekStart)
         {
             user.WeeklyInvitesSent = 0;
-            user.WeeklyInviteResetDate = currentWeekStart;
+            user.WeeklyInviteResetDate = DateTime.SpecifyKind(currentWeekStart, DateTimeKind.Utc);
+            user.EnsureUtcDates();
             await _context.SaveChangesAsync();
         }
     }
@@ -140,6 +157,11 @@ public class SubscriptionRepository : ISubscriptionRepository
         if (user.IsPro) return -1; // Unlimited
         
         await ResetWeeklyInvitesIfNeededAsync(userId);
+        
+        // Refresh user data after potential reset
+        user = await _context.Users.FindAsync(userId);
+        if (user == null) return 0;
+        
         return Math.Max(0, FREE_WEEKLY_INVITE_LIMIT - user.WeeklyInvitesSent);
     }
 }

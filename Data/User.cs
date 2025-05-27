@@ -25,4 +25,23 @@ public class User : IdentityUser
     public int WeeklyInvitesSent { get; set; } = 0;
     public DateTime? WeeklyInviteResetDate { get; set; }
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
+
+    // Ensure all DateTime properties are set to UTC
+    public void EnsureUtcDates()
+    {
+        if (LastQuestionCreatedAt.HasValue && LastQuestionCreatedAt.Value.Kind != DateTimeKind.Utc)
+            LastQuestionCreatedAt = DateTime.SpecifyKind(LastQuestionCreatedAt.Value, DateTimeKind.Utc);
+            
+        if (SubscriptionStartDate.HasValue && SubscriptionStartDate.Value.Kind != DateTimeKind.Utc)
+            SubscriptionStartDate = DateTime.SpecifyKind(SubscriptionStartDate.Value, DateTimeKind.Utc);
+            
+        if (SubscriptionEndDate.HasValue && SubscriptionEndDate.Value.Kind != DateTimeKind.Utc)
+            SubscriptionEndDate = DateTime.SpecifyKind(SubscriptionEndDate.Value, DateTimeKind.Utc);
+            
+        if (WeeklyInviteResetDate.HasValue && WeeklyInviteResetDate.Value.Kind != DateTimeKind.Utc)
+            WeeklyInviteResetDate = DateTime.SpecifyKind(WeeklyInviteResetDate.Value, DateTimeKind.Utc);
+            
+        if (RegistrationDate.Kind != DateTimeKind.Utc)
+            RegistrationDate = DateTime.SpecifyKind(RegistrationDate, DateTimeKind.Utc);
+    }
 }
