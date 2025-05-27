@@ -1,141 +1,1101 @@
 @model TestPlatform2.Models.SubscriptionViewModel
 @{
-    ViewData["Title"] = "Subscription";
+    ViewData["Title"] = "Subscription Management";
 }
 
-<div class="container mt-4">
-    <h1 class="mb-4">Your Subscription</h1>
+<div class="subscription-container">
+    <!-- Header Section -->
+    <div class="subscription-header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="header-title">
+                    <i class="fas fa-crown me-3"></i>
+                    Subscription Management
+                </h1>
+                <p class="header-subtitle">
+                    Manage your TestPlatform subscription and view your usage statistics
+                </p>
+            </div>
+            <div class="current-plan-badge">
+                <div class="plan-badge @(Model.IsPro ? "plan-pro" : "plan-free")">
+                    <i class="fas @(Model.IsPro ? "fa-crown" : "fa-user") me-2"></i>
+                    @(Model.IsPro ? "PRO PLAN" : "FREE PLAN")
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Alert Messages -->
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            @TempData["SuccessMessage"]
+        <div class="alert alert-success alert-dismissible fade show custom-alert" role="alert">
+            <div class="alert-content">
+                <i class="fas fa-check-circle me-2"></i>
+                <span>@TempData["SuccessMessage"]</span>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["ErrorMessage"]
+        <div class="alert alert-danger alert-dismissible fade show custom-alert" role="alert">
+            <div class="alert-content">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span>@TempData["ErrorMessage"]</span>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Current Plan: @(Model.IsPro ? "Pro" : "Free")</h5>
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show custom-alert" role="alert">
+            <div class="alert-content">
+                <i class="fas fa-info-circle me-2"></i>
+                <span>@TempData["InfoMessage"]</span>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="subscription-content">
+        <!-- Current Plan Card -->
+        <div class="plan-card @(Model.IsPro ? "plan-card-pro" : "plan-card-free")">
+            <div class="plan-card-header">
+                <div class="plan-info">
+                    <h2 class="plan-title">
+                        @if (Model.IsPro)
+                        {
+                            <i class="fas fa-crown me-2">TestPlatform Pro</i> 
+                        }
+                        else
+                        {
+                            <i class="fas fa-user me-2">Free Plan</i>
+                        }
+                    </h2>
+                    <p class="plan-description">
+                        @if (Model.IsPro)
+                        {
+                            <span>You have unlimited access to all TestPlatform features</span>
+                        }
+                        else
+                        {
+                            <span>You're currently on the free plan with limited features</span>
+                        }
+                    </p>
                 </div>
-                <div class="card-body">
-                    @if (Model.IsPro)
-                    {
-                        <p class="text-success"><i class="bi bi-check-circle"></i> You have unlimited access!</p>
-                        <p>Subscription started: @Model.SubscriptionStartDate?.ToString("MMM dd, yyyy")</p>
+                
+                @if (Model.IsPro)
+                {
+                    <div class="plan-price">
+                        <span class="price-amount">$5</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                }
+            </div>
+
+            <div class="plan-card-body">
+                @if (Model.IsPro)
+                {
+                    <!-- Pro Plan Content -->
+                    <div class="subscription-details">
+                        <div class="detail-item">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <span><strong>Active since:</strong> @Model.SubscriptionStartDate?.ToString("MMMM dd, yyyy")</span>
+                        </div>
                         
-                        <form asp-action="ManageSubscription" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-primary">Manage Subscription</button>
-                        </form>
-                        
-                        <form asp-action="CancelSubscription" method="post" class="d-inline ms-2"
-                              onsubmit="return confirm('Are you sure you want to cancel your subscription?');">
-                            <button type="submit" class="btn btn-outline-danger">Cancel Subscription</button>
-                        </form>
-                    }
-                    else
-                    {
-                        <h6>Free Plan Limits:</h6>
-                        <ul>
-                            <li>30 questions (lifetime)</li>
-                            <li>10 test invites per week</li>
-                        </ul>
-                        
-                        <h6 class="mt-3">Upgrade to Pro for:</h6>
-                        <ul>
-                            <li>Unlimited questions</li>
-                            <li>Unlimited test invites</li>
-                            <li>Priority support</li>
-                            <li>Advanced analytics</li>
-                        </ul>
-                        
-                        <form asp-action="CreateCheckoutSession" method="post">
+                        @if (Model.SubscriptionEndDate.HasValue)
+                        {
+                            <div class="detail-item">
+                                <i class="fas fa-clock me-2"></i>
+                                <span><strong>Ends on:</strong> @Model.SubscriptionEndDate?.ToString("MMMM dd, yyyy")</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="pro-features">
+                        <h4 class="features-title">Your Pro Benefits:</h4>
+                        <div class="features-list">
+                            <div class="feature-item">
+                                <i class="fas fa-infinity text-success"></i>
+                                <span>Unlimited Questions</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-paper-plane text-success"></i>
+                                <span>Unlimited Test Invites</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-chart-line text-success"></i>
+                                <span>Advanced Analytics</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-headset text-success"></i>
+                                <span>Priority Support</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subscription-actions">
+                        <form asp-action="ManageSubscription" method="post" class="action-form">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-credit-card"></i> Upgrade to Pro - $5/month
+                                <i class="fas fa-cog me-2"></i>Manage Billing
                             </button>
                         </form>
-                    }
-                </div>
+                        
+                        <button type="button" class="btn btn-outline-danger btn-lg" onclick="showCancelModal()">
+                            <i class="fas fa-times me-2"></i>Cancel Subscription
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- Free Plan Content -->
+                    <div class="free-plan-limits">
+                        <h4 class="limits-title">Current Plan Includes:</h4>
+                        <div class="limits-list">
+                            <div class="limit-item">
+                                <i class="fas fa-question-circle text-primary"></i>
+                                <span>30 Questions (Lifetime)</span>
+                            </div>
+                            <div class="limit-item">
+                                <i class="fas fa-envelope text-primary"></i>
+                                <span>10 Test Invites per Week</span>
+                            </div>
+                            <div class="limit-item">
+                                <i class="fas fa-chart-bar text-muted"></i>
+                                <span>Basic Analytics</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upgrade-section">
+                        <h4 class="upgrade-title">Upgrade to Pro and Get:</h4>
+                        <div class="pro-features-grid">
+                            <div class="pro-feature">
+                                <i class="fas fa-infinity"></i>
+                                <span>Unlimited Questions</span>
+                            </div>
+                            <div class="pro-feature">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Unlimited Invites</span>
+                            </div>
+                            <div class="pro-feature">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Advanced Analytics</span>
+                            </div>
+                            <div class="pro-feature">
+                                <i class="fas fa-headset"></i>
+                                <span>Priority Support</span>
+                            </div>
+                        </div>
+
+                        <div class="upgrade-pricing">
+                            <div class="price-display">
+                                <span class="price-amount">$5</span>
+                                <span class="price-period">/month</span>
+                            </div>
+                            <p class="price-note">Cancel anytime • No setup fees</p>
+                        </div>
+
+                        <form asp-action="CreateCheckoutSession" method="post" class="upgrade-form" id="upgradeForm">
+                            <button type="submit" class="btn btn-success btn-lg upgrade-btn" id="upgradeButton">
+                                <i class="fas fa-credit-card me-2"></i>
+                                <span class="btn-text">Upgrade to Pro Now</span>
+                                <span class="btn-loading" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin me-2"></i>Processing...
+                                </span>
+                            </button>
+                        </form>
+
+                        <div class="security-badges">
+                            <div class="security-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Secure Payment</span>
+                            </div>
+                            <div class="security-badge">
+                                <i class="fas fa-lock"></i>
+                                <span>SSL Encrypted</span>
+                            </div>
+                            <div class="security-badge">
+                                <i class="fab fa-stripe"></i>
+                                <span>Powered by Stripe</span>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Usage Statistics</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <h6>Questions Created</h6>
-                        <div class="progress" style="height: 25px;">
-                            @{
-                                var questionPercent = Model.RemainingQuestions == -1 ? 100 : 
-                                    (Model.TotalQuestionsCreated / 30.0) * 100;
-                                var questionClass = Model.RemainingQuestions == -1 ? "bg-success" : 
-                                    questionPercent >= 80 ? "bg-warning" : "bg-primary";
-                            }
-                            <div class="progress-bar @questionClass" role="progressbar" 
-                                 style="width: @(Math.Min(questionPercent, 100))%">
-                                @Model.TotalQuestionsCreated / @(Model.RemainingQuestions == -1 ? "∞" : "30")
+
+        <!-- Usage Statistics Card -->
+        <div class="usage-card">
+            <div class="usage-header">
+                <h3 class="usage-title">
+                    <i class="fas fa-chart-pie me-2"></i>Usage Statistics
+                </h3>
+                <p class="usage-subtitle">Track your current usage and limits</p>
+            </div>
+
+            <div class="usage-stats">
+                <!-- Questions Usage -->
+                <div class="stat-item">
+                    <div class="stat-header">
+                        <div class="stat-info">
+                            <h4 class="stat-title">Questions Created</h4>
+                            <p class="stat-description">
+                                @if (Model.RemainingQuestions == -1)
+                                {
+                                    <span class="text-success">Unlimited remaining</span>
+                                }
+                                else
+                                {
+                                    <span>@Model.RemainingQuestions of @(30 - Model.TotalQuestionsCreated + Model.RemainingQuestions) remaining</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="stat-number">
+                            <span class="stat-current">@Model.TotalQuestionsCreated</span>
+                            <span class="stat-total">/@(Model.RemainingQuestions == -1 ? "∞" : "30")</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        @{
+                            var questionPercent = Model.RemainingQuestions == -1 ? 100 : 
+                                Math.Min((Model.TotalQuestionsCreated / 30.0) * 100, 100);
+                            var questionClass = Model.RemainingQuestions == -1 ? "progress-unlimited" : 
+                                questionPercent >= 90 ? "progress-danger" : 
+                                questionPercent >= 70 ? "progress-warning" : "progress-primary";
+                        }
+                        <div class="progress">
+                            <div class="progress-bar @questionClass" 
+                                 style="width: @questionPercent%"
+                                 data-percentage="@questionPercent.ToString("F1")">
                             </div>
                         </div>
-                        <small class="text-muted">
+                        <div class="progress-label">
                             @if (Model.RemainingQuestions == -1)
                             {
-                                <span>Unlimited questions available</span>
+                                <span class="text-success">Unlimited Access</span>
                             }
                             else
                             {
-                                <span>@Model.RemainingQuestions questions remaining</span>
+                                <span>@questionPercent.ToString("F1")% Used</span>
                             }
-                        </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invites Usage -->
+                <div class="stat-item">
+                    <div class="stat-header">
+                        <div class="stat-info">
+                            <h4 class="stat-title">Weekly Test Invites</h4>
+                            <p class="stat-description">
+                                @if (Model.RemainingWeeklyInvites == -1)
+                                {
+                                    <span class="text-success">Unlimited remaining</span>
+                                }
+                                else
+                                {
+                                    <span>@Model.RemainingWeeklyInvites of @(10 - Model.WeeklyInvitesSent + Model.RemainingWeeklyInvites) remaining this week</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="stat-number">
+                            <span class="stat-current">@Model.WeeklyInvitesSent</span>
+                            <span class="stat-total">/@(Model.RemainingWeeklyInvites == -1 ? "∞" : "10")</span>
+                        </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <h6>Weekly Test Invites</h6>
-                        <div class="progress" style="height: 25px;">
-                            @{
-                                var invitePercent = Model.RemainingWeeklyInvites == -1 ? 100 : 
-                                    (Model.WeeklyInvitesSent / 10.0) * 100;
-                                var inviteClass = Model.RemainingWeeklyInvites == -1 ? "bg-success" : 
-                                    invitePercent >= 80 ? "bg-warning" : "bg-primary";
-                            }
-                            <div class="progress-bar @inviteClass" role="progressbar" 
-                                 style="width: @(Math.Min(invitePercent, 100))%">
-                                @Model.WeeklyInvitesSent / @(Model.RemainingWeeklyInvites == -1 ? "∞" : "10")
+                    <div class="progress-container">
+                        @{
+                            var invitePercent = Model.RemainingWeeklyInvites == -1 ? 100 : 
+                                Math.Min((Model.WeeklyInvitesSent / 10.0) * 100, 100);
+                            var inviteClass = Model.RemainingWeeklyInvites == -1 ? "progress-unlimited" : 
+                                invitePercent >= 90 ? "progress-danger" : 
+                                invitePercent >= 70 ? "progress-warning" : "progress-primary";
+                        }
+                        <div class="progress">
+                            <div class="progress-bar @inviteClass" 
+                                 style="width: @invitePercent%"
+                                 data-percentage="@invitePercent.ToString("F1")">
                             </div>
                         </div>
-                        <small class="text-muted">
+                        <div class="progress-label">
                             @if (Model.RemainingWeeklyInvites == -1)
                             {
-                                <span>Unlimited invites available</span>
+                                <span class="text-success">Unlimited Access</span>
                             }
                             else
                             {
-                                <span>@Model.RemainingWeeklyInvites invites remaining this week</span>
+                                <span>@invitePercent.ToString("F1")% Used</span>
                             }
-                        </small>
-                    </div>
-                    
-                    @if (!Model.IsPro && (Model.RemainingQuestions == 0 || Model.RemainingWeeklyInvites == 0))
-                    {
-                        <div class="alert alert-warning mt-3">
-                            <i class="bi bi-exclamation-triangle"></i> 
-                            You've reached a limit! Upgrade to Pro to continue without restrictions.
                         </div>
-                    }
+                    </div>
                 </div>
+
+                <!-- Usage Alerts -->
+                @if (!Model.IsPro && (Model.RemainingQuestions <= 5 || Model.RemainingWeeklyInvites <= 2))
+                {
+                    <div class="usage-alert">
+                        <div class="alert-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h5 class="alert-title">Usage Limit Warning</h5>
+                            <p class="alert-message">
+                                @if (Model.RemainingQuestions <= 5 && Model.RemainingWeeklyInvites <= 2)
+                                {
+                                    <span>You're running low on both questions and weekly invites!</span>
+                                }
+                                else if (Model.RemainingQuestions <= 5)
+                                {
+                                    <span>You only have @Model.RemainingQuestions questions remaining!</span>
+                                }
+                                else
+                                {
+                                    <span>You only have @Model.RemainingWeeklyInvites invites remaining this week!</span>
+                                }
+                                Upgrade to Pro for unlimited access.
+                            </p>
+                            <form asp-action="CreateCheckoutSession" method="post" class="inline-upgrade">
+                                <button type="submit" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-arrow-up me-1"></i>Upgrade Now
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
+
+<!-- Cancel Subscription Modal -->
+@if (Model.IsPro)
+{
+    <div class="modal fade" id="cancelSubscriptionModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Cancel Subscription
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Are you sure you want to cancel your Pro subscription?</p>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>What happens next:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>You'll keep Pro access until the end of your billing period</li>
+                            <li>No more charges will be made</li>
+                            <li>You can resubscribe anytime</li>
+                            <li>Your data and tests will remain safe</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="cancel-reasons mt-3">
+                        <p class="small text-muted mb-2">Mind telling us why? (Optional)</p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cancelReason" value="too-expensive">
+                            <label class="form-check-label">Too expensive</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cancelReason" value="not-using">
+                            <label class="form-check-label">Not using it enough</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cancelReason" value="missing-features">
+                            <label class="form-check-label">Missing features I need</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cancelReason" value="other">
+                            <label class="form-check-label">Other reason</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Keep Subscription
+                    </button>
+                    <form asp-action="CancelSubscription" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-danger" id="confirmCancelBtn">
+                            <i class="fas fa-times-circle me-2"></i>Yes, Cancel Subscription
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+/* Subscription Page Styles */
+.subscription-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Header Section */
+.subscription-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.subscription-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.header-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.header-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.current-plan-badge {
+    text-align: center;
+}
+
+.plan-badge {
+    padding: 1rem 1.5rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.plan-badge.plan-pro {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.plan-badge.plan-free {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Alert Styles */
+.custom-alert {
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.alert-content {
+    display: flex;
+    align-items: center;
+}
+
+/* Subscription Content */
+.subscription-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* Plan Card */
+.plan-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.plan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+
+.plan-card-pro {
+    border: 2px solid #f093fb;
+    position: relative;
+}
+
+.plan-card-pro::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.plan-card-header {
+    padding: 2rem;
+    background: #f9fafb;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.plan-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.plan-description {
+    color: #6b7280;
+    margin: 0;
+}
+
+.plan-price {
+    text-align: right;
+}
+
+.price-amount {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #f093fb;
+}
+
+.price-period {
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.plan-card-body {
+    padding: 2rem;
+}
+
+/* Subscription Details */
+.subscription-details {
+    margin-bottom: 2rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 0;
+    color: #4b5563;
+}
+
+/* Features */
+.pro-features, .free-plan-limits {
+    margin-bottom: 2rem;
+}
+
+.features-title, .limits-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.features-list, .limits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.feature-item, .limit-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+.feature-item i, .limit-item i {
+    font-size: 1.125rem;
+}
+
+/* Upgrade Section */
+.upgrade-section {
+    text-align: center;
+}
+
+.upgrade-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+}
+
+.pro-features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.pro-feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: #f0f9ff;
+    border-radius: 12px;
+    color: #0369a1;
+}
+
+.pro-feature i {
+    font-size: 1.5rem;
+}
+
+.upgrade-pricing {
+    margin-bottom: 2rem;
+}
+
+.price-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.price-display .price-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #16a34a;
+}
+
+.price-display .price-period {
+    font-size: 1.25rem;
+    color: #6b7280;
+}
+
+.price-note {
+    color: #6b7280;
+    margin: 0;
+}
+
+.upgrade-btn {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 300px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+    transition: all 0.3s ease;
+}
+
+.upgrade-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(22, 163, 74, 0.4);
+}
+
+.upgrade-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.security-badges {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.security-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #f3f4f6;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Actions */
+.subscription-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.subscription-actions .btn {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Usage Card */
+.usage-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.usage-header {
+    padding: 2rem 2rem 1rem;
+    background: #f9fafb;
+}
+
+.usage-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.usage-subtitle {
+    color: #6b7280;
+    margin: 0;
+}
+
+.usage-stats {
+    padding: 2rem;
+}
+
+.stat-item {
+    margin-bottom: 2rem;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.stat-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.stat-description {
+    color: #6b7280;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.stat-number {
+    text-align: right;
+}
+
+.stat-current {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.stat-total {
+    font-size: 1.25rem;
+    color: #6b7280;
+}
+
+/* Progress */
+.progress-container {
+    position: relative;
+}
+
+.progress {
+    height: 12px;
+    border-radius: 6px;
+    background-color: #f3f4f6;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease;
+    position: relative;
+}
+
+.progress-primary {
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+}
+
+.progress-warning {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.progress-danger {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.progress-unlimited {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progress-label {
+    text-align: center;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Usage Alert */
+.usage-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    margin-top: 2rem;
+}
+
+.alert-icon {
+    color: #f59e0b;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.alert-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 0.5rem;
+}
+
+.alert-message {
+    color: #92400e;
+    margin-bottom: 1rem;
+}
+
+.inline-upgrade {
+    margin: 0;
+}
+
+/* Responsive Design */
+@@media (max-width: 1024px) {
+    .subscription-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .pro-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@@media (max-width: 768px) {
+    .subscription-header {
+        padding: 2rem 1rem;
+    }
+    
+    .header-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .plan-card-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .plan-card-body {
+        padding: 1.5rem;
+    }
+    
+    .usage-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .usage-stats {
+        padding: 1.5rem;
+    }
+    
+    .stat-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .stat-number {
+        text-align: left;
+    }
+    
+    .subscription-actions {
+        flex-direction: column;
+    }
+    
+    .security-badges {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+@@media (max-width: 576px) {
+    .subscription-header {
+        padding: 1.5rem 0.75rem;
+    }
+    
+    .header-title {
+        font-size: 1.75rem;
+    }
+    
+    .plan-card-header,
+    .plan-card-body {
+        padding: 1rem;
+    }
+    
+    .features-list,
+    .limits-list {
+        gap: 0.5rem;
+    }
+    
+    .usage-alert {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* Loading Animation */
+@@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Form Loading State */
+.upgrade-form.loading .btn-text {
+    display: none;
+}
+
+.upgrade-form.loading .btn-loading {
+    display: inline-flex !important;
+}
+</style>
+
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle upgrade form submission
+    const upgradeForm = document.getElementById('upgradeForm');
+    const upgradeButton = document.getElementById('upgradeButton');
+    
+    if (upgradeForm && upgradeButton) {
+        upgradeForm.addEventListener('submit', function(e) {
+            // Show loading state
+            upgradeButton.disabled = true;
+            upgradeForm.classList.add('loading');
+            
+            // Prevent double-submission
+            setTimeout(() => {
+                if (upgradeButton) {
+                    upgradeButton.disabled = false;
+                    upgradeForm.classList.remove('loading');
+                }
+            }, 10000); // Reset after 10 seconds as fallback
+        });
+    }
+    
+    // Animate progress bars on page load
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const percentage = bar.getAttribute('data-percentage');
+        if (percentage) {
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = percentage + '%';
+            }, 300);
+        }
+    });
+    
+    // Handle cancel reason tracking
+    const cancelReasons = document.querySelectorAll('input[name="cancelReason"]');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    
+    if (cancelReasons.length > 0 && confirmCancelBtn) {
+        cancelReasons.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Could send analytics data here
+                console.log('Cancel reason selected:', this.value);
+            });
+        });
+    }
+});
+
+// Show cancel modal
+function showCancelModal() {
+    const modal = new bootstrap.Modal(document.getElementById('cancelSubscriptionModal'));
+    modal.show();
+}
+
+// Handle billing portal loading
+document.querySelectorAll('form[action*="ManageSubscription"]').forEach(form => {
+    form.addEventListener('submit', function() {
+        const button = this.querySelector('button[type="submit"]');
+        if (button) {
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading Portal...';
+            
+            // Reset after 5 seconds as fallback
+            setTimeout(() => {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }, 5000);
+        }
+    });
+});
+</script>
+}
