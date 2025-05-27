@@ -17,7 +17,7 @@
           "Microsoft.EntityFrameworkCore.Tools": "8.0.10",
           "Microsoft.VisualStudio.Web.CodeGeneration.Design": "8.0.7",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
-          "Stripe.net": "48.1.0"
+          "Stripe.net": "47.4.0"
         },
         "runtime": {
           "TestPlatform2.dll": {}
@@ -1911,15 +1911,15 @@
           }
         }
       },
-      "Stripe.net/48.1.0": {
+      "Stripe.net/47.4.0": {
         "dependencies": {
           "Newtonsoft.Json": "13.0.3",
           "System.Configuration.ConfigurationManager": "8.0.0"
         },
         "runtime": {
           "lib/net8.0/Stripe.net.dll": {
-            "assemblyVersion": "48.1.0.0",
-            "fileVersion": "48.1.0.0"
+            "assemblyVersion": "47.4.0.0",
+            "fileVersion": "47.4.0.0"
           }
         }
       },
@@ -3101,12 +3101,12 @@
       "path": "sqlitepclraw.provider.e_sqlite3/2.1.6",
       "hashPath": "sqlitepclraw.provider.e_sqlite3.2.1.6.nupkg.sha512"
     },
-    "Stripe.net/48.1.0": {
+    "Stripe.net/47.4.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-xrc6KfpzBphA1EIqF9ALgxaJf7LSJVQUefH3j0+5RS5Mn0NrEmIk4g7VfoqGQot73CH7RomiOGNnGVmLcN9mtg==",
-      "path": "stripe.net/48.1.0",
-      "hashPath": "stripe.net.48.1.0.nupkg.sha512"
+      "sha512": "sha512-paFQ1NFjdjd3BHkYS1qOmy7T+Bz663tgAC0unsGu7GLHrWTl5SISj6ukGB6nuycV6a1GA9VZr18eCi4pWNpE2w==",
+      "path": "stripe.net/47.4.0",
+      "hashPath": "stripe.net.47.4.0.nupkg.sha512"
     },
     "System.CodeDom/5.0.0": {
       "type": "package",

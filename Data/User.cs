@@ -26,6 +26,33 @@ public class User : IdentityUser
     public DateTime? WeeklyInviteResetDate { get; set; }
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
 
+    // Helper property to check if subscription is currently active
+    public bool IsSubscriptionActive
+    {
+        get
+        {
+            if (!IsPro) return false;
+            
+            // If no end date is set, subscription is active
+            if (!SubscriptionEndDate.HasValue) return true;
+            
+            // If end date is in the future, subscription is still active
+            return SubscriptionEndDate.Value > DateTime.UtcNow;
+        }
+    }
+
+    // Helper property to check if subscription will expire soon (within 7 days)
+    public bool IsSubscriptionExpiringSoon
+    {
+        get
+        {
+            if (!IsPro || !SubscriptionEndDate.HasValue) return false;
+            
+            var daysUntilExpiration = (SubscriptionEndDate.Value - DateTime.UtcNow).TotalDays;
+            return daysUntilExpiration <= 7 && daysUntilExpiration > 0;
+        }
+    }
+
     // Ensure all DateTime properties are set to UTC
     public void EnsureUtcDates()
     {

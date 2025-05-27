@@ -117,8 +117,9 @@ public class StripeWebhookController : ControllerBase
                 return;
             }
 
-            _logger.LogInformation("Processing subscription update for customer {CustomerId}, status: {Status}", 
-                subscription.CustomerId, subscription.Status);
+            var currentPeriodEnd = subscription.CurrentPeriodEnd;
+            _logger.LogInformation("Processing subscription update for customer {CustomerId}, status: {Status}, cancel_at_period_end: {CancelAtPeriodEnd}, current_period_end: {CurrentPeriodEnd}", 
+                subscription.CustomerId, subscription.Status, subscription.CancelAtPeriodEnd, currentPeriodEnd);
 
             var user = await _subscriptionRepository.GetUserByStripeCustomerIdAsync(subscription.CustomerId);
             if (user == null)
@@ -128,16 +129,70 @@ public class StripeWebhookController : ControllerBase
                 return;
             }
 
+            // Determine if user should be Pro based on subscription status
             bool isPro = subscription.Status == "active" || subscription.Status == "trialing";
+            
+            // Calculate when subscription should end
+            DateTime? subscriptionEndDate = null;
+            if (subscription.CancelAtPeriodEnd || subscription.Status == "canceled")
+            {
+                // If cancelled, set end date to current period end
+                subscriptionEndDate = currentPeriodEnd;
+                _logger.LogInformation("Subscription will end at: {EndDate}", subscriptionEndDate);
+            }
+            else if (isPro)
+            {
+                // Active subscription, no end date
+                subscriptionEndDate = null;
+            }
+            else
+            {
+                // Inactive subscription, end immediately
+                subscriptionEndDate = DateTime.UtcNow;
+            }
+
             await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                 user.Id,
                 isPro,
                 subscription.CustomerId,
-                subscription.Id);
+                subscription.Id,
+                subscriptionEndDate);
 
-            _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}", user.Id, isPro);
+            _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}, EndDate: {EndDate}", 
+                user.Id, isPro, subscriptionEndDate);
 
-            if (isPro && stripeEvent.Type == "customer.subscription.created")
+            // Send appropriate emails
+            if (subscription.CancelAtPeriodEnd && stripeEvent.Type == "customer.subscription.updated")
+            {
+                // Subscription was cancelled but still active until end of period
+                try
+                {
+                    var endDate = subscriptionEndDate ?? currentPeriodEnd;
+                    await _emailService.SendEmailAsync(
+                        user.Email!,
+                        "TestPlatform Pro Subscription Cancelled",
+                        $"<h2>Your Pro Subscription Has Been Cancelled</h2>" +
+                        $"<p>Hi {user.FirstName},</p>" +
+                        $"<p>Your TestPlatform Pro subscription has been cancelled and will end on {endDate:MMMM dd, yyyy}.</p>" +
+                        $"<p>You'll continue to have Pro access until then, including:</p>" +
+                        $"<ul>" +
+                        $"<li>Unlimited questions</li>" +
+                        $"<li>Unlimited test invites</li>" +
+                        $"<li>Priority support</li>" +
+                        $"</ul>" +
+                        $"<p>After {endDate:MMMM dd, yyyy}, you'll be moved to the free tier.</p>" +
+                        $"<p>You can reactivate your subscription at any time before then.</p>" +
+                        $"<p><a href='https://yourdomain.com/Subscription'>Reactivate Subscription</a></p>"
+                    );
+                    
+                    _logger.LogInformation("Sent cancellation notice email to user {UserId}", user.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to send cancellation notice email to user {UserId}", user.Id);
+                }
+            }
+            else if (isPro && stripeEvent.Type == "customer.subscription.created")
             {
                 try
                 {
@@ -190,13 +245,15 @@ public class StripeWebhookController : ControllerBase
                 return;
             }
 
+            // Subscription has been deleted, revoke Pro access immediately
             await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                 user.Id,
                 false,
                 subscription.CustomerId,
-                null);
+                null,
+                DateTime.UtcNow);
 
-            _logger.LogInformation("Updated subscription status for user {UserId} to free tier", user.Id);
+            _logger.LogInformation("Updated subscription status for user {UserId} to free tier due to subscription deletion", user.Id);
 
             try
             {

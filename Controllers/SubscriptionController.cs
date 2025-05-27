@@ -209,12 +209,13 @@ public class SubscriptionController : Controller
                             _logger.LogInformation("Verified subscription {SubscriptionId} exists in Stripe with status: {Status}", 
                                 session.SubscriptionId, stripeSubscription.Status);
                             
-                            // Update subscription status
+                            // Update subscription status - no end date for new active subscriptions
                             await _subscriptionRepository.UpdateSubscriptionStatusAsync(
                                 user.Id, 
                                 true, 
                                 session.CustomerId, 
-                                session.SubscriptionId);
+                                session.SubscriptionId,
+                                null); // No end date for active subscription
                             
                             _logger.LogInformation("Successfully updated subscription status for user {UserId}. Customer: {CustomerId}, Subscription: {SubscriptionId}", 
                                 user.Id, session.CustomerId, session.SubscriptionId);
@@ -286,12 +287,12 @@ public class SubscriptionController : Controller
 
             var service = new SubscriptionService();
             
-            // First, try to get the subscription to see if it exists and its current status
+            // Get the subscription to check its current status
             try
             {
                 var existingSubscription = await service.GetAsync(user.StripeSubscriptionId);
-                _logger.LogInformation("Found subscription {SubscriptionId} with status: {Status}", 
-                    user.StripeSubscriptionId, existingSubscription.Status);
+                _logger.LogInformation("Found subscription {SubscriptionId} with status: {Status}, cancel_at_period_end: {CancelAtPeriodEnd}", 
+                    user.StripeSubscriptionId, existingSubscription.Status, existingSubscription.CancelAtPeriodEnd);
 
                 // Check if subscription is already cancelled
                 if (existingSubscription.Status == "canceled" || existingSubscription.Status == "cancelled")
@@ -299,21 +300,45 @@ public class SubscriptionController : Controller
                     _logger.LogInformation("Subscription {SubscriptionId} is already cancelled", user.StripeSubscriptionId);
                     
                     // Update local database to reflect the cancellation
-                    await _subscriptionRepository.UpdateSubscriptionStatusAsync(user.Id, false, user.StripeCustomerId, null);
+                    await _subscriptionRepository.UpdateSubscriptionStatusAsync(
+                        user.Id, 
+                        false, 
+                        user.StripeCustomerId, 
+                        null,
+                        DateTime.UtcNow);
                     
                     TempData["InfoMessage"] = "Your subscription was already cancelled.";
                     return RedirectToAction("Index");
                 }
 
-                // If subscription exists and is active, cancel it
-                var cancelledSubscription = await service.CancelAsync(user.StripeSubscriptionId);
+                // If already set to cancel at period end, inform user
+                if (existingSubscription.CancelAtPeriodEnd)
+                {
+                    _logger.LogInformation("Subscription {SubscriptionId} is already set to cancel at period end", user.StripeSubscriptionId);
+                    var endDate = existingSubscription.CurrentPeriodEnd;
+                    TempData["InfoMessage"] = $"Your subscription is already set to cancel on {endDate:MMMM dd, yyyy}.";
+                    return RedirectToAction("Index");
+                }
+
+                // Cancel the subscription at the end of the period
+                var cancelledSubscription = await service.UpdateAsync(user.StripeSubscriptionId, new SubscriptionUpdateOptions
+                {
+                    CancelAtPeriodEnd = true
+                });
                 
-                _logger.LogInformation("Successfully cancelled subscription {SubscriptionId} for user {UserId}. New status: {Status}", 
-                    user.StripeSubscriptionId, user.Id, cancelledSubscription.Status);
+                var periodEndDate = cancelledSubscription.CurrentPeriodEnd;
+                _logger.LogInformation("Successfully set subscription {SubscriptionId} to cancel at period end for user {UserId}. Will end on: {EndDate}", 
+                    user.StripeSubscriptionId, user.Id, periodEndDate);
                 
-                // Note: Don't update local status here - let the webhook handle it
-                // This ensures consistency with Stripe's system
-                TempData["SuccessMessage"] = "Your subscription has been cancelled. You'll retain Pro access until the end of your billing period.";
+                // Update local database to reflect the scheduled cancellation
+                await _subscriptionRepository.UpdateSubscriptionStatusAsync(
+                    user.Id, 
+                    true, // Still Pro until end of period
+                    user.StripeCustomerId, 
+                    user.StripeSubscriptionId,
+                    periodEndDate); // Set end date
+                
+                TempData["SuccessMessage"] = $"Your subscription has been cancelled and will end on {periodEndDate:MMMM dd, yyyy}. You'll retain Pro access until then.";
             }
             catch (StripeException stripeEx) when (stripeEx.StripeError?.Code == "resource_missing")
             {
@@ -321,7 +346,12 @@ public class SubscriptionController : Controller
                     user.StripeSubscriptionId, user.Id);
                 
                 // Subscription doesn't exist in Stripe, so update local database
-                await _subscriptionRepository.UpdateSubscriptionStatusAsync(user.Id, false, user.StripeCustomerId, null);
+                await _subscriptionRepository.UpdateSubscriptionStatusAsync(
+                    user.Id, 
+                    false, 
+                    user.StripeCustomerId, 
+                    null,
+                    DateTime.UtcNow);
                 
                 TempData["InfoMessage"] = "Your subscription has been cancelled.";
             }
@@ -340,101 +370,4 @@ public class SubscriptionController : Controller
 
         return RedirectToAction("Index");
     }
-
-    // // Add this temporary action for debugging subscription issues
-    // [HttpGet]
-    // public async Task<IActionResult> DebugSubscription()
-    // {
-    //     try
-    //     {
-    //         var user = await _userManager.GetUserAsync(User);
-    //         if (user == null) return Json(new { error = "User not found" });
-    //
-    //         var result = new
-    //         {
-    //             UserId = user.Id,
-    //             UserEmail = user.Email,
-    //             IsPro = user.IsPro,
-    //             StripeCustomerId = user.StripeCustomerId,
-    //             StripeSubscriptionId = user.StripeSubscriptionId,
-    //             SubscriptionStartDate = user.SubscriptionStartDate,
-    //             SubscriptionEndDate = user.SubscriptionEndDate
-    //         };
-    //
-    //         _logger.LogInformation("Debug subscription info for user {UserId}: {@SubscriptionInfo}", user.Id, result);
-    //
-    //         // If we have a subscription ID, try to get it from Stripe
-    //         if (!string.IsNullOrEmpty(user.StripeSubscriptionId))
-    //         {
-    //             try
-    //             {
-    //                 var service = new SubscriptionService();
-    //                 var stripeSubscription = await service.GetAsync(user.StripeSubscriptionId);
-    //                 
-    //                 return Json(new
-    //                 {
-    //                     localData = result,
-    //                     stripeData = new
-    //                     {
-    //                         Id = stripeSubscription.Id,
-    //                         Status = stripeSubscription.Status,
-    //                         CustomerId = stripeSubscription.CustomerId,
-    //                         CurrentPeriodStart = stripeSubscription.CurrentPeriodStart,
-    //                         CurrentPeriodEnd = stripeSubscription.CurrentPeriodEnd,
-    //                         CancelAtPeriodEnd = stripeSubscription.CancelAtPeriodEnd
-    //                     }
-    //                 });
-    //             }
-    //             catch (StripeException stripeEx)
-    //             {
-    //                 return Json(new
-    //                 {
-    //                     localData = result,
-    //                     stripeError = new
-    //                     {
-    //                         Code = stripeEx.StripeError?.Code,
-    //                         Message = stripeEx.StripeError?.Message,
-    //                         Type = stripeEx.StripeError?.Type
-    //                     }
-    //                 });
-    //             }
-    //         }
-    //
-    //         return Json(new { localData = result, stripeData = "No subscription ID found" });
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError(ex, "Error in debug subscription");
-    //         return Json(new { error = ex.Message });
-    //     }
-    // }
-    // {
-    //     try
-    //     {
-    //         var user = await _userManager.GetUserAsync(User);
-    //         if (user == null || string.IsNullOrEmpty(user.StripeCustomerId))
-    //         {
-    //             TempData["ErrorMessage"] = "No billing information found. Please contact support.";
-    //             return RedirectToAction("Index");
-    //         }
-    //
-    //         var options = new Stripe.BillingPortal.SessionCreateOptions
-    //         {
-    //             Customer = user.StripeCustomerId,
-    //             ReturnUrl = $"{Request.Scheme}://{Request.Host}/Subscription/Index"
-    //         };
-    //         
-    //         var service = new Stripe.BillingPortal.SessionService();
-    //         var session = await service.CreateAsync(options);
-    //         
-    //         _logger.LogInformation("Created billing portal session for user {UserId}", user.Id);
-    //         return Redirect(session.Url);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError(ex, "Error creating billing portal session for user {UserId}", User.Identity?.Name);
-    //         TempData["ErrorMessage"] = "Error accessing billing portal. Please try again.";
-    //         return RedirectToAction("Index");
-    //     }
-    // }
 }
