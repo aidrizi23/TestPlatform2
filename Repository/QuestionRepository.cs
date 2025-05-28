@@ -18,7 +18,6 @@ public class QuestionRepository : IQuestionRepository
     {
         return await _context.Questions
             .Where(q => q.TestId == testId)
-            .AsNoTracking()
             .ToListAsync();
     }
     
@@ -28,6 +27,8 @@ public class QuestionRepository : IQuestionRepository
         return await _context.Questions
             .Where(q => q.Id == questionId)
             .Include(x => x.Test)
+            .ThenInclude(x => x.Attempts)
+            .ThenInclude(x => x.Answers)
             .FirstOrDefaultAsync();
     }
     

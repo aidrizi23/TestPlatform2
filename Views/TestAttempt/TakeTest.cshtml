@@ -173,6 +173,33 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
     </div>
 </div>
 
+<!-- Security Warning Modal -->
+<div class="modal fade" id="securityWarningModal" tabindex="-1" aria-labelledby="securityWarningLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="securityWarningLabel">
+                    <i class="fas fa-shield-alt me-2"></i>Security Violation Detected
+                </h5>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <h4>Unauthorized Activity Detected!</h4>
+                <p id="securityMessage" class="mb-3">You have attempted to use prohibited tools or actions during the test.</p>
+                <div class="alert alert-warning">
+                    <strong>Warning:</strong> Continued violations will result in automatic test submission and account restrictions.
+                </div>
+                <p><strong>Violations: <span id="violationCount">0</span>/3</strong></p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" onclick="acknowledgeWarning()">
+                    <i class="fas fa-check me-2"></i>I Understand - Continue Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Attempt Warning Modal -->
 <div class="modal fade" id="attemptWarningModal" tabindex="-1" aria-labelledby="attemptWarningLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -228,8 +255,408 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
     </div>
 </div>
 
+<style>
+    /* Enhanced security styles */
+    body {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .container {
+        pointer-events: auto;
+    }
+
+    /* Prevent text highlighting */
+    * {
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+    }
+
+    /* Allow input fields to be selectable */
+    input, textarea, select {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+    }
+
+    /* Hide scrollbars to prevent right-click */
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+    }
+
+    /* Security overlay for dev tools detection */
+    .security-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(220, 38, 38, 0.95);
+        z-index: 10000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    /* Fullscreen test mode */
+    .test-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        background: white !important;
+        overflow-y: auto !important;
+    }
+</style>
+
 @section Scripts {
 <script>
+    // Enhanced Anti-Cheat System
+    class EnhancedAntiCheat {
+        constructor() {
+            this.violations = 0;
+            this.maxViolations = 3;
+            this.isDevToolsOpen = false;
+            this.securityCheckInterval = null;
+            this.consoleWarnings = 0;
+            this.lastActivityTime = Date.now();
+            this.init();
+        }
+
+        init() {
+            this.blockAllKeyboardShortcuts();
+            this.blockContextMenu();
+            this.blockTextSelection();
+            this.blockDragDrop();
+            this.detectDevTools();
+            this.preventConsoleAccess();
+            this.monitorPageVisibility();
+            this.preventDebugging();
+            this.blockViewSource();
+            this.enterFullscreen();
+            this.startSecurityChecks();
+            this.overrideConsoleMethods();
+        }
+
+        blockAllKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                const blockedCombinations = [
+                    // Dev Tools
+                    {key: 'F12'},
+                    {ctrl: true, shift: true, key: 'I'},
+                    {ctrl: true, shift: true, key: 'J'},
+                    {ctrl: true, shift: true, key: 'C'},
+                    {cmd: true, alt: true, key: 'I'}, // Mac
+                    {cmd: true, alt: true, key: 'J'}, // Mac
+                    {cmd: true, alt: true, key: 'C'}, // Mac
+
+                    // Refresh/Navigation
+                    {key: 'F5'},
+                    {ctrl: true, key: 'r'},
+                    {ctrl: true, key: 'R'},
+                    {cmd: true, key: 'r'}, // Mac
+                    {alt: true, key: 'ArrowLeft'},
+                    {alt: true, key: 'ArrowRight'},
+                    {cmd: true, key: 'ArrowLeft'}, // Mac
+                    {cmd: true, key: 'ArrowRight'}, // Mac
+
+                    // Copy/Paste/Select/Save/Print
+                    {ctrl: true, key: 'c'},
+                    {ctrl: true, key: 'v'},
+                    {ctrl: true, key: 'x'},
+                    {ctrl: true, key: 'a'},
+                    {ctrl: true, key: 's'},
+                    {ctrl: true, key: 'p'},
+                    {cmd: true, key: 'c'}, // Mac
+                    {cmd: true, key: 'v'}, // Mac
+                    {cmd: true, key: 'x'}, // Mac
+                    {cmd: true, key: 'a'}, // Mac
+                    {cmd: true, key: 's'}, // Mac
+                    {cmd: true, key: 'p'}, // Mac
+
+                    // View Source
+                    {ctrl: true, key: 'u'},
+                    {ctrl: true, key: 'U'},
+                    {cmd: true, key: 'u'}, // Mac
+
+                    // Zoom
+                    {ctrl: true, key: '+'},
+                    {ctrl: true, key: '-'},
+                    {ctrl: true, key: '0'},
+                    {cmd: true, key: '+'}, // Mac
+                    {cmd: true, key: '-'}, // Mac
+                    {cmd: true, key: '0'}, // Mac
+
+                    // Alt+Tab
+                    {alt: true, key: 'Tab'},
+                    {cmd: true, key: 'Tab'}, // Mac
+
+                    // Find
+                    {ctrl: true, key: 'f'},
+                    {ctrl: true, key: 'g'},
+                    {cmd: true, key: 'f'}, // Mac
+                    {cmd: true, key: 'g'}, // Mac
+
+                    // All function keys
+                    {key: 'F1'}, {key: 'F2'}, {key: 'F3'}, {key: 'F4'},
+                    {key: 'F5'}, {key: 'F6'}, {key: 'F7'}, {key: 'F8'},
+                    {key: 'F9'}, {key: 'F10'}, {key: 'F11'}, {key: 'F12'}
+                ];
+
+                const isBlocked = blockedCombinations.some(combo => {
+                    return Object.keys(combo).every(key => {
+                        switch(key) {
+                            case 'key': return e.key === combo.key || e.code === combo.key;
+                            case 'ctrl': return e.ctrlKey === combo.ctrl;
+                            case 'shift': return e.shiftKey === combo.shift;
+                            case 'alt': return e.altKey === combo.alt;
+                            case 'cmd': return e.metaKey === combo.cmd;
+                            default: return true;
+                        }
+                    });
+                });
+
+                if (isBlocked) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    this.recordViolation('keyboard_shortcut', `Blocked key combination: ${e.key}`);
+                    return false;
+                }
+            }, true);
+        }
+
+        blockContextMenu() {
+            ['contextmenu', 'selectstart', 'dragstart'].forEach(event => {
+                document.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (event === 'contextmenu') {
+                        this.recordViolation('right_click', 'Right-click attempted');
+                    }
+                    return false;
+                }, true);
+            });
+        }
+
+        blockTextSelection() {
+            document.addEventListener('selectstart', (e) => {
+                if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        blockDragDrop() {
+            ['drag', 'dragend', 'dragenter', 'dragover', 'dragstart', 'drop'].forEach(event => {
+                document.addEventListener(event, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }, true);
+            });
+        }
+
+        detectDevTools() {
+            // Multiple detection methods
+            setInterval(() => {
+                // Method 1: Console detection
+                let devtools = {open: false, orientation: null};
+                setInterval(() => {
+                    if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+                        if (!devtools.open) {
+                            devtools.open = true;
+                            this.recordViolation('dev_tools', 'Developer tools detected (size method)');
+                        }
+                    } else {
+                        devtools.open = false;
+                    }
+                }, 500);
+
+                // Method 2: Console.clear detection
+                const originalClear = console.clear;
+                console.clear = () => {
+                    this.recordViolation('dev_tools', 'Console.clear() detected');
+                    return originalClear.apply(console, arguments);
+                };
+
+                // Method 3: Debug detection
+                let startTime = performance.now();
+                debugger;
+                let endTime = performance.now();
+                if (endTime - startTime > 100) {
+                    this.recordViolation('dev_tools', 'Debugger statement detected');
+                }
+            }, 1000);
+        }
+
+        preventConsoleAccess() {
+            // Override console methods
+            const noop = () => {};
+            const consoleProps = ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace', 'dir', 'dirxml', 'group', 'groupCollapsed', 'groupEnd', 'clear', 'count', 'countReset', 'assert', 'profile', 'profileEnd', 'time', 'timeLog', 'timeEnd', 'timeStamp'];
+
+            consoleProps.forEach(prop => {
+                try {
+                    Object.defineProperty(console, prop, {
+                        get: () => {
+                            this.recordViolation('console_access', `Console.${prop} accessed`);
+                            return noop;
+                        },
+                        set: noop
+                    });
+                } catch (e) {}
+            });
+        }
+
+        overrideConsoleMethods() {
+            // Additional console protection
+            if (typeof console !== 'undefined') {
+                Object.defineProperty(window, 'console', {
+                    get: () => {
+                        this.recordViolation('console_access', 'Console object accessed');
+                        return {};
+                    },
+                    set: () => {}
+                });
+            }
+        }
+
+        monitorPageVisibility() {
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.recordViolation('tab_switch', 'Page became hidden');
+                    decrementAttempts(true);
+                }
+            });
+
+            window.addEventListener('blur', () => {
+                this.recordViolation('window_blur', 'Window lost focus');
+                decrementAttempts(true);
+            });
+
+            window.addEventListener('focus', () => {
+                this.lastActivityTime = Date.now();
+            });
+        }
+
+        preventDebugging() {
+            // Infinite debugger loop
+            setInterval(() => {
+                function detectDebugger() {
+                    const start = new Date();
+                    debugger;
+                    const end = new Date();
+                    if (end - start > 100) {
+                        this.recordViolation('debugger_detected', 'Debugger execution detected');
+                    }
+                }
+                detectDebugger.call(this);
+            }, 1000);
+
+            // Prevent step debugging
+            (() => {
+                function block() {
+                    setInterval(() => {
+                        (function() {
+                            return false;
+                        })['constructor']('debugger')['call']();
+                    }, 50);
+                }
+                try {
+                    block();
+                } catch (e) {}
+            })();
+        }
+
+        blockViewSource() {
+            // Prevent view source
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+                    e.preventDefault();
+                    this.recordViolation('view_source', 'View source attempted');
+                    return false;
+                }
+            });
+        }
+
+        enterFullscreen() {
+            // Try to enter fullscreen mode
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            } else if (document.documentElement.msRequestFullscreen) {
+                document.documentElement.msRequestFullscreen();
+            }
+
+            // Monitor fullscreen exit
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement) {
+                    this.recordViolation('fullscreen_exit', 'Exited fullscreen mode');
+                }
+            });
+        }
+
+        startSecurityChecks() {
+            this.securityCheckInterval = setInterval(() => {
+                // Check for automation tools
+                if (window.navigator.webdriver) {
+                    this.recordViolation('automation', 'WebDriver detected');
+                }
+
+                // Check for suspicious properties
+                if (window.chrome && window.chrome.runtime && window.chrome.runtime.onConnect) {
+                    this.recordViolation('extension', 'Chrome extension detected');
+                }
+
+                // Check activity
+                if (Date.now() - this.lastActivityTime > 300000) { // 5 minutes
+                    this.recordViolation('inactivity', 'No activity for 5 minutes');
+                }
+
+                // Check window size (potential dev tools)
+                if (window.outerHeight - window.innerHeight > 200) {
+                    this.recordViolation('window_size', 'Suspicious window dimensions');
+                }
+            }, 5000);
+        }
+
+        recordViolation(type, message) {
+            this.violations++;
+            console.log(`Security violation #${this.violations}: ${type} - ${message}`);
+
+            // Update modal
+            document.getElementById('violationCount').textContent = this.violations;
+            document.getElementById('securityMessage').textContent = `${message} (Type: ${type})`;
+
+            // Show warning modal
+            const modal = new bootstrap.Modal(document.getElementById('securityWarningModal'));
+            modal.show();
+
+            // Auto-submit if max violations reached
+            if (this.violations >= this.maxViolations) {
+                setTimeout(() => {
+                    alert('Maximum security violations reached. Test will be automatically submitted.');
+                    submitForm();
+                }, 2000);
+            }
+        }
+    }
+
     // Initialize variables
     let timeRemaining = @Model.Test.TimeLimit * 60;
     const timerElement = document.getElementById('timer');
@@ -243,6 +670,9 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
     const modal = new bootstrap.Modal(document.getElementById('attemptWarningModal'));
     const submitModal = new bootstrap.Modal(document.getElementById('submitConfirmModal'));
 
+    // Initialize anti-cheat system
+    const antiCheat = new EnhancedAntiCheat();
+
     // Question navigation
     const questionContainers = document.querySelectorAll('.question-container');
     const prevBtn = document.getElementById('prevBtn');
@@ -253,6 +683,12 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
 
     // Track answered questions
     const questionStatus = new Array(questionContainers.length).fill(false);
+
+    // Security warning acknowledgment
+    function acknowledgeWarning() {
+        const warningModal = bootstrap.Modal.getInstance(document.getElementById('securityWarningModal'));
+        warningModal.hide();
+    }
 
     // Timer logic
     function updateTimer() {
@@ -289,6 +725,9 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         if (formSubmitted) return;
         formSubmitted = true;
         clearInterval(timerInterval);
+        if (antiCheat.securityCheckInterval) {
+            clearInterval(antiCheat.securityCheckInterval);
+        }
         document.getElementById('testForm').submit();
     }
 
@@ -494,7 +933,7 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleFocusChange);
     window.addEventListener('focus', () => {
-        // Reset any flags or states if needed
+        antiCheat.lastActivityTime = Date.now();
     });
 
     // Navigation/closing detection
@@ -506,26 +945,60 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         }
     });
 
-    // Prevent refreshing
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+    // Additional security measures
+    document.addEventListener('paste', (e) => {
+        if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
             e.preventDefault();
-            decrementAttempts(true);
+            antiCheat.recordViolation('paste_blocked', 'Paste operation blocked');
         }
     });
 
-    // Prevent inspecting elements
-    document.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        decrementAttempts(true);
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
-            e.preventDefault();
-            decrementAttempts(true);
+    // Prevent print screen
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'PrintScreen') {
+            antiCheat.recordViolation('print_screen', 'Print Screen key detected');
         }
     });
+
+    // Monitor mouse activity for automation detection
+    let mouseEvents = 0;
+    document.addEventListener('mousemove', () => {
+        mouseEvents++;
+        antiCheat.lastActivityTime = Date.now();
+    });
+
+    // Check for unusual mouse patterns
+    setInterval(() => {
+        if (mouseEvents === 0) {
+            antiCheat.recordViolation('no_mouse_activity', 'No mouse movement detected');
+        }
+        mouseEvents = 0;
+    }, 30000); // Check every 30 seconds
+
+    // Prevent iframe injection
+    if (window.self !== window.top) {
+        antiCheat.recordViolation('iframe_detected', 'Page loaded in iframe');
+        window.top.location = window.self.location;
+    }
+
+    // Check for headless browser
+    if (navigator.webdriver || window.navigator.webdriver) {
+        antiCheat.recordViolation('webdriver_detected', 'WebDriver detected');
+    }
+
+    // Check for common automation properties
+    if (window.phantom || window._phantom || window.callPhantom) {
+        antiCheat.recordViolation('phantom_detected', 'PhantomJS detected');
+    }
+
+    if (window.Buffer) {
+        antiCheat.recordViolation('nodejs_detected', 'Node.js Buffer detected');
+    }
+
+    // Additional automation checks
+    if (window.spawn || window.emit) {
+        antiCheat.recordViolation('automation_detected', 'Automation tools detected');
+    }
 
     // Initialize - show the first question
     showQuestion(0);
@@ -557,6 +1030,84 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                 input.dispatchEvent(event);
             }
         });
+    });
+
+    // Disable common browser shortcuts during test
+    window.addEventListener('keydown', (e) => {
+        // Block Ctrl+W (close tab)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+            e.preventDefault();
+            antiCheat.recordViolation('close_tab_attempt', 'Attempted to close tab');
+        }
+
+        // Block Ctrl+T (new tab)
+        if ((e.ctrlKey || e.metaKey) && e.key === 't') {
+            e.preventDefault();
+            antiCheat.recordViolation('new_tab_attempt', 'Attempted to open new tab');
+        }
+
+        // Block Ctrl+N (new window)
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+            e.preventDefault();
+            antiCheat.recordViolation('new_window_attempt', 'Attempted to open new window');
+        }
+
+        // Block Ctrl+Shift+T (restore tab)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 't') {
+            e.preventDefault();
+            antiCheat.recordViolation('restore_tab_attempt', 'Attempted to restore tab');
+        }
+    }, true);
+
+    // Detect if running in headless mode
+    if (window.outerWidth === 0 && window.outerHeight === 0) {
+        antiCheat.recordViolation('headless_detected', 'Headless browser detected');
+    }
+
+    // Check for missing browser features (indicates automation)
+    if (!window.chrome || !window.chrome.runtime) {
+        // This might be a normal browser, but combined with other factors could indicate automation
+    }
+
+    // Monitor for suspicious console activity
+    let consoleCallCount = 0;
+    const originalLog = console.log;
+    console.log = function(...args) {
+        consoleCallCount++;
+        if (consoleCallCount > 10) {
+            antiCheat.recordViolation('excessive_console', 'Excessive console usage detected');
+        }
+        return originalLog.apply(console, args);
+    };
+
+    // Final security check on page load
+    setTimeout(() => {
+        if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+            antiCheat.recordViolation('dev_tools_open', 'Developer tools appear to be open on load');
+        }
+    }, 2000);
+
+    // Lock the page in fullscreen if possible
+    function requestFullscreen() {
+        const element = document.documentElement;
+        if (element.requestFullscreen) {
+            element.requestFullscreen().catch(() => {});
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
+    }
+
+    // Request fullscreen after user interaction
+    document.addEventListener('click', requestFullscreen, { once: true });
+    document.addEventListener('keydown', requestFullscreen, { once: true });
+
+    // Prevent back button
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', () => {
+        history.go(1);
+        antiCheat.recordViolation('back_button', 'Back button usage detected');
     });
 </script>
 }

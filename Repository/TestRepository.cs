@@ -29,6 +29,8 @@ public class TestRepository : ITestRepository
             .Where(t => t.Id == testId)
             .Include(x => x.User)
             .Include(x => x.Questions)
+            .Include(x => x.Attempts)
+            .Include(x => x.InvitedStudents)
             .FirstOrDefaultAsync();
     }
 

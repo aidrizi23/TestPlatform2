@@ -3,266 +3,1155 @@
 
 <style>
     body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
+        background-color: #f8f9fa;
+        color: #1f2937;
     }
 
     .container {
-        max-width: 800px;
+        max-width: 900px;
     }
 
     .card {
-        background-color: var(--secondary-bg);
+        background: white;
         border: none;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
         margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 16px 16px 0 0;
+        padding: 1.5rem 2rem;
+        position: relative;
+    }
+
+    .card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .card-body {
+        padding: 2rem;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 0.875rem 1rem;
+        transition: all 0.3s ease;
+        background-color: white;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+        outline: none;
+        transform: translateY(-1px);
+    }
+
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #d1d5db;
+        transition: all 0.2s ease;
+    }
+
+    .form-check-input:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    }
+
+    .form-switch .form-check-input {
+        width: 2.75em;
+        height: 1.375em;
+        border-radius: 2em;
+        background-color: #e5e7eb;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .form-switch .form-check-input:checked {
+        background-color: #3b82f6;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+    }
+
+    .btn {
+        border-radius: 10px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+
+    .btn-outline-primary {
+        color: #3b82f6;
+        border: 2px solid #3b82f6;
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        color: #6b7280;
+        border: 2px solid #d1d5db;
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #6b7280;
+        color: white;
+        border-color: #6b7280;
+        transform: translateY(-1px);
+    }
+
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+    }
+
+    .text-danger {
+        color: #dc2626 !important;
+    }
+
+    /* Breadcrumb Navigation */
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .breadcrumb-link {
+        color: #3b82f6;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s ease;
+        font-weight: 500;
+    }
+
+    .breadcrumb-link:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+    }
+
+    .breadcrumb-separator {
+        margin: 0 0.75rem;
+        color: #9ca3af;
+    }
+
+    .breadcrumb-current {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        opacity: 0.9;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Form Section Titles */
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.125rem;
+    }
+
+    /* Input Group Styling */
+    .input-group {
+        position: relative;
+    }
+
+    .input-group-text {
+        background: #f8fafc;
+        border: 2px solid #e5e7eb;
+        border-right: none;
+        border-radius: 12px 0 0 12px;
+        color: #6b7280;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.875rem 1rem;
+    }
+
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 12px 12px 0;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        color: #3b82f6;
+    }
+
+    /* Options Container */
+    .options-container {
+        background: #f8fafc;
+        border: 2px dashed #d1d5db;
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .options-container:hover {
+        border-color: #3b82f6;
+        background: #f0f9ff;
+    }
+
+    .options-container.has-options {
+        border-style: solid;
+        border-color: #e5e7eb;
+        background: white;
+    }
+
+    .options-title {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .options-count {
+        background: #e0e7ff;
+        color: #3730a3;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    /* Option Groups */
+    .option-group {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .option-group:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .option-group.correct-option {
+        border-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .option-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .option-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+
+    .option-group.correct-option .option-number {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .option-label {
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+        flex: 1;
+    }
+
+    .option-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .correct-check {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f9fafb;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .correct-check.is-correct {
+        background: #f0fdf4;
+        border-color: #10b981;
+        color: #059669;
+    }
+
+    .correct-check-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .remove-option-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.125rem;
+        padding: 0;
+        border: none;
+    }
+
+    /* Empty State */
+    .empty-options {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6b7280;
+    }
+
+    .empty-icon {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Add Option Button */
+    .add-option-section {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .add-option-btn {
+        background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+        color: #1d4ed8;
+        border: 2px dashed #93c5fd;
+        border-radius: 12px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .add-option-btn:hover {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+        border-style: solid;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+    }
+
+    /* Multiple Selection Toggle */
+    .multiple-selection-card {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+        border: 1px solid #c7d2fe;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .toggle-info {
+        flex: 1;
+    }
+
+    .toggle-title {
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 0.25rem;
+    }
+
+    .toggle-description {
+        font-size: 0.875rem;
+        color: #3730a3;
+        margin: 0;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f3f4f6;
+    }
+
+    /* Validation Messages */
+    .validation-message {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .validation-message::before {
+        content: '⚠';
+        font-size: 1rem;
+    }
+
+    /* Help Text */
+    .form-text {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+        line-height: 1.4;
+    }
+
+    /* Animations */
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .option-group {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+        20%, 40%, 60%, 80% { transform: translateX(3px); }
+    }
+
+    .error-shake {
+        animation: shake 0.6s ease-in-out;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .page-header {
+        padding: 2rem 1.5rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 
     .card-body {
         padding: 1.5rem;
     }
 
-    .form-control, .form-select {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
+    .form-actions {
+        flex-direction: column;
     }
 
-    .form-control:focus, .form-select:focus {
-        background-color: var(--primary-bg);
-        border-color: var(--accent-green);
-        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        color: var(--text-primary);
+    .option-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
     }
 
-    .form-check-input {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.5);
+    .option-header {
+        flex-wrap: wrap;
+    }
     }
 
-    .form-check-input:checked {
-        background-color: var(--accent-green);
-        border-color: var(--accent-green);
+    @@media (max-width: 576px) {
+    .breadcrumb-nav {
+        padding: 0.75rem 1rem;
     }
 
-    .btn-primary {
-        background-color: var(--accent-green);
-        border: none;
-        color: var(--text-primary);
+    .page-header {
+        padding: 1.5rem 1rem;
     }
 
-    .btn-primary:hover {
-        background-color: var(--accent-purple);
+    .card-body {
+        padding: 1rem;
     }
 
-    .btn-outline-primary {
-        color: var(--accent-green);
-        border-color: var(--accent-green);
-    }
-
-    .btn-outline-primary:hover {
-        background-color: var(--accent-green);
-        color: var(--text-primary);
-    }
-
-    .btn-outline-secondary {
-        color: var(--text-secondary);
-        border-color: var(--text-secondary);
-    }
-
-    .btn-outline-secondary:hover {
-        background-color: var(--text-secondary);
-        color: var(--primary-bg);
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        border: none;
-    }
-
-    .text-danger {
-        color: #dc3545 !important;
-    }
-
-    #optionsContainer {
-        background-color: var(--primary-bg);
-        border-color: rgba(255, 255, 255, 0.1);
+    .options-container {
+        padding: 1.5rem;
     }
 
     .option-group {
-        background-color: var(--secondary-bg);
-        border-radius: 4px;
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
+        padding: 1rem;
+    }
     }
 </style>
 
 <div class="container mt-4">
-    <h2 class="mb-4">Create Multiple Choice Question</h2>
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-nav">
+        <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="breadcrumb-link">
+            <i class="fas fa-arrow-left me-2"></i>Back to Test
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Create Multiple Choice Question</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-list-ul"></i>
+            Create Multiple Choice Question
+        </h1>
+        <p class="page-subtitle">Design a question with multiple answer options for your test</p>
+    </div>
 
     <form asp-controller="Question" asp-action="CreateMultipleChoice" method="post" id="questionForm">
         <input type="hidden" asp-for="TestId" />
 
+        <!-- Question Details Card -->
         <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <div class="section-icon">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    Question Details
+                </h3>
+            </div>
             <div class="card-body">
-                <div class="mb-3">
+                <div class="mb-4">
                     <label asp-for="Text" class="form-label fw-bold">Question Text</label>
-                    <textarea asp-for="Text" class="form-control" rows="3" required></textarea>
-                    <span asp-validation-for="Text" class="text-danger"></span>
+                    <textarea asp-for="Text" class="form-control" rows="4"
+                              placeholder="Enter your multiple choice question here..." required></textarea>
+                    <span asp-validation-for="Text" class="validation-message"></span>
+                    <div class="form-text">Write a clear question that students will answer by selecting from multiple options</div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label asp-for="Points" class="form-label fw-bold">Points</label>
-                            <input asp-for="Points" class="form-control" type="number" step="0.5" min="0" required />
-                            <span asp-validation-for="Points" class="text-danger"></span>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-star"></i>
+                                </span>
+                                <input asp-for="Points" class="form-control" type="number" step="0.5" min="0" max="100" required />
+                            </div>
+                            <span asp-validation-for="Points" class="validation-message"></span>
+                            <div class="form-text">Points awarded for answering correctly</div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="mb-3 pt-4">
-                            <div class="form-check form-switch">
-                                <input asp-for="AllowMultipleSelections" class="form-check-input" type="checkbox" role="switch" id="AllowMultipleSelections">
-                                <label asp-for="AllowMultipleSelections" class="form-check-label fw-bold">Allow Multiple Selections</label>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Question Type</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-list-ul"></i>
+                                </span>
+                                <input type="text" class="form-control" value="Multiple Choice" readonly />
                             </div>
+                            <div class="form-text">Students select from predefined answer options</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple Selection Toggle -->
+                <div class="multiple-selection-card">
+                    <div class="toggle-container">
+                        <div class="toggle-info">
+                            <div class="toggle-title">Allow Multiple Selections</div>
+                            <div class="toggle-description">Enable students to select more than one answer option</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input asp-for="AllowMultipleSelections" class="form-check-input" type="checkbox"
+                                   role="switch" id="AllowMultipleSelections">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Answer Options Card -->
         <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <div class="section-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    Answer Options
+                </h3>
+            </div>
             <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold mb-3">Answer Options</label>
-                    <div id="optionsContainer" class="border rounded p-3">
-                        <div id="optionsList">
-                            @if (Model.Options.Any())
-                            {
-                                @for (var i = 0; i < Model.Options.Count; i++)
-                                {
-                                    <div class="option-group mb-3">
-                                        <div class="d-flex gap-2 align-items-center">
-                                            <input type="text" name="Options" value="@Model.Options[i]" class="form-control" required />
-                                            <div class="form-check form-check-inline">
-                                                <input type="checkbox" name="CorrectAnswers" value="@Model.Options[i]"
-                                                       @(Model.CorrectAnswers.Contains(Model.Options[i]) ? "checked" : "")
-                                                       class="form-check-input correct-answer" />
-                                                <label class="form-check-label">Correct</label>
-                                            </div>
-                                            <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
-                                        </div>
+                <div class="options-container" id="optionsContainer">
+                    <div class="options-title">
+                        <span>Configure Answer Options</span>
+                        <span class="options-count" id="optionsCount">0 options</span>
+                    </div>
+
+                    <div id="optionsList">
+                        @if (Model.Options != null && Model.Options.Any())
+                        {
+                        @for (var i = 0; i < Model.Options.Count; i++)
+                        {
+                        <div class="option-group @(Model.CorrectAnswers != null && Model.CorrectAnswers.Contains(Model.Options[i]) ? "correct-option" : "")" data-index="@i">
+                            <div class="option-header">
+                                <div class="option-number">@(i + 1)</div>
+                                <div class="option-label">Option @(i + 1)</div>
+                                <div class="option-controls">
+                                    <div class="correct-check @(Model.CorrectAnswers != null && Model.CorrectAnswers.Contains(Model.Options[i]) ? "is-correct" : "")">
+                                        <input type="checkbox" name="CorrectAnswers" value="@Model.Options[i]"
+                                               @(Model.CorrectAnswers != null && Model.CorrectAnswers.Contains(Model.Options[i]) ? "checked" : "")
+                                               class="form-check-input correct-answer" id="correct-@i" />
+                                        <label class="correct-check-label" for="correct-@i">
+                                            <i class="fas fa-check me-1"></i>Correct
+                                        </label>
                                     </div>
-                                }
-                            }
-                            else
-                            {
-                                <div class="option-group mb-3">
-                                    <div class="d-flex gap-2 align-items-center">
-                                        <input type="text" name="Options" class="form-control" required />
-                                        <div class="form-check form-check-inline">
-                                            <input type="checkbox" name="CorrectAnswers" class="form-check-input correct-answer" />
-                                            <label class="form-check-label">Correct</label>
-                                        </div>
-                                        <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
-                                    </div>
+                                    <button type="button" class="btn btn-danger remove-option-btn remove-option" title="Remove this option">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
-                            }
+                            </div>
+                            <input type="text" name="Options" value="@Model.Options[i]" class="form-control"
+                                   placeholder="Enter answer option..." required />
                         </div>
+                        }
+                        }
+                        else
+                        {
+                        <!-- Empty state -->
+                        <div class="empty-options" id="emptyState">
+                            <div class="empty-icon">
+                                <i class="fas fa-list-ul"></i>
+                            </div>
+                            <div class="empty-title">No answer options yet</div>
+                            <div class="empty-description">Click the button below to add your first answer option</div>
+                        </div>
+                        }
+                    </div>
+
+                    <div class="add-option-section">
+                        <button type="button" class="add-option-btn" id="addOption">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Answer Option
+                        </button>
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline-primary mt-3" id="addOption">
-                    <i class="bi bi-plus-circle"></i> Add Option
-                </button>
+
+                <div class="form-text mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Add at least 2 answer options and mark the correct ones. You can rearrange options by dragging them.
+                </div>
             </div>
         </div>
 
-        <div class="d-flex gap-2 mt-4">
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check-circle"></i> Create Question
-            </button>
-            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-x-circle"></i> Cancel
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId"
+               class="btn btn-outline-secondary px-4">
+                <i class="fas fa-times me-2"></i>Cancel
             </a>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-check-circle me-2"></i>Create Question
+            </button>
         </div>
     </form>
 </div>
+
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            const handleMultipleSelection = () => {
-                const allowMultiple = $("#AllowMultipleSelections").is(":checked");
-                $(".correct-answer").off('change');
+<script>
+    $(document).ready(function () {
+        let optionIndex = @(Model.Options?.Count ?? 0);
 
-                if (!allowMultiple) {
-                    $(".correct-answer").on('change', function() {
-                        if (this.checked) {
-                            $(".correct-answer").not(this).prop('checked', false);
-                        }
-                    });
-                    
-                    // Ensure only one is checked initially
-                    const $checked = $(".correct-answer:checked");
-                    if ($checked.length > 1) {
-                        $checked.slice(1).prop('checked', false);
-                    }
-                }
-            };
+        // Update options container state
+        function updateOptionsContainer() {
+            const container = $("#optionsContainer");
+            const emptyState = $("#emptyState");
+            const optionsList = $("#optionsList .option-group");
+            const optionsCount = $("#optionsCount");
 
-            // Initial setup
-            handleMultipleSelection();
-            $("#AllowMultipleSelections").change(handleMultipleSelection);
-
-            // Add new option
-            $("#addOption").click(function () {
-                const newOption = `
-                    <div class="option-group mb-3">
-                        <div class="d-flex gap-2 align-items-center">
-                            <input type="text" name="Options" class="form-control" required />
-                            <div class="form-check form-check-inline">
-                                <input type="checkbox" name="CorrectAnswers" class="form-check-input correct-answer" />
-                                <label class="form-check-label">Correct</label>
+            if (optionsList.length === 0) {
+                container.removeClass("has-options");
+                if (emptyState.length === 0) {
+                    $("#optionsList").html(`
+                            <div class="empty-options" id="emptyState">
+                                <div class="empty-icon">
+                                    <i class="fas fa-list-ul"></i>
+                                </div>
+                                <div class="empty-title">No answer options yet</div>
+                                <div class="empty-description">Click the button below to add your first answer option</div>
                             </div>
-                            <button type="button" class="btn btn-danger btn-sm remove-option">×</button>
-                        </div>
-                    </div>`;
-                $("#optionsList").append(newOption);
-                handleMultipleSelection();
-            });
-
-            // Remove option
-            $(document).on("click", ".remove-option", function () {
-                if ($(".option-group").length > 1) {
-                    $(this).closest(".option-group").remove();
-                } else {
-                    alert("You must have at least one option");
+                        `);
                 }
-            });
+                optionsCount.text("0 options");
+            } else {
+                container.addClass("has-options");
+                emptyState.remove();
+                optionsCount.text(`${optionsList.length} option${optionsList.length === 1 ? '' : 's'}`);
 
-            // Form validation
-            $("#questionForm").submit(function (e) {
-                const options = $("input[name='Options']").map(function() { return $(this).val(); }).get();
-                const uniqueOptions = [...new Set(options)];
-                
-                if (uniqueOptions.length < 2) {
-                    alert("Please provide at least 2 distinct options");
-                    e.preventDefault();
-                    return;
-                }
-
-                const correctAnswers = $(".correct-answer:checked");
-                if (correctAnswers.length === 0) {
-                    alert("Please select at least one correct answer");
-                    e.preventDefault();
-                    return;
-                }
-
-                // Update correct answer values
-                correctAnswers.each(function() {
-                    $(this).val($(this).closest('.option-group').find('input[name="Options"]').val());
+                // Update option numbers
+                optionsList.each(function(index) {
+                    $(this).find('.option-number').text(index + 1);
+                    $(this).find('.option-label').text(`Option ${index + 1}`);
+                    $(this).attr('data-index', index);
                 });
+            }
+        }
+
+        // Handle multiple selection toggle
+        function handleMultipleSelection() {
+            const allowMultiple = $("#AllowMultipleSelections").is(":checked");
+            $(".correct-answer").off('change');
+
+            if (!allowMultiple) {
+                $(".correct-answer").on('change', function() {
+                    if (this.checked) {
+                        $(".correct-answer").not(this).prop('checked', false);
+                        // Update visual states
+                        $(".option-group").removeClass("correct-option");
+                        $(".correct-check").removeClass("is-correct");
+                        $(this).closest('.option-group').addClass("correct-option");
+                        $(this).closest('.correct-check').addClass("is-correct");
+                        // Update checkbox values
+                        updateCorrectAnswerValues();
+                    }
+                });
+
+                // Ensure only one is checked initially
+                const $checked = $(".correct-answer:checked");
+                if ($checked.length > 1) {
+                    $checked.slice(1).prop('checked', false);
+                    $(".option-group").removeClass("correct-option");
+                    $(".correct-check").removeClass("is-correct");
+                    $checked.first().closest('.option-group').addClass("correct-option");
+                    $checked.first().closest('.correct-check').addClass("is-correct");
+                }
+            } else {
+                $(".correct-answer").on('change', function() {
+                    const isChecked = this.checked;
+                    const optionGroup = $(this).closest('.option-group');
+                    const correctCheck = $(this).closest('.correct-check');
+
+                    if (isChecked) {
+                        optionGroup.addClass("correct-option");
+                        correctCheck.addClass("is-correct");
+                    } else {
+                        optionGroup.removeClass("correct-option");
+                        correctCheck.removeClass("is-correct");
+                    }
+                    updateCorrectAnswerValues();
+                });
+            }
+        }
+
+        // Update correct answer checkbox values based on option text
+        function updateCorrectAnswerValues() {
+            $(".correct-answer:checked").each(function() {
+                const optionText = $(this).closest('.option-group').find('input[name="Options"]').val();
+                $(this).val(optionText);
+            });
+        }
+
+        // Add new option
+        $("#addOption").click(function () {
+            optionIndex++;
+            const newOption = `
+                    <div class="option-group" data-index="${optionIndex}">
+                        <div class="option-header">
+                            <div class="option-number">${optionIndex + 1}</div>
+                            <div class="option-label">Option ${optionIndex + 1}</div>
+                            <div class="option-controls">
+                                <div class="correct-check">
+                                    <input type="checkbox" name="CorrectAnswers" class="form-check-input correct-answer" id="correct-${optionIndex}" />
+                                    <label class="correct-check-label" for="correct-${optionIndex}">
+                                        <i class="fas fa-check me-1"></i>Correct
+                                    </label>
+                                </div>
+                                <button type="button" class="btn btn-danger remove-option-btn remove-option" title="Remove this option">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="text" name="Options" class="form-control" placeholder="Enter answer option..." required />
+                    </div>`;
+
+            $("#emptyState").remove();
+            $("#optionsList").append(newOption);
+            updateOptionsContainer();
+            handleMultipleSelection();
+
+            // Focus on the new input
+            $("#optionsList .option-group:last-child input[name='Options']").focus();
+
+            // Add input listener for the new option
+            $("#optionsList .option-group:last-child input[name='Options']").on('input', function() {
+                updateCorrectAnswerValues();
+            });
+
+            // Scroll to the new option
+            $("#optionsList .option-group:last-child")[0].scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
             });
         });
-    </script>
+
+        // Remove option
+        $(document).on("click", ".remove-option", function () {
+            const optionGroups = $(".option-group");
+
+            if (optionGroups.length > 1) {
+                $(this).closest(".option-group").fadeOut(300, function() {
+                    $(this).remove();
+                    updateOptionsContainer();
+                    updateCorrectAnswerValues();
+                });
+            } else {
+                // Show error message
+                const button = $(this);
+                button.addClass('error-shake');
+
+                // Create temporary tooltip
+                const tooltip = $('<div class="alert alert-warning position-absolute" style="top: -60px; left: 50%; transform: translateX(-50%); z-index: 1000; white-space: nowrap; font-size: 0.875rem;">You must have at least one option</div>');
+                button.parent().css('position', 'relative').append(tooltip);
+
+                setTimeout(() => {
+                    button.removeClass('error-shake');
+                    tooltip.fadeOut(300, function() { $(this).remove(); });
+                }, 3000);
+            }
+        });
+
+        // Listen for option text changes to update correct answer values
+        $(document).on('input', 'input[name="Options"]', function() {
+            updateCorrectAnswerValues();
+        });
+
+        // Form validation
+        $("#questionForm").submit(function (e) {
+            const questionText = $("#Text").val().trim();
+            const points = parseFloat($("#Points").val());
+            const options = $("input[name='Options']").map(function() {
+                return $(this).val().trim();
+            }).get().filter(opt => opt.length > 0);
+
+            const uniqueOptions = [...new Set(options)];
+            let isValid = true;
+            let errorMessage = '';
+
+            // Clear previous errors
+            $('.validation-message').hide();
+            $('.form-control').removeClass('is-invalid');
+
+            if (!questionText) {
+                $("#Text").addClass('is-invalid');
+                $("#Text").next('.validation-message').text('Question text is required').show();
+                isValid = false;
+            }
+
+            if (isNaN(points) || points <= 0) {
+                $("#Points").addClass('is-invalid');
+                $("#Points").closest('.input-group').next('.validation-message').text('Points must be greater than 0').show();
+                isValid = false;
+            }
+
+            if (options.length < 2) {
+                errorMessage = "Please provide at least 2 answer options";
+                isValid = false;
+            } else if (uniqueOptions.length !== options.length) {
+                errorMessage = "All answer options must be unique";
+                isValid = false;
+            } else if (uniqueOptions.length < 2) {
+                errorMessage = "Please provide at least 2 distinct answer options";
+                isValid = false;
+            }
+
+            const correctAnswers = $(".correct-answer:checked");
+            if (correctAnswers.length === 0) {
+                errorMessage = "Please select at least one correct answer";
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                if (errorMessage) {
+                    // Show error in options container
+                    let errorDiv = $('#optionsError');
+                    if (errorDiv.length === 0) {
+                        errorDiv = $(`<div id="optionsError" class="alert alert-danger mt-3" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <span class="error-text"></span>
+                            </div>`);
+                        $('#optionsContainer').append(errorDiv);
+                    }
+                    errorDiv.find('.error-text').text(errorMessage);
+                    errorDiv.show();
+
+                    // Scroll to error
+                    errorDiv[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // Add shake animation to container
+                    $('#optionsContainer').addClass('error-shake');
+                    setTimeout(() => {
+                        $('#optionsContainer').removeClass('error-shake');
+                    }, 600);
+                }
+
+                return false;
+            }
+
+            // Update correct answer values before submission
+            updateCorrectAnswerValues();
+
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.prop('disabled', true);
+            submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Question...');
+
+            // Reset button after 5 seconds as fallback
+            setTimeout(() => {
+                submitBtn.prop('disabled', false);
+                submitBtn.html(originalText);
+            }, 5000);
+        });
+
+        // Initialize
+        updateOptionsContainer();
+        handleMultipleSelection();
+        $("#AllowMultipleSelections").change(handleMultipleSelection);
+
+        // Auto-focus question text on page load
+        setTimeout(() => {
+            $("#Text").focus();
+        }, 500);
+
+        // Real-time validation feedback
+        $("#Text").on('input', function() {
+            const $this = $(this);
+            const $error = $this.next('.validation-message');
+
+            if ($this.val().trim()) {
+                $this.removeClass('is-invalid');
+                $error.hide();
+            } else {
+                $this.addClass('is-invalid');
+                $error.text('Question text is required').show();
+            }
+        });
+
+        $("#Points").on('input', function() {
+            const $this = $(this);
+            const $error = $this.closest('.input-group').next('.validation-message');
+            const value = parseFloat($this.val());
+
+            if (!isNaN(value) && value > 0) {
+                $this.removeClass('is-invalid');
+                $error.hide();
+            } else {
+                $this.addClass('is-invalid');
+                $error.text('Points must be greater than 0').show();
+            }
+        });
+
+        // Hide options error when making changes
+        $(document).on('input change', '#optionsContainer input, #optionsContainer .correct-answer', function() {
+            $('#optionsError').fadeOut();
+        });
+
+        // Keyboard shortcuts
+        $(document).on('keydown', function(e) {
+            // Ctrl/Cmd + Enter to add option
+            if ((e.ctrlKey || e.metaKey) && e.keyCode === 13) {
+                e.preventDefault();
+                $("#addOption").click();
+            }
+
+            // Escape to cancel if focused on an input
+            if (e.keyCode === 27 && $(e.target).is('input, textarea')) {
+                $(e.target).blur();
+            }
+        });
+
+        // Auto-resize textareas
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+
+        $("#Text").on('input', function() {
+            autoResize(this);
+        });
+
+        // Initialize textarea size
+        autoResize(document.getElementById('Text'));
+
+        // Add drag and drop functionality for reordering options
+        if (typeof Sortable !== 'undefined') {
+            new Sortable(document.getElementById('optionsList'), {
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                filter: '.empty-options',
+                onEnd: function() {
+                    updateOptionsContainer();
+                    updateCorrectAnswerValues();
+                }
+            });
+        }
+
+        // Add tooltips for better UX
+        $('[title]').each(function() {
+            $(this).attr('data-bs-toggle', 'tooltip');
+        });
+
+        // Initialize tooltips if Bootstrap is available
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+    });
+</script>
 }
