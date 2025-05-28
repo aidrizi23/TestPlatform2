@@ -31,12 +31,13 @@ public class TestAttemptRepository : ITestAttemptRepository
     public async Task<IEnumerable<TestAttempt?>> GetAttemptsByTestIdAsync(string testId)
     {
         return await _context.TestAttempts
+            .AsNoTracking()
             .Where(a => a.TestId == testId)
             .Include(a => a.Answers)
-            .AsNoTracking()
+            .AsSplitQuery() // Split query to avoid cartesian product
+            .OrderByDescending(a => a.StartTime) // Add ordering
             .ToListAsync();
     }
-    
     public async Task<IEnumerable <TestAttempt?>> GetFinishedAttemptsByTestIdAsync(string testId)
     {
         return await _context.TestAttempts
@@ -58,8 +59,11 @@ public class TestAttemptRepository : ITestAttemptRepository
     public async Task<TestAttempt?> GetAttemptByIdAsync(string attemptId)
     {
         return await _context.TestAttempts
+            .AsSplitQuery() // Split to optimize multiple includes
             .Include(a => a.Answers)
+            .ThenInclude(ans => ans.Question)
             .Include(a => a.Test)
+            .ThenInclude(t => t.Questions)
             .FirstOrDefaultAsync(a => a.Id == attemptId);
     }
 

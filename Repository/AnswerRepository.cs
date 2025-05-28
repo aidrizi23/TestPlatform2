@@ -26,15 +26,14 @@ public class AnswerRepository : IAnswerRepository
 
     public async Task<IEnumerable<Answer>> GetAnswersByAttemptIdAsync(string attemptId)
     {
-        
         return await _context.Answers
+            .AsNoTracking() // Add for read-only operations
             .Where(a => a.AttemptId == attemptId)
             .Include(a => a.Question)
-            .Include(x => x.Attempt)
-            // .AsNoTracking()
+            .Include(a => a.Attempt)
+            .AsSplitQuery() // Prevent cartesian explosion
             .ToListAsync();
     }
-
     public async Task<Answer?> GetByIdAsync(string answerId)
     {
         return await _context.Answers

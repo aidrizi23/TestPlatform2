@@ -26,12 +26,41 @@ public class TestRepository : ITestRepository
     public async Task<Test?> GetTestByIdAsync(string testId)
     {
         return await _context.Tests
-            .Where(t => t.Id == testId)
+            .AsSplitQuery() // Critical for multiple collection includes
             .Include(x => x.User)
-            .Include(x => x.Questions)
+            .Include(x => x.Questions.OrderBy(q => q.Position)) // Order questions
             .Include(x => x.Attempts)
             .Include(x => x.InvitedStudents)
+            .FirstOrDefaultAsync(t => t.Id == testId);
+    }
+    
+    public async Task<Dictionary<string, object>> GetTestAnalyticsSummaryAsync(string testId)
+    {
+        var result = await _context.Tests
+            .Where(t => t.Id == testId)
+            .Select(t => new
+            {
+                TotalQuestions = t.Questions.Count(),
+                TotalPoints = t.Questions.Sum(q => q.Points),
+                TotalAttempts = t.Attempts.Count(),
+                CompletedAttempts = t.Attempts.Count(a => a.IsCompleted),
+                AverageScore = t.Attempts.Where(a => a.IsCompleted).Average(a => (double?)a.Score) ?? 0,
+                LastAttemptDate = t.Attempts.Max(a => (DateTime?)a.StartTime)
+            })
             .FirstOrDefaultAsync();
+
+        if (result == null)
+            return null;
+
+        return new Dictionary<string, object>
+        {
+            ["TotalQuestions"] = result.TotalQuestions,
+            ["TotalPoints"] = result.TotalPoints,
+            ["TotalAttempts"] = result.TotalAttempts,
+            ["CompletedAttempts"] = result.CompletedAttempts,
+            ["AverageScore"] = result.AverageScore,
+            ["LastAttemptDate"] = result.LastAttemptDate
+        };
     }
 
     public async Task Create(Test test)
@@ -61,5 +90,6 @@ public interface ITestRepository
     Task Create(Test test);
     Task Update(Test test);
     Task Delete(Test test);
+    Task<Dictionary<string, object>> GetTestAnalyticsSummaryAsync(string testId);
 }
 

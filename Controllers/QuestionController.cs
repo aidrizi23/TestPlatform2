@@ -30,6 +30,10 @@ public class QuestionController : Controller
     {
         if (!await _subscriptionRepository.CanCreateQuestionAsync(userId))
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
+            }
             TempData["ErrorMessage"] = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!";
             return RedirectToAction("Index", "Subscription");
         }
@@ -44,25 +48,60 @@ public class QuestionController : Controller
         var question = await _questionRepository.GetQuestionByIdAsync(id);
         if (question is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Question not found" });
+            }
             return NotFound();
         }
         
         var test = await _testRepository.GetTestByIdAsync(question.TestId);
         if (test is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound();
         }
         
         var user = await _userManager.GetUserAsync(User);
         if (user is null || test.UserId != user.Id)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
         }
-        
-        await _questionRepository.Delete(question);
-        return RedirectToAction("Details", "Test", new { id = question.TestId });
+
+        try
+        {
+            await _questionRepository.Delete(question);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { 
+                    success = true, 
+                    message = "Question deleted successfully!",
+                    questionId = id
+                });
+            }
+
+            TempData["SuccessMessage"] = "Question deleted successfully!";
+            return RedirectToAction("Details", "Test", new { id = question.TestId });
+        }
+        catch (Exception ex)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "An error occurred while deleting the question." });
+            }
+            
+            TempData["ErrorMessage"] = "An error occurred while deleting the question.";
+            return RedirectToAction("Details", "Test", new { id = question.TestId });
+        }
     }
-    
     
     [HttpGet]
     [Authorize]
@@ -71,12 +110,20 @@ public class QuestionController : Controller
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound();
         }
         
         var user = await _userManager.GetUserAsync(User);
         if (user is null || test.UserId != user.Id)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
         }
         
@@ -92,6 +139,13 @@ public class QuestionController : Controller
             Text = "",
             CorrectAnswer = true
         };
+
+        // For AJAX requests, return JSON data
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new { success = true, data = model });
+        }
+
         return View(model);
     }
 
@@ -100,11 +154,26 @@ public class QuestionController : Controller
     public async Task<IActionResult> CreateTrueFalse(CreateTrueFalseQuestionViewModel model)
     {
         if (!ModelState.IsValid)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                    .ToArray();
+                
+                return Json(new { success = false, errors = errors });
+            }
             return View(model);
+        }
         
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "User not authenticated" });
+            }
             return Unauthorized();
         }
         
@@ -115,28 +184,60 @@ public class QuestionController : Controller
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound();
         }
         
         if (test.UserId != user.Id)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
         }
-        
-        var question = new TrueFalseQuestion()
+
+        try
         {
-            TestId = model.TestId,
-            Points = model.Points,
-            Text = model.Text,
-            Position = test.Questions.Count,
-            CorrectAnswer = model.CorrectAnswer,
-            Test = test
-        };
-        
-        await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
-       
-        return RedirectToAction("Details", "Test", new { id = test.Id });
+            var question = new TrueFalseQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                CorrectAnswer = model.CorrectAnswer,
+                Test = test
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { 
+                    success = true, 
+                    message = "True/False question created successfully!",
+                    questionId = question.Id,
+                    redirectUrl = Url.Action("Details", "Test", new { id = test.Id })
+                });
+            }
+
+            TempData["SuccessMessage"] = "True/False question created successfully!";
+            return RedirectToAction("Details", "Test", new { id = test.Id });
+        }
+        catch (Exception ex)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "An error occurred while creating the question." });
+            }
+
+            ModelState.AddModelError("", "An error occurred while creating the question.");
+            return View(model);
+        }
     }
 
     [HttpGet]
@@ -146,12 +247,20 @@ public class QuestionController : Controller
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test is null)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound("Test not found");
         }
         
         var user = await _userManager.GetUserAsync(User);
         if (user is null || test.UserId != user.Id)
         {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
         }
         
@@ -168,6 +277,12 @@ public class QuestionController : Controller
             AllowMultipleSelections = false,
             CorrectAnswers = new List<string>(),
         };
+
+        // For AJAX requests, return JSON data
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new { success = true, data = model });
+        }
         
         return View(model);
     }
@@ -177,35 +292,82 @@ public class QuestionController : Controller
     public async Task<IActionResult> CreateMultipleChoice(CreateMultipleChoiceQuestionViewModel model)
     {
         if(!ModelState.IsValid)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                    .ToArray();
+                
+                return Json(new { success = false, errors = errors });
+            }
             return View(model);
+        }
         
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         var user = await _userManager.GetUserAsync(User);
         if (test is null)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound("test not found");
+        }
         if (user is null || test.UserId != user.Id)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
+        }
         
         // Check question limit
         var limitCheck = await CheckQuestionLimitAsync(user.Id);
         if (limitCheck != null) return limitCheck;
-        
-        var question = new MultipleChoiceQuestion()
+
+        try
         {
-            TestId = model.TestId,
-            Points = model.Points,
-            Text = model.Text,
-            Position = test.Questions.Count,
-            Options = model.Options,
-            CorrectAnswers = model.CorrectAnswers,
-            AllowMultipleSelections = model.AllowMultipleSelections,
-            Test = test,
-        };
-        
-        await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
-       
-        return RedirectToAction("Details", "Test", new { id = test.Id });
+            var question = new MultipleChoiceQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                Options = model.Options,
+                CorrectAnswers = model.CorrectAnswers,
+                AllowMultipleSelections = model.AllowMultipleSelections,
+                Test = test,
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { 
+                    success = true, 
+                    message = "Multiple choice question created successfully!",
+                    questionId = question.Id,
+                    redirectUrl = Url.Action("Details", "Test", new { id = test.Id })
+                });
+            }
+
+            TempData["SuccessMessage"] = "Multiple choice question created successfully!";
+            return RedirectToAction("Details", "Test", new { id = test.Id });
+        }
+        catch (Exception ex)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "An error occurred while creating the question." });
+            }
+
+            ModelState.AddModelError("", "An error occurred while creating the question.");
+            return View(model);
+        }
     }
 
     [HttpGet]
@@ -214,11 +376,23 @@ public class QuestionController : Controller
     {
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test is null)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound("Test not found");
+        }
         
         var user = await _userManager.GetUserAsync(User);
         if (user is null || test.UserId != user.Id)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
+        }
         
         // Check question limit
         var limitCheck = await CheckQuestionLimitAsync(user.Id);
@@ -232,6 +406,12 @@ public class QuestionController : Controller
             ExpectedAnswer = "",
             CaseSensitive = false,
         };
+
+        // For AJAX requests, return JSON data
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return Json(new { success = true, data = model });
+        }
         
         return View(model);
     }
@@ -240,31 +420,81 @@ public class QuestionController : Controller
     [Authorize]
     public async Task<IActionResult> CreateShortAnswer(CreateShortAnswerQuestionViewModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                    .ToArray();
+                
+                return Json(new { success = false, errors = errors });
+            }
+            return View(model);
+        }
+
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         var user = await _userManager.GetUserAsync(User);
         if (test is null)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Test not found" });
+            }
             return NotFound("Test not found");
-        if (user is null || test.UserId != user!.Id)
+        }
+        if (user is null || test.UserId != user.Id)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "Unauthorized access" });
+            }
             return Unauthorized();
+        }
         
         // Check question limit
         var limitCheck = await CheckQuestionLimitAsync(user.Id);
         if (limitCheck != null) return limitCheck;
 
-        var question = new ShortAnswerQuestion()
+        try
         {
-            TestId = model.TestId,
-            Points = model.Points,
-            Text = model.Text,
-            Position = test.Questions.Count,
-            ExpectedAnswer = model.ExpectedAnswer,
-            CaseSensitive = model.CaseSensitive,
-            Test = test!,
-        };
-        
-        await _questionRepository.Create(question);
-        await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
-        
-        return RedirectToAction("Details", "Test", new { id = test.Id });
+            var question = new ShortAnswerQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                ExpectedAnswer = model.ExpectedAnswer,
+                CaseSensitive = model.CaseSensitive,
+                Test = test,
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { 
+                    success = true, 
+                    message = "Short answer question created successfully!",
+                    questionId = question.Id,
+                    redirectUrl = Url.Action("Details", "Test", new { id = test.Id })
+                });
+            }
+
+            TempData["SuccessMessage"] = "Short answer question created successfully!";
+            return RedirectToAction("Details", "Test", new { id = test.Id });
+        }
+        catch (Exception ex)
+        {
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = false, message = "An error occurred while creating the question." });
+            }
+
+            ModelState.AddModelError("", "An error occurred while creating the question.");
+            return View(model);
+        }
     }
 }

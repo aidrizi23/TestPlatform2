@@ -29,9 +29,9 @@ ViewData["Title"] = "My Tests";
                 </div>
             </div>
             <div class="hero-action">
-                <a asp-action="Create" class="btn btn-primary btn-lg create-test-btn">
+                <button class="btn btn-primary btn-lg create-test-btn" data-bs-toggle="modal" data-bs-target="#createTestModal">
                     <i class="fas fa-plus-circle me-2"></i>Create New Test
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -61,9 +61,9 @@ ViewData["Title"] = "My Tests";
                 Get started by creating your first test. You can add various question types,
                 set time limits, and invite students to take your tests.
             </p>
-            <a asp-action="Create" class="btn btn-primary btn-lg">
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#createTestModal">
                 <i class="fas fa-plus-circle me-2"></i>Create Your First Test
-            </a>
+            </button>
         </div>
     </div>
     }
@@ -102,10 +102,10 @@ ViewData["Title"] = "My Tests";
             <div class="test-card" data-test-id="@test.Id">
                 <div class="test-card-header">
                     <div class="test-status">
-                                <span class="status-badge @(test.IsLocked ? "status-locked" : "status-active")">
-                                    <i class="fas @(test.IsLocked ? "fa-lock" : "fa-unlock")"></i>
-                                    @(test.IsLocked ? "Locked" : "Active")
-                                </span>
+                        <span class="status-badge @(test.IsLocked ? "status-locked" : "status-active")">
+                            <i class="fas @(test.IsLocked ? "fa-lock" : "fa-unlock")"></i>
+                            @(test.IsLocked ? "Locked" : "Active")
+                        </span>
                     </div>
                     <div class="test-actions">
                         <div class="dropdown">
@@ -116,14 +116,14 @@ ViewData["Title"] = "My Tests";
                                 <li><a class="dropdown-item" asp-action="Details" asp-route-id="@test.Id">
                                         <i class="fas fa-eye me-2"></i>View Details
                                     </a></li>
-                                <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@test.Id">
+                                <li><button class="dropdown-item edit-test-btn" data-test-id="@test.Id">
                                         <i class="fas fa-edit me-2"></i>Edit Test
-                                    </a></li>
+                                    </button></li>
                                 <li><a class="dropdown-item" asp-action="Analytics" asp-route-id="@test.Id">
                                         <i class="fas fa-chart-line me-2"></i>View Analytics
                                     </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><button class="dropdown-item text-danger" onclick="confirmDelete('@test.Id', '@test.TestName')">
+                                <li><button class="dropdown-item text-danger delete-test-btn" data-test-id="@test.Id" data-test-name="@test.TestName">
                                         <i class="fas fa-trash me-2"></i>Delete Test
                                     </button></li>
                             </ul>
@@ -168,16 +168,16 @@ ViewData["Title"] = "My Tests";
                         @if (test.RandomizeQuestions)
                         {
                         <span class="feature-tag">
-                                        <i class="fas fa-random"></i>
-                                        Randomized
-                                    </span>
+                            <i class="fas fa-random"></i>
+                            Randomized
+                        </span>
                         }
                         @if (test.MaxAttempts > 1)
                         {
                         <span class="feature-tag">
-                                        <i class="fas fa-redo"></i>
+                            <i class="fas fa-redo"></i>
                             @test.MaxAttempts Attempts
-                                    </span>
+                        </span>
                         }
                     </div>
                 </div>
@@ -201,19 +201,157 @@ ViewData["Title"] = "My Tests";
     }
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+<!-- Create Test Modal -->
+<div class="modal fade" id="createTestModal" tabindex="-1" aria-labelledby="createTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTestModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Test
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createTestForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="testTitle" class="form-label">Test Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="testTitle" name="Title" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="testDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="testDescription" name="Description" rows="3"></textarea>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="timeLimit" class="form-label">Time Limit (minutes) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="timeLimit" name="TimeLimit" min="1" max="180" value="60" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="maxAttempts" class="form-label">Max Attempts <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="maxAttempts" name="MaxAttempts" min="1" max="10" value="1" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 d-flex align-items-end">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="randomizeQuestions" name="RandomizeQuestions">
+                                    <label class="form-check-label" for="randomizeQuestions">
+                                        Randomize Questions
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Create Test
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Test Modal -->
+<div class="modal fade" id="editTestModal" tabindex="-1" aria-labelledby="editTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editTestModalLabel">
+                    <i class="fas fa-edit me-2"></i>Edit Test
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editTestForm">
+                <input type="hidden" id="editTestId" name="Id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="editTestName" class="form-label">Test Title <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="editTestName" name="TestName" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="editTestDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="editTestDescription" name="Description" rows="3"></textarea>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="editTimeLimit" class="form-label">Time Limit (minutes) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editTimeLimit" name="TimeLimit" min="1" max="180" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="editMaxAttempts" class="form-label">Max Attempts <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="editMaxAttempts" name="MaxAttempts" min="1" max="10" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3 d-flex align-items-end">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="editRandomizeQuestions" name="RandomizeQuestions">
+                                    <label class="form-check-label" for="editRandomizeQuestions">
+                                        Randomize Questions
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editIsLocked" name="IsLocked">
+                                <label class="form-check-label" for="editIsLocked">
+                                    <i class="fas fa-lock me-2"></i>Lock Test
+                                </label>
+                                <div class="form-text">Locked tests cannot be taken by students</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Update Test
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Test Modal -->
+<div class="modal fade" id="deleteTestModal" tabindex="-1" aria-labelledby="deleteTestModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0">
-                <h5 class="modal-title" id="deleteConfirmModalLabel">
+                <h5 class="modal-title" id="deleteTestModalLabel">
                     <i class="fas fa-exclamation-triangle text-warning me-2"></i>
                     Confirm Delete
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-3">Are you sure you want to delete the test <strong>"<span id="testNameToDelete"></span>"</strong>?</p>
+                <p class="mb-3">Are you sure you want to delete the test <strong>"<span id="deleteTestName"></span>"</strong>?</p>
                 <div class="alert alert-warning border-0">
                     <i class="fas fa-info-circle me-2"></i>
                     This action cannot be undone and will permanently delete all questions and student attempts.
@@ -223,9 +361,9 @@ ViewData["Title"] = "My Tests";
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times me-2"></i>Cancel
                 </button>
-                <a id="confirmDeleteBtn" href="#" class="btn btn-danger">
+                <button type="button" class="btn btn-danger" id="confirmDeleteTest">
                     <i class="fas fa-trash me-2"></i>Delete Test
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -569,6 +707,27 @@ ViewData["Title"] = "My Tests";
         justify-content: center;
     }
 
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-spinner {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
     /* Responsive Design */
     @@media (max-width: 768px) {
     .hero-content {
@@ -640,18 +799,265 @@ ViewData["Title"] = "My Tests";
     }
 </style>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 mb-0">Processing...</p>
+    </div>
+</div>
+
 @section Scripts {
 <script>
-    function confirmDelete(id, name) {
-        document.getElementById('testNameToDelete').textContent = name;
-        document.getElementById('confirmDeleteBtn').href = '@Url.Action("Delete", "Test")/' + id;
-
-        const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-        modal.show();
-    }
-
-    // View toggle functionality
     document.addEventListener('DOMContentLoaded', function() {
+        // Global variables
+        let currentTestId = null;
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Utility functions
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function clearFormErrors(form) {
+            const inputs = form.querySelectorAll('.form-control');
+            const feedbacks = form.querySelectorAll('.invalid-feedback');
+
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+
+            feedbacks.forEach(feedback => {
+                feedback.textContent = '';
+            });
+        }
+
+        function showFormErrors(form, errors) {
+            clearFormErrors(form);
+
+            errors.forEach(error => {
+                const input = form.querySelector(`[name="${error.Field}"]`);
+                const feedback = input ? input.nextElementSibling : null;
+
+                if (input && feedback && feedback.classList.contains('invalid-feedback')) {
+                    input.classList.add('is-invalid');
+                    feedback.textContent = error.Message;
+                }
+            });
+        }
+
+        // Create Test Modal
+        const createTestForm = document.getElementById('createTestForm');
+        const createTestModal = new bootstrap.Modal(document.getElementById('createTestModal'));
+
+        createTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            showLoading();
+            clearFormErrors(this);
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Convert checkbox to boolean
+            data.RandomizeQuestions = formData.has('RandomizeQuestions');
+
+            try {
+                const response = await fetch('@Url.Action("Create", "Test")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    createTestModal.hide();
+                    showToast(result.message, 'success');
+
+                    // Refresh the page to show the new test
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    if (result.errors) {
+                        showFormErrors(this, result.errors);
+                    } else {
+                        showToast(result.message || 'An error occurred', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating test:', error);
+                showToast('An error occurred while creating the test', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Edit Test Modal
+        const editTestForm = document.getElementById('editTestForm');
+        const editTestModal = new bootstrap.Modal(document.getElementById('editTestModal'));
+
+        // Edit test button click handlers
+        document.querySelectorAll('.edit-test-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const testId = this.dataset.testId;
+                currentTestId = testId;
+
+                showLoading();
+
+                try {
+                    const response = await fetch(`@Url.Action("Edit", "Test")/${testId}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Populate the form
+                        document.getElementById('editTestId').value = result.data.Id;
+                        document.getElementById('editTestName').value = result.data.TestName;
+                        document.getElementById('editTestDescription').value = result.data.Description || '';
+                        document.getElementById('editTimeLimit').value = result.data.TimeLimit;
+                        document.getElementById('editMaxAttempts').value = result.data.MaxAttempts;
+                        document.getElementById('editRandomizeQuestions').checked = result.data.RandomizeQuestions;
+                        document.getElementById('editIsLocked').checked = result.data.IsLocked;
+
+                        editTestModal.show();
+                    } else {
+                        showToast(result.message || 'Error loading test data', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error loading test data:', error);
+                    showToast('Error loading test data', 'error');
+                } finally {
+                    hideLoading();
+                }
+            });
+        });
+
+        editTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            showLoading();
+            clearFormErrors(this);
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // Convert checkboxes to boolean
+            data.RandomizeQuestions = formData.has('RandomizeQuestions');
+            data.IsLocked = formData.has('IsLocked');
+
+            try {
+                const response = await fetch('@Url.Action("Edit", "Test")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    editTestModal.hide();
+                    showToast(result.message, 'success');
+
+                    // Refresh the page to show updated test
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    if (result.errors) {
+                        showFormErrors(this, result.errors);
+                    } else {
+                        showToast(result.message || 'An error occurred', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating test:', error);
+                showToast('An error occurred while updating the test', 'error');
+            } finally {
+                hideLoading();
+            }
+        });
+
+        // Delete Test Modal
+        const deleteTestModal = new bootstrap.Modal(document.getElementById('deleteTestModal'));
+        const confirmDeleteBtn = document.getElementById('confirmDeleteTest');
+
+        // Delete test button click handlers
+        document.querySelectorAll('.delete-test-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const testId = this.dataset.testId;
+                const testName = this.dataset.testName;
+
+                currentTestId = testId;
+                document.getElementById('deleteTestName').textContent = testName;
+                deleteTestModal.show();
+            });
+        });
+
+        confirmDeleteBtn.addEventListener('click', async function() {
+            if (!currentTestId) return;
+
+            showLoading();
+
+            try {
+                const response = await fetch(`@Url.Action("Delete", "Test")/${currentTestId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    deleteTestModal.hide();
+                    showToast(result.message, 'success');
+
+                    // Remove the test card from the UI
+                    const testCard = document.querySelector(`[data-test-id="${currentTestId}"]`);
+                    if (testCard) {
+                        testCard.style.transform = 'scale(0)';
+                        testCard.style.opacity = '0';
+                        setTimeout(() => {
+                            testCard.remove();
+
+                            // Check if no tests left and show empty state
+                            const remainingCards = document.querySelectorAll('.test-card').length;
+                            if (remainingCards === 0) {
+                                window.location.reload();
+                            }
+                        }, 300);
+                    }
+                } else {
+                    showToast(result.message || 'Error deleting test', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting test:', error);
+                showToast('Error deleting test', 'error');
+            } finally {
+                hideLoading();
+                currentTestId = null;
+            }
+        });
+
+        // View toggle functionality
         const viewButtons = document.querySelectorAll('.view-btn');
         const testsContainer = document.getElementById('testsContainer');
 
@@ -679,6 +1085,17 @@ ViewData["Title"] = "My Tests";
                 console.log('Sort by:', this.value);
             });
         }
+
+        // Reset forms when modals are hidden
+        document.getElementById('createTestModal').addEventListener('hidden.bs.modal', function() {
+            createTestForm.reset();
+            clearFormErrors(createTestForm);
+        });
+
+        document.getElementById('editTestModal').addEventListener('hidden.bs.modal', function() {
+            editTestForm.reset();
+            clearFormErrors(editTestForm);
+        });
     });
 </script>
 }
