@@ -1,3 +1,6 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model TestPlatform2.Data.Questions.CreateTrueFalseQuestionViewModel
+
 <style>
     body {
         background-color: var(--primary-bg);
@@ -43,62 +46,339 @@
         background-color: var(--accent-purple);
     }
 
-    .btn-secondary {
-        background-color: #6c757d;
-        border: none;
-        color: var(--text-primary);
+    .btn-outline-secondary {
+        color: var(--text-secondary);
+        border-color: var(--text-secondary);
     }
 
-    .btn-secondary:hover {
-        background-color: #5a6268;
+    .btn-outline-secondary:hover {
+        background-color: var(--text-secondary);
+        color: var(--primary-bg);
     }
 
     .text-danger {
         color: #dc3545 !important;
     }
+
+    .answer-options {
+        background-color: var(--primary-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .answer-option {
+        background-color: var(--secondary-bg);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .answer-option:hover {
+        border-color: var(--accent-green);
+        background-color: rgba(76, 175, 80, 0.05);
+    }
+
+    .answer-option.selected {
+        border-color: var(--accent-green);
+        background-color: rgba(76, 175, 80, 0.1);
+    }
+
+    .answer-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--accent-green);
+    }
+
+    .answer-option-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .true-icon {
+        background-color: rgba(22, 163, 74, 0.2);
+        color: #16a34a;
+    }
+
+    .false-icon {
+        background-color: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-link {
+        color: #2563eb;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-link:hover {
+        color: #1d4ed8;
+    }
+
+    .breadcrumb-separator {
+        margin: 0 0.5rem;
+        color: #6b7280;
+    }
+
+    .breadcrumb-current {
+        color: #6b7280;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 1.125rem;
+    }
+
+    .form-section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .input-group {
+        position: relative;
+    }
+
+    .input-group-text {
+        background-color: var(--secondary-bg);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .answer-option {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    }
 </style>
 
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@model TestPlatform2.Data.Questions.CreateTrueFalseQuestionViewModel
-
 <div class="container mt-4">
-    <h2 class="mb-4">Create True/False Question</h2>
-    
-    <form asp-controller="Question" asp-action="CreateTrueFalse" method="post">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-nav">
+        <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="breadcrumb-link">
+            <i class="fas fa-arrow-left me-2"></i>Back to Test
+        </a>
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Create True/False Question</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-check-circle text-success"></i>
+            Create True/False Question
+        </h1>
+        <p class="page-subtitle">Create a binary choice question for your test</p>
+    </div>
+
+    <form asp-controller="Question" asp-action="CreateTrueFalse" method="post" id="questionForm">
         <input type="hidden" asp-for="TestId" />
-        
-        <div class="card mb-4">
+
+        <!-- Question Details Card -->
+        <div class="card">
             <div class="card-body">
-                <div class="mb-3">
+                <h3 class="form-section-title">
+                    <i class="fas fa-edit"></i>
+                    Question Details
+                </h3>
+
+                <div class="mb-4">
                     <label asp-for="Text" class="form-label fw-bold">Question Text</label>
-                    <textarea asp-for="Text" class="form-control" rows="3" required></textarea>
+                    <textarea asp-for="Text" class="form-control" rows="4"
+                              placeholder="Enter your true/false question here..." required></textarea>
                     <span asp-validation-for="Text" class="text-danger"></span>
+                    <div class="form-text">Write a clear statement that can be answered with True or False</div>
                 </div>
-                
-                <div class="mb-3">
-                    <label asp-for="Points" class="form-label fw-bold">Points</label>
-                    <input asp-for="Points" class="form-control" type="number" step="0.5" min="0" required />
-                    <span asp-validation-for="Points" class="text-danger"></span>
-                </div>
-                
-                <div class="mb-3">
-                    <label asp-for="CorrectAnswer" class="form-label fw-bold">Correct Answer</label>
-                    <select asp-for="CorrectAnswer" class="form-select">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                    </select>
-                    <span asp-validation-for="CorrectAnswer" class="text-danger"></span>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Points" class="form-label fw-bold">Points</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-star"></i>
+                                </span>
+                                <input asp-for="Points" class="form-control" type="number"
+                                       step="0.5" min="0" max="100" required />
+                            </div>
+                            <span asp-validation-for="Points" class="text-danger"></span>
+                            <div class="form-text">Points awarded for correct answer</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Question Type</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-check-circle"></i>
+                                </span>
+                                <input type="text" class="form-control" value="True/False" readonly />
+                            </div>
+                            <div class="form-text">Binary choice question type</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-check-circle"></i> Create Question
-            </button>
-            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-secondary px-4">
-                <i class="bi bi-x-circle"></i> Cancel
+
+        <!-- Answer Selection Card -->
+        <div class="card">
+            <div class="card-body">
+                <h3 class="form-section-title">
+                    <i class="fas fa-bullseye"></i>
+                    Correct Answer
+                </h3>
+
+                <div class="answer-options">
+                    <div class="answer-option" onclick="selectAnswer(true)" id="trueOption">
+                        <input type="radio" asp-for="CorrectAnswer" value="true" id="answerTrue" />
+                        <div class="answer-option-icon true-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <label for="answerTrue" class="form-label fw-bold mb-1" style="cursor: pointer;">True</label>
+                            <div class="text-muted small">The statement is correct</div>
+                        </div>
+                    </div>
+
+                    <div class="answer-option" onclick="selectAnswer(false)" id="falseOption">
+                        <input type="radio" asp-for="CorrectAnswer" value="false" id="answerFalse" />
+                        <div class="answer-option-icon false-icon">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <label for="answerFalse" class="form-label fw-bold mb-1" style="cursor: pointer;">False</label>
+                            <div class="text-muted small">The statement is incorrect</div>
+                        </div>
+                    </div>
+                </div>
+
+                <span asp-validation-for="CorrectAnswer" class="text-danger"></span>
+                <div class="form-text mt-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Select the correct answer for your question
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId"
+               class="btn btn-outline-secondary px-4">
+                <i class="fas fa-times me-2"></i>Cancel
             </a>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-check-circle me-2"></i>Create Question
+            </button>
         </div>
     </form>
 </div>
+
+@section Scripts {
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+<script>
+    function selectAnswer(isTrue) {
+        // Update radio buttons
+        document.getElementById('answerTrue').checked = isTrue;
+        document.getElementById('answerFalse').checked = !isTrue;
+
+        // Update visual selection
+        const trueOption = document.getElementById('trueOption');
+        const falseOption = document.getElementById('falseOption');
+
+        if (isTrue) {
+            trueOption.classList.add('selected');
+            falseOption.classList.remove('selected');
+        } else {
+            falseOption.classList.add('selected');
+            trueOption.classList.remove('selected');
+        }
+    }
+
+    // Initialize selection on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const trueRadio = document.getElementById('answerTrue');
+        const falseRadio = document.getElementById('answerFalse');
+
+        if (trueRadio.checked) {
+            selectAnswer(true);
+        } else if (falseRadio.checked) {
+            selectAnswer(false);
+        }
+
+        // Add change listeners for accessibility
+        trueRadio.addEventListener('change', function() {
+            if (this.checked) selectAnswer(true);
+        });
+
+        falseRadio.addEventListener('change', function() {
+            if (this.checked) selectAnswer(false);
+        });
+    });
+</script>
+}

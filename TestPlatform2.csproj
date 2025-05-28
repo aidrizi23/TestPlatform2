@@ -25,7 +25,6 @@
 
     <ItemGroup>
       <Folder Include="Views\Account\" />
-      <Folder Include="Views\TestAttempt\" />
     </ItemGroup>
 
 </Project>

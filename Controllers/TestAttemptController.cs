@@ -1,5 +1,4 @@
-﻿
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
@@ -30,19 +29,137 @@ public class TestAttemptController : Controller
         _userManager = userManager;
     }
     
+    private IActionResult ShowTestDenied(TestDenialReason reason, string testName = null, string testId = null, Dictionary<string, object> additionalInfo = null)
+    {
+        var model = new TestDeniedViewModel
+        {
+            Reason = reason,
+            TestName = testName,
+            TestId = testId,
+            AdditionalInfo = additionalInfo ?? new Dictionary<string, object>()
+        };
+
+        switch (reason)
+        {
+            case TestDenialReason.TestTakenBefore:
+                model.Title = "Test Already Completed";
+                model.Message = "You have already taken this test and submitted your answers.";
+                model.IconClass = "icon-info";
+                model.AlertClass = "status-info";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.InvalidToken:
+                model.Title = "Invalid Access Link";
+                model.Message = "The test link you used is invalid or has expired. Please check your email for the correct link.";
+                model.IconClass = "icon-error";
+                model.AlertClass = "status-error";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.TestLocked:
+                model.Title = "Test Currently Locked";
+                model.Message = "This test has been temporarily locked by the instructor. Please try again later or contact them directly.";
+                model.IconClass = "icon-locked";
+                model.AlertClass = "status-warning";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.TestNotFound:
+                model.Title = "Test Not Found";
+                model.Message = "The test you're looking for doesn't exist or may have been deleted.";
+                model.IconClass = "icon-error";
+                model.AlertClass = "status-error";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.NoQuestionsAvailable:
+                model.Title = "Test Not Ready";
+                model.Message = "This test doesn't have any questions yet. The instructor needs to add questions before students can take it.";
+                model.IconClass = "icon-warning";
+                model.AlertClass = "status-warning";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.MaxAttemptsExceeded:
+                model.Title = "Maximum Attempts Reached";
+                model.Message = "You have used all available attempts for this test.";
+                model.IconClass = "icon-info";
+                model.AlertClass = "status-info";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.InviteAlreadyUsed:
+                model.Title = "Invitation Already Used";
+                model.Message = "This test invitation has already been used. Each invitation can only be used once.";
+                model.IconClass = "icon-info";
+                model.AlertClass = "status-info";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.UnauthorizedAccess:
+                model.Title = "Access Denied";
+                model.Message = "You don't have permission to access this test.";
+                model.IconClass = "icon-error";
+                model.AlertClass = "status-error";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            case TestDenialReason.TestExpired:
+                model.Title = "Test Expired";
+                model.Message = "This test is no longer available. The submission deadline has passed.";
+                model.IconClass = "icon-warning";
+                model.AlertClass = "status-warning";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+
+            default:
+                model.Title = "Access Denied";
+                model.Message = "You cannot access this test at this time.";
+                model.IconClass = "icon-error";
+                model.AlertClass = "status-error";
+                model.ShowContactSupport = true;
+                model.ShowRetryButton = false;
+                break;
+        }
+
+        return View("TestDenied", model);
+    }
+
+    [HttpGet]
+    public IActionResult TestDenied()
+    {
+        // This method handles direct access to the TestDenied page
+        return ShowTestDenied(TestDenialReason.UnauthorizedAccess);
+    }
+    
     [HttpGet]
     public async Task<IActionResult> StartTest(string testId, string token)
     {
         // Validate the invite token
         var invite = await _inviteRepository.GetInviteByTokenAsync(token);
-        if (invite == null || invite.IsUsed)
-            return Forbid();
+        if (invite == null)
+            return ShowTestDenied(TestDenialReason.InvalidToken);
+            
+        if (invite.IsUsed)
+            return ShowTestDenied(TestDenialReason.InviteAlreadyUsed);
 
         // Get the test details
         var test = await _testRepository.GetTestByIdAsync(testId);
         if (test == null)
-            return NotFound();
-        if (test.IsLocked) return BadRequest("tesst is locked");
+            return ShowTestDenied(TestDenialReason.TestNotFound);
+            
+        if (test.IsLocked)
+            return ShowTestDenied(TestDenialReason.TestLocked, test.TestName, testId);
 
         // Show the start test view
         return View(new StartTestViewModel
@@ -61,16 +178,22 @@ public class TestAttemptController : Controller
     {
         // Validate the invite token again
         var invite = await _inviteRepository.GetInviteByTokenAsync(model.Token);
-        if (invite == null || invite.IsUsed)
-            return Forbid();
+        if (invite == null)
+            return ShowTestDenied(TestDenialReason.InvalidToken);
+            
+        if (invite.IsUsed)
+            return ShowTestDenied(TestDenialReason.InviteAlreadyUsed);
         
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test == null)
-            return NotFound();
-        if (test.IsLocked) return BadRequest("tesst is locked");
+            return ShowTestDenied(TestDenialReason.TestNotFound);
+            
+        if (test.IsLocked)
+            return ShowTestDenied(TestDenialReason.TestLocked, test.TestName, model.TestId);
 
         if(test.Questions.Count == 0 || !test.Questions.Any())
-            return BadRequest("Test has no questions");
+            return ShowTestDenied(TestDenialReason.NoQuestionsAvailable, test.TestName, model.TestId);
+            
         // Create a new test attempt
         var attempt = new TestAttempt
         {
@@ -91,33 +214,45 @@ public class TestAttemptController : Controller
         return RedirectToAction("TakeTest", new { attemptId = attempt.Id });
     }
 
-
-
-
     [HttpPost]
     public async Task<IActionResult> EnterToken(string token)
     {
         if (string.IsNullOrEmpty(token))
         {
-            TempData["ErrorMessage"] = "Token cannot be empty.";
-            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+            return ShowTestDenied(TestDenialReason.InvalidToken, additionalInfo: new Dictionary<string, object>
+            {
+                { "Error", "No token provided" }
+            });
         }
 
         var trimmedToken = token.Trim();
         // Validate the invite token
         var invite = await _inviteRepository.GetInviteByTokenAsync(trimmedToken);
-        if (invite == null || invite.IsUsed)
+        if (invite == null)
         {
-            TempData["ErrorMessage"] = "Invalid or used token.";
-            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+            return ShowTestDenied(TestDenialReason.InvalidToken, additionalInfo: new Dictionary<string, object>
+            {
+                { "Token", trimmedToken }
+            });
+        }
+        
+        if (invite.IsUsed)
+        {
+            return ShowTestDenied(TestDenialReason.InviteAlreadyUsed, additionalInfo: new Dictionary<string, object>
+            {
+                { "Token", trimmedToken }
+            });
         }
 
         // Get the test ID associated with the invite.
         var testId = invite.TestId;
         if (string.IsNullOrEmpty(testId))
         {
-            TempData["ErrorMessage"] = "Test ID not found for this invite.";
-            return RedirectToAction("Index", "Home"); // Redirect to the view where the form is located
+            return ShowTestDenied(TestDenialReason.TestNotFound, additionalInfo: new Dictionary<string, object>
+            {
+                { "Token", trimmedToken },
+                { "Error", "No test associated with this invite" }
+            });
         }
 
         // Redirect to the StartTest method with the testId and token
@@ -131,17 +266,32 @@ public class TestAttemptController : Controller
     {
         // Get the test attempt
         var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
-        if (attempt == null || attempt.IsCompleted)
-            return NotFound();
+        if (attempt == null)
+            return ShowTestDenied(TestDenialReason.TestNotFound, additionalInfo: new Dictionary<string, object>
+            {
+                { "Attempt ID", attemptId }
+            });
+            
+        if (attempt.IsCompleted)
+            return ShowTestDenied(TestDenialReason.TestTakenBefore, additionalInfo: new Dictionary<string, object>
+            {
+                { "Completed On", attempt.EndTime?.ToString("MMMM dd, yyyy 'at' HH:mm") ?? "Unknown" },
+                { "Score", attempt.Score.ToString("0.00") }
+            });
 
         // Get the test and questions
         var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
         if (test == null)
-            return NotFound();
-        if (test.IsLocked) return BadRequest("tesst is locked");
+            return ShowTestDenied(TestDenialReason.TestNotFound);
+            
+        if (test.IsLocked)
+            return ShowTestDenied(TestDenialReason.TestLocked, test.TestName, test.Id);
         
         if(attempt.RemainingAttempts <= 0)
-            return RedirectToAction("TestCompleted");
+            return ShowTestDenied(TestDenialReason.MaxAttemptsExceeded, test.TestName, test.Id, new Dictionary<string, object>
+            {
+                { "Max Attempts", test.MaxAttempts.ToString() }
+            });
 
         // Randomize questions if needed
         var questions = test.Questions.OrderBy(q => q.Position).ToList();

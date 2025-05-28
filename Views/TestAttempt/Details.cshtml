@@ -1,156 +1,636 @@
 @model IEnumerable<TestPlatform2.Data.Answer>
+@using TestPlatform2.Data.Questions
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Test Attempt Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var attempt = Model.FirstOrDefault()?.Attempt;
+    var totalQuestions = Model.Count();
+    var correctAnswers = Model.Count(a => a.PointsAwarded > 0);
+    var totalPoints = Model.Sum(a => a.PointsAwarded);
+    var maxPoints = Model.Sum(a => a.Question?.Points ?? 0);
+    var percentage = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
 }
 
 <style>
     /* General Styles */
     body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
+        background-color: #f8f9fa;
+        color: #1f2937;
+    }
+
+    .container {
+        max-width: 1200px;
     }
 
     .card {
-        background-color: var(--secondary-bg);
+        background: white;
         border: none;
         border-radius: 12px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
     }
 
     .card-header {
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        color: var(--text-primary);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
         border-bottom: none;
-        border-radius: 12px 12px 0 0;
-        padding: 20px;
+        padding: 1.5rem;
     }
 
     .card-body {
-        padding: 30px;
+        padding: 1.5rem;
     }
 
-    .btn {
-        border: none;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        padding: 10px 20px;
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
     }
 
-    .btn:hover {
+    .breadcrumb-link {
+        color: #2563eb;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s ease;
+    }
+
+    .breadcrumb-link:hover {
+        color: #1d4ed8;
+        text-decoration: none;
+    }
+
+    .breadcrumb-separator {
+        margin: 0 0.5rem;
+        color: #6b7280;
+    }
+
+    .breadcrumb-current {
+        color: #6b7280;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .page-subtitle {
+        color: #6b7280;
+        font-size: 1rem;
+    }
+
+    /* Statistics Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     }
 
-    /* Custom Button Colors */
-    .btn-primary { background-color: var(--accent-green); color: var(--text-primary); }
-    .btn-primary:hover { background-color: var(--accent-purple); }
-    .btn-secondary { background-color: #6c757d; color: var(--text-primary); }
-    .btn-warning { background-color: #ffc107; color: #000; }
-    .btn-danger { background-color: #dc3545; color: var(--text-primary); }
-    .btn-info { background-color: #17a2b8; color: var(--text-primary); }
-    .btn-success { background-color: #28a745; color: var(--text-primary); }
-
-    /* Table Styles */
-    .table {
-        color: var(--text-primary);
-        border-collapse: separate;
-        border-spacing: 0 10px;
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 1rem;
     }
 
-    .table thead th {
-        background-color: var(--secondary-bg);
-        border: none;
-        padding: 15px;
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .score-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .questions-icon {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    .correct-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+
+    .percentage-icon {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        color: white;
+    }
+
+    /* Answer Details */
+    .answer-item {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+    .answer-item:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .answer-header {
+        background: #f9fafb;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .question-number {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: #374151;
     }
 
-    .table tbody td {
-        background-color: rgba(255, 255, 255, 0.05);
-        border: none;
-        padding: 15px;
-        vertical-align: middle;
-    }
-
-    .table tbody tr {
-        transition: all 0.3s ease;
-    }
-
-    /* Modified hover styles to maintain text color */
-    .table tbody tr:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        color: var(--text-primary) !important;
-    }
-
-    .table tbody tr:hover td {
-        color: var(--text-primary);
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: rgba(255, 255, 255, 0.02);
-    }
-
-    /* Filter Buttons */
-    .filter-buttons {
-        margin-bottom: 20px;
-    }
-
-    .filter-buttons .btn {
-        margin-right: 10px;
-    }
-
-    /* Status Badge */
-    .badge {
-        padding: 8px 12px;
-        border-radius: 20px;
+    .question-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 16px;
+        font-size: 0.75rem;
         font-weight: 600;
     }
 
-    .badge-success { background-color: #28a745; }
-    .badge-warning { background-color: #ffc107; color: #000; }
+    .type-multiple-choice {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+    }
+
+    .type-true-false {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .type-short-answer {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+    }
+
+    .points-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .points-earned {
+        font-weight: 600;
+        color: #059669;
+    }
+
+    .points-total {
+        color: #6b7280;
+    }
+
+    .answer-content {
+        padding: 1.5rem;
+    }
+
+    .question-text {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .answer-section {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .student-answer,
+    .correct-answer {
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid;
+    }
+
+    .student-answer {
+        background: rgba(239, 246, 255, 0.5);
+        border-color: #bfdbfe;
+    }
+
+    .student-answer.correct {
+        background: rgba(240, 253, 244, 0.8);
+        border-color: #bbf7d0;
+    }
+
+    .student-answer.incorrect {
+        background: rgba(254, 242, 242, 0.8);
+        border-color: #fecaca;
+    }
+
+    .correct-answer {
+        background: rgba(240, 253, 244, 0.3);
+        border-color: #bbf7d0;
+    }
+
+    .answer-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .answer-text {
+        color: #1f2937;
+        font-weight: 500;
+    }
+
+    .result-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: auto;
+    }
+
+    .result-correct {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+    }
+
+    .result-incorrect {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+
+    .no-answer {
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    @@media (max-width: 768px) {
+        .container {
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .answer-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.75rem;
+        }
+        
+        .question-number {
+            justify-content: space-between;
+        }
+        
+        .answer-section {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<h1>Details</h1>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Response)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PointsAwarded)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Question)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Attempt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Response)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PointsAwarded)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Question.Text)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Attempt.RemainingAttempts)
-            </td>
+<div class="container mt-4">
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-nav">
+        @if (attempt != null)
+        {
+            <a asp-controller="Test" asp-action="AllAttempts" asp-route-testId="@attempt.TestId" class="breadcrumb-link">
+                <i class="fas fa-arrow-left me-2"></i>Back to All Attempts
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Test" asp-action="Index" class="breadcrumb-link">
+                <i class="fas fa-arrow-left me-2"></i>Back to Tests
+            </a>
+        }
+        <span class="breadcrumb-separator">/</span>
+        <span class="breadcrumb-current">Test Attempt Details</span>
+    </div>
 
-        </tr>
-}
-    </tbody>
-</table>
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-clipboard-check text-primary"></i>
+            Test Attempt Details
+        </h1>
+        @if (attempt != null)
+        {
+            <p class="page-subtitle">
+                <strong>@attempt.FirstName @attempt.LastName</strong> (@attempt.StudentEmail) - 
+                @if (attempt.IsCompleted)
+                {
+                    <span>Completed on @attempt.EndTime?.ToString("MMM d, yyyy 'at' h:mm tt")</span>
+                }
+                else
+                {
+                    <span class="text-warning">In Progress</span>
+                }
+            </p>
+        }
+    </div>
+
+    @if (attempt != null)
+    {
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon score-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-number">@totalPoints.ToString("0.0")</div>
+                <div class="stat-label">Points Earned</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon questions-icon">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <div class="stat-number">@totalQuestions</div>
+                <div class="stat-label">Total Questions</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon correct-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-number">@correctAnswers</div>
+                <div class="stat-label">Correct Answers</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon percentage-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-number">@percentage.ToString("0.0")%</div>
+                <div class="stat-label">Score Percentage</div>
+            </div>
+        </div>
+    }
+
+    <!-- Detailed Answers Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0">
+                <i class="fas fa-list-alt me-2"></i>
+                Question by Question Analysis
+            </h3>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                @foreach (var answer in Model.OrderBy(a => a.Question.Position))
+                {
+                    var question = answer.Question;
+                    var isCorrect = answer.PointsAwarded > 0;
+                    var questionNumber = question.Position + 1;
+                    
+                    <div class="answer-item">
+                        <div class="answer-header">
+                            <div class="question-number">
+                                <span class="badge bg-primary me-2">Q@questionNumber</span>
+                                
+                                @switch (question)
+                                {
+                                    case MultipleChoiceQuestion:
+                                        <span class="question-type-badge type-multiple-choice">
+                                            <i class="fas fa-list-ul"></i>
+                                            Multiple Choice
+                                        </span>
+                                        break;
+                                    case TrueFalseQuestion:
+                                        <span class="question-type-badge type-true-false">
+                                            <i class="fas fa-check-circle"></i>
+                                            True/False
+                                        </span>
+                                        break;
+                                    case ShortAnswerQuestion:
+                                        <span class="question-type-badge type-short-answer">
+                                            <i class="fas fa-pen"></i>
+                                            Short Answer
+                                        </span>
+                                        break;
+                                }
+                                
+                                <span class="result-indicator @(isCorrect ? "result-correct" : "result-incorrect")">
+                                    <i class="fas @(isCorrect ? "fa-check" : "fa-times")"></i>
+                                    @(isCorrect ? "Correct" : "Incorrect")
+                                </span>
+                            </div>
+                            
+                            <div class="points-display">
+                                <span class="points-earned">@answer.PointsAwarded.ToString("0.0")</span>
+                                <span class="points-total">/ @question.Points.ToString("0.0") pts</span>
+                            </div>
+                        </div>
+                        
+                        <div class="answer-content">
+                            <div class="question-text">
+                                @question.Text
+                            </div>
+                            
+                            <div class="answer-section">
+                                <!-- Student's Answer -->
+                                <div class="student-answer @(isCorrect ? "correct" : "incorrect")">
+                                    <div class="answer-label">
+                                        <i class="fas fa-user"></i>
+                                        Student's Answer
+                                    </div>
+                                    <div class="answer-text">
+                                        @if (string.IsNullOrEmpty(answer.Response))
+                                        {
+                                            <span class="no-answer">No answer provided</span>
+                                        }
+                                        else
+                                        {
+                                            @switch (question)
+                                            {
+                                                case MultipleChoiceQuestion mcq:
+                                                    var studentAnswers = answer.Response.Split(',').Where(a => !string.IsNullOrEmpty(a)).ToList();
+                                                    if (studentAnswers.Any())
+                                                    {
+                                                        <ul class="mb-0">
+                                                            @foreach (var studentAnswer in studentAnswers)
+                                                            {
+                                                                <li>@studentAnswer.Trim()</li>
+                                                            }
+                                                        </ul>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="no-answer">No selection made</span>
+                                                    }
+                                                    break;
+                                                case TrueFalseQuestion:
+                                                    <strong>@answer.Response</strong>
+                                                    break;
+                                                case ShortAnswerQuestion:
+                                                    <span class="font-monospace">@answer.Response</span>
+                                                    break;
+                                                default:
+                                                    @answer.Response
+                                                    break;
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                                
+                                <!-- Correct Answer -->
+                                <div class="correct-answer">
+                                    <div class="answer-label">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        Correct Answer
+                                    </div>
+                                    <div class="answer-text">
+                                        @switch (question)
+                                        {
+                                            case MultipleChoiceQuestion mcq:
+                                                <ul class="mb-0">
+                                                    @foreach (var correctAnswer in mcq.CorrectAnswers)
+                                                    {
+                                                        <li><strong>@correctAnswer</strong></li>
+                                                    }
+                                                </ul>
+                                                @if (mcq.AllowMultipleSelections)
+                                                {
+                                                    <small class="text-muted mt-2 d-block">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Multiple selections allowed
+                                                    </small>
+                                                }
+                                                break;
+                                            case TrueFalseQuestion tfq:
+                                                <strong>@(tfq.CorrectAnswer ? "True" : "False")</strong>
+                                                break;
+                                            case ShortAnswerQuestion saq:
+                                                <span class="font-monospace">@saq.ExpectedAnswer</span>
+                                                @if (saq.CaseSensitive)
+                                                {
+                                                    <small class="text-muted mt-2 d-block">
+                                                        <i class="fas fa-font me-1"></i>
+                                                        Case sensitive
+                                                    </small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted mt-2 d-block">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        Case insensitive
+                                                    </small>
+                                                }
+                                                break;
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-inbox fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">No answers found</h5>
+                    <p class="text-muted">This test attempt has no recorded answers.</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (attempt != null && attempt.IsCompleted)
+    {
+        <!-- Summary Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    Attempt Summary
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Student Information</h6>
+                        <p><strong>Name:</strong> @attempt.FirstName @attempt.LastName</p>
+                        <p><strong>Email:</strong> @attempt.StudentEmail</p>
+                        <p><strong>Started:</strong> @attempt.StartTime.ToString("MMM d, yyyy 'at' h:mm tt")</p>
+                        <p><strong>Completed:</strong> @attempt.EndTime?.ToString("MMM d, yyyy 'at' h:mm tt")</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Performance Summary</h6>
+                        <p><strong>Total Score:</strong> @totalPoints.ToString("0.0") / @maxPoints.ToString("0.0") points</p>
+                        <p><strong>Percentage:</strong> @percentage.ToString("0.0")%</p>
+                        <p><strong>Questions Correct:</strong> @correctAnswers / @totalQuestions</p>
+                        @if (attempt.EndTime.HasValue)
+                        {
+                            var timeTaken = attempt.EndTime.Value - attempt.StartTime;
+                            <p><strong>Time Taken:</strong> @timeTaken.ToString(@"hh\:mm\:ss")</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
