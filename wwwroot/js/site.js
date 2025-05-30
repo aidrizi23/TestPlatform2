@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== Form Field Animations =====
-    const formFields = document.querySelectorAll('.form-control, .form-select, .form-check');
+    const formFields = document.querySelectorAll('.form-control, .form-select, .form-check, .form-control-modern');
 
     formFields.forEach((field, index) => {
         field.classList.add('form-animate');
@@ -123,50 +123,96 @@ document.addEventListener('DOMContentLoaded', function() {
             toastContainer.style.top = '80px';
             toastContainer.style.right = '20px';
             toastContainer.style.zIndex = '9999';
+            toastContainer.style.maxWidth = '400px';
             document.body.appendChild(toastContainer);
         }
 
         // Create toast element
         const toast = document.createElement('div');
-        toast.classList.add('toast');
-        toast.style.minWidth = '250px';
+        toast.classList.add('toast-modern');
+        toast.style.minWidth = '300px';
 
-        // Set background color based on type
+        // Set styles and colors based on type
+        let backgroundColor, iconClass;
         switch(type) {
             case 'success':
-                toast.style.backgroundColor = 'rgba(22, 163, 74, 0.9)';
+                backgroundColor = 'rgba(22, 163, 74, 0.95)';
+                iconClass = 'fa-check-circle';
                 break;
             case 'error':
-                toast.style.backgroundColor = 'rgba(220, 38, 38, 0.9)';
+                backgroundColor = 'rgba(220, 38, 38, 0.95)';
+                iconClass = 'fa-exclamation-circle';
                 break;
             case 'warning':
-                toast.style.backgroundColor = 'rgba(245, 158, 11, 0.9)';
+                backgroundColor = 'rgba(245, 158, 11, 0.95)';
+                iconClass = 'fa-exclamation-triangle';
                 break;
             default:
-                toast.style.backgroundColor = 'rgba(14, 165, 233, 0.9)';
+                backgroundColor = 'rgba(14, 165, 233, 0.95)';
+                iconClass = 'fa-info-circle';
         }
 
+        toast.style.backgroundColor = backgroundColor;
         toast.style.color = '#fff';
-        toast.style.padding = '0.75rem 1rem';
-        toast.style.borderRadius = '6px';
-        toast.style.marginBottom = '10px';
-        toast.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.1)';
+        toast.style.padding = '1rem 1.25rem';
+        toast.style.borderRadius = '12px';
+        toast.style.marginBottom = '12px';
+        toast.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.15)';
         toast.style.transform = 'translateX(100%)';
         toast.style.opacity = '0';
-        toast.style.transition = 'all 0.3s ease';
+        toast.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        toast.style.backdropFilter = 'blur(10px)';
+        toast.style.border = '1px solid rgba(255, 255, 255, 0.1)';
 
-        // Add icon based on type
+        // Create toast content
+        const toastContent = document.createElement('div');
+        toastContent.style.display = 'flex';
+        toastContent.style.alignItems = 'flex-start';
+        toastContent.style.gap = '0.75rem';
+
+        // Add icon
         const icon = document.createElement('i');
-        icon.classList.add('fas');
-        icon.classList.add(
-            type === 'success' ? 'fa-check-circle' :
-                type === 'error' ? 'fa-exclamation-circle' :
-                    type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'
-        );
-        icon.style.marginRight = '8px';
+        icon.classList.add('fas', iconClass);
+        icon.style.fontSize = '1.25rem';
+        icon.style.marginTop = '0.125rem';
+        icon.style.flexShrink = '0';
 
-        toast.appendChild(icon);
-        toast.appendChild(document.createTextNode(message));
+        // Add message
+        const messageDiv = document.createElement('div');
+        messageDiv.style.fontSize = '0.9rem';
+        messageDiv.style.lineHeight = '1.4';
+        messageDiv.style.fontWeight = '500';
+        messageDiv.textContent = message;
+
+        // Add close button
+        const closeBtn = document.createElement('button');
+        closeBtn.style.background = 'none';
+        closeBtn.style.border = 'none';
+        closeBtn.style.color = 'white';
+        closeBtn.style.fontSize = '1.125rem';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.opacity = '0.8';
+        closeBtn.style.padding = '0';
+        closeBtn.style.marginLeft = 'auto';
+        closeBtn.style.flexShrink = '0';
+        closeBtn.innerHTML = '&times;';
+
+        closeBtn.addEventListener('click', () => {
+            removeToast(toast);
+        });
+
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.opacity = '1';
+        });
+
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.opacity = '0.8';
+        });
+
+        toastContent.appendChild(icon);
+        toastContent.appendChild(messageDiv);
+        toastContent.appendChild(closeBtn);
+        toast.appendChild(toastContent);
 
         // Add to container
         toastContainer.appendChild(toast);
@@ -177,17 +223,26 @@ document.addEventListener('DOMContentLoaded', function() {
             toast.style.opacity = '1';
         }, 10);
 
-        // Remove after delay
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            toast.style.opacity = '0';
+        // Auto remove after delay
+        const autoRemoveTimeout = setTimeout(() => {
+            removeToast(toast);
+        }, 5000);
+
+        // Clear timeout if manually closed
+        closeBtn.addEventListener('click', () => {
+            clearTimeout(autoRemoveTimeout);
+        });
+
+        function removeToast(toastElement) {
+            toastElement.style.transform = 'translateX(100%)';
+            toastElement.style.opacity = '0';
 
             setTimeout(() => {
-                if (toast.parentNode) {
-                    toastContainer.removeChild(toast);
+                if (toastElement.parentNode) {
+                    toastContainer.removeChild(toastElement);
                 }
-            }, 300);
-        }, 4000);
+            }, 400);
+        }
     };
 
     // ===== Enhance Success/Error Messages =====
@@ -196,13 +251,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.querySelector('.alert-danger');
 
     if (successMessage) {
-        showToast(successMessage.textContent, 'success');
-        successMessage.remove(); // Remove the original alert
+        const messageText = successMessage.textContent.trim();
+        if (messageText) {
+            showToast(messageText, 'success');
+            successMessage.remove(); // Remove the original alert
+        }
     }
 
     if (errorMessage) {
-        showToast(errorMessage.textContent, 'error');
-        errorMessage.remove(); // Remove the original alert
+        const messageText = errorMessage.textContent.trim();
+        if (messageText) {
+            showToast(messageText, 'error');
+            errorMessage.remove(); // Remove the original alert
+        }
     }
 
     // ===== Test Lock Toggle Enhancement =====
@@ -297,8 +358,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ===== Modal Fixes =====
-    // Fix modal backdrop click issues
+    // ===== Modal Fixes and Enhancements =====
+    // Fix modal backdrop click issues and add modern effects
     document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
         button.addEventListener('click', function() {
             // Get target modal ID
@@ -313,6 +374,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (modalDialog) {
                         // Make sure the dialog can be interacted with
                         modalDialog.style.pointerEvents = 'auto';
+
+                        // Add entrance animation
+                        modalDialog.style.transform = 'scale(0.95) translateY(-10px)';
+                        modalDialog.style.opacity = '0';
+                        modalDialog.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+
+                        setTimeout(() => {
+                            modalDialog.style.transform = 'scale(1) translateY(0)';
+                            modalDialog.style.opacity = '1';
+                        }, 10);
                     }
                     // Ensure modal has proper z-index
                     modal.style.zIndex = '1055';
@@ -324,5 +395,147 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }, 50);
         });
+    });
+
+    // ===== Modern Form Input Effects =====
+    // Add floating label effect for modern forms
+    document.querySelectorAll('.form-control-modern').forEach(input => {
+        // Focus effects
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+
+            // Add subtle glow effect
+            this.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.1)';
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+
+            // Remove glow effect
+            if (!this.classList.contains('is-invalid')) {
+                this.style.boxShadow = '';
+            }
+        });
+
+        // Real-time validation feedback
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid') && this.value.trim()) {
+                this.classList.remove('is-invalid');
+                const feedback = this.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            }
+        });
+    });
+
+    // ===== Enhanced Checkbox Interactions =====
+    document.querySelectorAll('.form-check-modern').forEach(checkContainer => {
+        const checkbox = checkContainer.querySelector('.form-check-input-modern');
+
+        if (checkbox) {
+            // Add ripple effect on click
+            checkContainer.addEventListener('click', function(e) {
+                if (e.target === checkbox) return; // Don't double-trigger
+
+                // Create ripple effect
+                const ripple = document.createElement('div');
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'rgba(37, 99, 235, 0.3)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.left = '1rem';
+                ripple.style.top = '1rem';
+                ripple.style.width = '20px';
+                ripple.style.height = '20px';
+                ripple.style.pointerEvents = 'none';
+
+                this.style.position = 'relative';
+                this.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+
+                // Toggle checkbox
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        }
+    });
+
+    // ===== Add CSS for ripple animation =====
+    if (!document.querySelector('#dynamic-styles')) {
+        const style = document.createElement('style');
+        style.id = 'dynamic-styles';
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+
+            .form-control-modern:focus {
+                transform: translateY(-1px);
+            }
+
+            .btn-modern:active {
+                transform: translateY(0) !important;
+            }
+
+            .toast-modern {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                backdrop-filter: blur(4px);
+            }
+
+            .loading-spinner {
+                background: white;
+                padding: 2rem;
+                border-radius: 12px;
+                text-align: center;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // ===== Accessibility Improvements =====
+    // Add keyboard navigation for custom elements
+    document.querySelectorAll('.form-check-modern').forEach(checkContainer => {
+        checkContainer.setAttribute('tabindex', '0');
+        checkContainer.setAttribute('role', 'checkbox');
+
+        checkContainer.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+
+    // ===== Performance Optimization =====
+    // Debounce resize events
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            // Trigger any resize-dependent calculations here
+            console.log('Window resized');
+        }, 250);
     });
 });

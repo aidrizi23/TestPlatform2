@@ -6,6 +6,7 @@ using Microsoft.JSInterop;
 using TestPlatform2.Data;
 using TestPlatform2.Models;
 using TestPlatform2.Repository;
+using System.Text.Json;
 
 namespace TestPlatform2.Controllers;
 
@@ -15,17 +16,20 @@ public class TestController : Controller
     private readonly UserManager<User> _userManager;
     private readonly ITestAttemptRepository _testAttemptRepository;
     private readonly ITestAnalyticsRepository _testAnalyticsRepository;
+    private readonly ITestInviteRepository _testInviteRepository;
     
     public TestController(
         ITestRepository testRepository, 
         UserManager<User> userManager, 
         ITestAttemptRepository testAttemptRepository,
-        ITestAnalyticsRepository testAnalyticsRepository)
+        ITestAnalyticsRepository testAnalyticsRepository,
+        ITestInviteRepository testInviteRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
         _testAttemptRepository = testAttemptRepository;
         _testAnalyticsRepository = testAnalyticsRepository;
+        _testInviteRepository = testInviteRepository;
     }
     
     // GET: /Test/Index
@@ -493,5 +497,393 @@ public class TestController : Controller
         };
     
         return View(viewModel);
+    }
+
+    // ========== AJAX-SPECIFIC METHODS ==========
+
+    /// <summary>
+    /// Gets test data for modal editing
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetTestDataForModal(string id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        var testData = new
+        {
+            id = test.Id,
+            testName = test.TestName,
+            description = test.Description,
+            randomizeQuestions = test.RandomizeQuestions,
+            timeLimit = test.TimeLimit,
+            maxAttempts = test.MaxAttempts,
+            isLocked = test.IsLocked,
+            questionCount = test.Questions.Count,
+            attemptCount = test.Attempts.Count,
+            inviteCount = test.InvitedStudents.Count
+        };
+
+        return Json(new { success = true, data = testData });
+    }
+
+    /// <summary>
+    /// Quick update for specific test properties
+    /// </summary>
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> QuickUpdateTest([FromBody] QuickUpdateTestDto dto)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(dto.TestId);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            switch (dto.Property.ToLower())
+            {
+                case "testname":
+                    test.TestName = dto.Value?.ToString() ?? test.TestName;
+                    break;
+                case "description":
+                    test.Description = dto.Value?.ToString() ?? test.Description;
+                    break;
+                case "timelimit":
+                    if (int.TryParse(dto.Value?.ToString(), out int timeLimit))
+                        test.TimeLimit = timeLimit;
+                    break;
+                case "maxattempts":
+                    if (int.TryParse(dto.Value?.ToString(), out int maxAttempts))
+                        test.MaxAttempts = maxAttempts;
+                    break;
+                case "randomizequestions":
+                    if (bool.TryParse(dto.Value?.ToString(), out bool randomize))
+                        test.RandomizeQuestions = randomize;
+                    break;
+                case "islocked":
+                    if (bool.TryParse(dto.Value?.ToString(), out bool locked))
+                        test.IsLocked = locked;
+                    break;
+                default:
+                    return Json(new { success = false, message = "Invalid property" });
+            }
+
+            await _testRepository.Update(test);
+            return Json(new { success = true, message = "Test updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Error updating test" });
+        }
+    }
+
+    /// <summary>
+    /// Gets quick statistics for a test
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetTestStatistics(string id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        var stats = await _testRepository.GetTestAnalyticsSummaryAsync(id);
+        if (stats == null)
+            return Json(new { success = false, message = "Could not retrieve statistics" });
+
+        return Json(new { success = true, data = stats });
+    }
+
+    /// <summary>
+    /// Gets test questions list for dynamic loading
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetTestQuestions(string id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        var questions = test.Questions.OrderBy(q => q.Position).Select(q => new
+        {
+            id = q.Id,
+            text = q.Text,
+            points = q.Points,
+            position = q.Position,
+            type = q.GetType().Name.Replace("Question", "")
+        });
+
+        return Json(new { success = true, data = questions });
+    }
+
+    /// <summary>
+    /// Bulk delete multiple tests
+    /// </summary>
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> BulkDeleteTests([FromBody] List<string> testIds)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (testIds == null || !testIds.Any())
+            return Json(new { success = false, message = "No tests selected" });
+
+        var deletedCount = 0;
+        var errors = new List<string>();
+
+        foreach (var testId in testIds)
+        {
+            try
+            {
+                var test = await _testRepository.GetTestByIdAsync(testId);
+                if (test != null && test.User == user)
+                {
+                    await _testRepository.Delete(test);
+                    deletedCount++;
+                }
+                else
+                {
+                    errors.Add($"Could not delete test {testId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Error deleting test {testId}");
+            }
+        }
+
+        return Json(new
+        {
+            success = deletedCount > 0,
+            message = $"Deleted {deletedCount} test(s)",
+            deletedCount,
+            errors
+        });
+    }
+
+    /// <summary>
+    /// Clones an existing test
+    /// </summary>
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> CloneTest(string id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var originalTest = await _testRepository.GetTestByIdAsync(id);
+        if (originalTest is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (originalTest.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            var clonedTest = new Test
+            {
+                TestName = $"{originalTest.TestName} (Copy)",
+                Description = originalTest.Description,
+                RandomizeQuestions = originalTest.RandomizeQuestions,
+                TimeLimit = originalTest.TimeLimit,
+                MaxAttempts = originalTest.MaxAttempts,
+                UserId = user.Id,
+                IsLocked = false // New test starts unlocked
+            };
+
+            await _testRepository.Create(clonedTest);
+
+            return Json(new
+            {
+                success = true,
+                message = "Test cloned successfully",
+                newTestId = clonedTest.Id,
+                newTestName = clonedTest.TestName
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Error cloning test" });
+        }
+    }
+
+    /// <summary>
+    /// Gets recent activity for all tests
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetRecentActivity()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
+        var recentActivity = new List<object>();
+
+        foreach (var test in tests)
+        {
+            var testData = await _testRepository.GetTestByIdAsync(test.Id);
+            if (testData == null) continue;
+
+            var recentAttempts = testData.Attempts
+                .OrderByDescending(a => a.StartTime)
+                .Take(5)
+                .Select(a => new
+                {
+                    testId = test.Id,
+                    testName = test.TestName,
+                    studentName = $"{a.FirstName} {a.LastName}",
+                    startTime = a.StartTime,
+                    isCompleted = a.IsCompleted,
+                    score = a.Score,
+                    type = "attempt"
+                });
+
+            recentActivity.AddRange(recentAttempts);
+        }
+
+        var sortedActivity = recentActivity
+            .OrderByDescending(a => ((dynamic)a).startTime)
+            .Take(20);
+
+        return Json(new { success = true, data = sortedActivity });
+    }
+
+    /// <summary>
+    /// Exports test data in various formats
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportTestData(string id, string format = "json")
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        var exportData = new
+        {
+            test = new
+            {
+                id = test.Id,
+                name = test.TestName,
+                description = test.Description,
+                settings = new
+                {
+                    randomizeQuestions = test.RandomizeQuestions,
+                    timeLimit = test.TimeLimit,
+                    maxAttempts = test.MaxAttempts,
+                    isLocked = test.IsLocked
+                }
+            },
+            questions = test.Questions.OrderBy(q => q.Position).Select(q => new
+            {
+                id = q.Id,
+                text = q.Text,
+                points = q.Points,
+                position = q.Position,
+                type = q.GetType().Name.Replace("Question", "")
+            }),
+            statistics = await _testRepository.GetTestAnalyticsSummaryAsync(id)
+        };
+
+        if (format.ToLower() == "json")
+        {
+            return Json(new { success = true, data = exportData });
+        }
+
+        // Add other export formats here (CSV, PDF, etc.)
+        return Json(new { success = false, message = "Unsupported export format" });
+    }
+
+    /// <summary>
+    /// Gets test invite statistics
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetInviteStatistics(string id)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        var invites = await _testInviteRepository.GetInvitesByTestIdAsync(id);
+        var inviteStats = new
+        {
+            totalInvites = invites.Count(),
+            usedInvites = invites.Count(i => i.IsUsed),
+            unusedInvites = invites.Count(i => !i.IsUsed),
+            invitesByEmail = invites.GroupBy(i => i.Email)
+                .Select(g => new { email = g.Key, count = g.Count() })
+                .OrderByDescending(x => x.count)
+                .Take(10),
+            recentInvites = invites.OrderByDescending(i => i.InviteSentDate)
+                .Take(10)
+                .Select(i => new
+                {
+                    email = i.Email,
+                    sentDate = i.InviteSentDate,
+                    isUsed = i.IsUsed
+                })
+        };
+
+        return Json(new { success = true, data = inviteStats });
+    }
+
+    // DTO for quick updates
+    public class QuickUpdateTestDto
+    {
+        public string TestId { get; set; }
+        public string Property { get; set; }
+        public object Value { get; set; }
     }
 }
