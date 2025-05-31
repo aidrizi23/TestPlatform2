@@ -56,9 +56,9 @@ ViewData["Title"] = "Home";
                 }
                 else
                 {
-                <a asp-controller="Test" asp-action="Create" class="btn btn-primary btn-lg hero-cta">
+                <button type="button" class="btn btn-primary btn-lg hero-cta" data-bs-toggle="modal" data-bs-target="#createTestModal">
                     <i class="fas fa-plus-circle me-2"></i>Create New Test
-                </a>
+                </button>
                 <a asp-controller="Test" asp-action="Index" class="btn btn-outline-primary btn-lg">
                     <i class="fas fa-clipboard-list me-2"></i>My Tests
                 </a>
@@ -91,43 +91,41 @@ ViewData["Title"] = "Home";
     <!-- Test Access Section -->
     <section class="test-access-section">
         <div class="access-container">
-            <div class="access-content">
-                <div class="access-header">
-                    <h2 class="access-title">
-                        <i class="fas fa-key me-3"></i>Take a Test
-                    </h2>
-                    <p class="access-description">
-                        Have an access token? Enter it below to begin your test
-                    </p>
-                </div>
-
-                @if (TempData["ErrorMessage"] != null)
-                {
-                <div class="alert alert-danger">
-                    <div class="alert-content">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <span>@TempData["ErrorMessage"]</span>
-                    </div>
-                </div>
-                }
-
-                <form asp-action="EnterToken" asp-controller="TestAttempt" method="post" class="token-form">
-                    <div class="token-input-group">
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock input-icon"></i>
-                            <input type="text" id="token" name="token" class="form-control token-input"
-                                   placeholder="Enter your access token" required autocomplete="off" />
-                        </div>
-                        <button type="submit" class="btn btn-primary token-submit">
-                            <i class="fas fa-play-circle me-2"></i>Start Test
-                        </button>
-                    </div>
-                    <div class="token-help">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Your instructor provided this token via email
-                    </div>
-                </form>
+            <div class="access-header">
+                <h2 class="access-title">
+                    <i class="fas fa-key me-3"></i>Take a Test
+                </h2>
+                <p class="access-description">
+                    Have an access token? Enter it below to begin your test
+                </p>
             </div>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+            <div class="alert alert-danger">
+                <div class="alert-content">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <span>@TempData["ErrorMessage"]</span>
+                </div>
+            </div>
+            }
+
+            <form asp-action="EnterToken" asp-controller="TestAttempt" method="post" class="token-form">
+                <div class="token-input-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="text" id="token" name="token" class="form-control token-input"
+                               placeholder="Enter your access token" required autocomplete="off" />
+                    </div>
+                    <button type="submit" class="btn btn-primary token-submit">
+                        <i class="fas fa-play-circle me-2"></i>Start Test
+                    </button>
+                </div>
+                <div class="token-help">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Your instructor provided this token via email
+                </div>
+            </form>
         </div>
     </section>
 
@@ -320,6 +318,183 @@ ViewData["Title"] = "Home";
     </section>
     }
 </div>
+
+<!-- Create Test Modal (Only show if authenticated) -->
+@if (User.Identity.IsAuthenticated)
+{
+<div class="modal fade" id="createTestModal" tabindex="-1" aria-labelledby="createTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createTestModalLabel">
+                    <i class="fas fa-plus-circle me-2 text-primary"></i>Create New Test
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="createTestForm" novalidate>
+                <div class="modal-body">
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-info-circle me-2"></i>Basic Information
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="testTitle" class="form-label">Test Title <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                                    <input type="text" class="form-control" id="testTitle" name="Title" required
+                                           placeholder="Enter a descriptive title for your test">
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="col-12 mb-3">
+                                <label for="testDescription" class="form-label">Description</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                                    <textarea class="form-control" id="testDescription" name="Description" rows="3"
+                                              placeholder="Enter instructions or details about the test"></textarea>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Optional description that students will see before starting</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Test Settings Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-cog me-2"></i>Test Settings
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="timeLimit" class="form-label">Time Limit (minutes) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-clock"></i></span>
+                                    <input type="number" class="form-control" id="timeLimit" name="TimeLimit"
+                                           min="1" max="180" value="60" required>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Maximum time allowed to complete the test</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="maxAttempts" class="form-label">Max Attempts <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-redo"></i></span>
+                                    <input type="number" class="form-control" id="maxAttempts" name="MaxAttempts"
+                                           min="1" max="10" value="1" required>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Number of times students can attempt</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="randomizeQuestions"
+                                           name="RandomizeQuestions">
+                                    <label class="form-check-label" for="randomizeQuestions">
+                                        <i class="fas fa-random me-2"></i>Randomize Question Order
+                                    </label>
+                                </div>
+                                <div class="form-text">Questions will appear in random order for each student</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Preview Section -->
+                    <div class="preview-section">
+                        <h6 class="preview-title">
+                            <i class="fas fa-eye me-2"></i>Live Preview
+                        </h6>
+                        <div class="preview-content">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="preview-item">
+                                        <span class="preview-label">Title:</span>
+                                        <span class="preview-value" id="preview-title">Your test title</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <span class="preview-label">Time Limit:</span>
+                                        <span class="preview-value" id="preview-time">60 minutes</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="preview-item">
+                                        <span class="preview-label">Max Attempts:</span>
+                                        <span class="preview-value" id="preview-attempts">1</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <span class="preview-label">Question Order:</span>
+                                        <span class="preview-value" id="preview-randomize">Sequential</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="preview-features" id="preview-features">
+                                <!-- Dynamic feature tags will be added here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-create-test">
+                        <i class="fas fa-save me-2"></i>Create Test
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-success" id="successModalLabel">
+                    <i class="fas fa-check-circle me-2"></i>Success!
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="success-icon mb-3">
+                    <i class="fas fa-check-circle text-success"></i>
+                </div>
+                <h4 class="mb-3">Test Created Successfully!</h4>
+                <p class="text-muted mb-4" id="successMessage">Your test has been created and is ready for questions.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-outline-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                    <a href="#" id="viewTestLink" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>View Test
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 mb-0">Creating your test...</p>
+    </div>
+</div>
+}
 
 <style>
     /* Home Page Specific Styles */
@@ -883,6 +1058,259 @@ ViewData["Title"] = "Home";
         opacity: 0.8;
     }
 
+    /* Modal Styles */
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #f3f4f6;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #f3f4f6;
+        padding: 1.5rem 2rem;
+        background: #fafafa;
+        border-radius: 0 0 16px 16px;
+    }
+
+    /* Form Sections */
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: #f9fafb;
+        border-radius: 12px;
+        border: 1px solid #f3f4f6;
+    }
+
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-control {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    }
+
+    .input-group-text {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        color: #6b7280;
+    }
+
+    .form-check-input:checked {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+
+    .form-switch .form-check-input {
+        width: 2.5em;
+        height: 1.25em;
+    }
+
+    /* Preview Section */
+    .preview-section {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+        border: 1px solid #c7d2fe;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .preview-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .preview-content {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .preview-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+    }
+
+    .preview-item:last-child {
+        border-bottom: none;
+    }
+
+    .preview-label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+    }
+
+    .preview-value {
+        color: #1e40af;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .preview-features {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .feature-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.75rem;
+        background: rgba(37, 99, 235, 0.1);
+        color: #1d4ed8;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+    }
+
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .loading-content .spinner-border {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .loading-content p {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* Success Modal */
+    .success-icon {
+        font-size: 4rem;
+        color: #16a34a;
+    }
+
+    /* Button Styles */
+    .btn {
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid #2563eb;
+        color: #2563eb;
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: #2563eb;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-create-test:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Validation Styles */
+    .is-invalid {
+        border-color: #dc2626 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 38, 38, 0.15) !important;
+    }
+
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #dc2626;
+    }
+
+    .text-danger {
+        color: #dc2626 !important;
+    }
+
+    .text-success {
+        color: #16a34a !important;
+    }
+
     /* Responsive Design */
     @@media (max-width: 1024px) {
     .hero-section {
@@ -976,6 +1404,15 @@ ViewData["Title"] = "Home";
     .cta-title {
         font-size: 2rem;
     }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-header,
+    .modal-footer {
+        padding: 1.25rem 1.5rem;
+    }
     }
 
     @@media (max-width: 576px) {
@@ -1030,6 +1467,14 @@ ViewData["Title"] = "Home";
     .cta-primary {
         width: 100%;
     }
+
+    .form-section {
+        padding: 1rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
     }
 
     /* Animation Enhancements */
@@ -1070,6 +1515,36 @@ ViewData["Title"] = "Home";
     .step-item:nth-child(1) { animation-delay: 0.1s; }
     .step-item:nth-child(3) { animation-delay: 0.2s; }
     .step-item:nth-child(5) { animation-delay: 0.3s; }
+
+    /* Toast Notification Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+    }
+
+    .toast {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(8px);
+    }
+
+    .toast.success {
+        background: rgba(22, 163, 74, 0.95);
+        color: white;
+    }
+
+    .toast.error {
+        background: rgba(220, 38, 38, 0.95);
+        color: white;
+    }
+
+    .toast.warning {
+        background: rgba(245, 158, 11, 0.95);
+        color: white;
+    }
 </style>
 
 @section Scripts {
@@ -1120,6 +1595,223 @@ ViewData["Title"] = "Home";
                 this.style.transform = 'translateY(0) scale(1)';
             });
         });
+
+        // Create Test Modal Functionality
+        @if (User.Identity.IsAuthenticated)
+        {
+        <text>
+        const createTestForm = document.getElementById('createTestForm');
+        const createTestModal = new bootstrap.Modal(document.getElementById('createTestModal'));
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Form inputs for live preview
+        const titleInput = document.getElementById('testTitle');
+        const descriptionInput = document.getElementById('testDescription');
+        const timeLimitInput = document.getElementById('timeLimit');
+        const maxAttemptsInput = document.getElementById('maxAttempts');
+        const randomizeInput = document.getElementById('randomizeQuestions');
+
+        // Preview elements
+        const previewTitle = document.getElementById('preview-title');
+        const previewTime = document.getElementById('preview-time');
+        const previewAttempts = document.getElementById('preview-attempts');
+        const previewRandomize = document.getElementById('preview-randomize');
+        const previewFeatures = document.getElementById('preview-features');
+
+        // Utility functions
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function clearFormErrors() {
+            const inputs = createTestForm.querySelectorAll('.form-control');
+            const feedbacks = createTestForm.querySelectorAll('.invalid-feedback');
+
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid');
+            });
+
+            feedbacks.forEach(feedback => {
+                feedback.textContent = '';
+            });
+        }
+
+        function showFormErrors(errors) {
+            clearFormErrors();
+
+            errors.forEach(error => {
+                const input = createTestForm.querySelector(`[name="${error.Field}"]`);
+                const feedback = input ? input.parentElement.querySelector('.invalid-feedback') : null;
+
+                if (input && feedback) {
+                    input.classList.add('is-invalid');
+                    feedback.textContent = error.Message;
+                }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-body d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'} me-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Show toast
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+
+            // Hide toast after 4 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 4000);
+        }
+
+        // Live preview updates
+        function updatePreview() {
+            const title = titleInput.value.trim() || 'Your test title';
+            const timeLimit = timeLimitInput.value || '60';
+            const maxAttempts = maxAttemptsInput.value || '1';
+            const isRandomized = randomizeInput.checked;
+
+            previewTitle.textContent = title;
+            previewTime.textContent = `${timeLimit} minutes`;
+            previewAttempts.textContent = maxAttempts;
+            previewRandomize.textContent = isRandomized ? 'Randomized' : 'Sequential';
+
+            // Update feature tags
+            let featuresHTML = '';
+            if (isRandomized) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-random"></i> Randomized Questions</span>';
+            }
+            if (parseInt(maxAttempts) > 1) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-redo"></i> Multiple Attempts</span>';
+            }
+            if (parseInt(timeLimit) >= 120) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-clock"></i> Extended Time</span>';
+            }
+            previewFeatures.innerHTML = featuresHTML;
+        }
+
+        // Add event listeners for live preview
+        titleInput.addEventListener('input', updatePreview);
+        timeLimitInput.addEventListener('input', updatePreview);
+        maxAttemptsInput.addEventListener('input', updatePreview);
+        randomizeInput.addEventListener('change', updatePreview);
+
+        // Form submission
+        createTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitButton = this.querySelector('.btn-create-test');
+            const originalText = submitButton.innerHTML;
+
+            showLoading();
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+            clearFormErrors();
+
+            try {
+                // Get CSRF token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+                // Create the data object matching TestForCreationDto exactly
+                const data = {
+                    Title: titleInput.value.trim(),
+                    Description: descriptionInput.value.trim(),
+                    TimeLimit: parseInt(timeLimitInput.value) || 60,
+                    MaxAttempts: parseInt(maxAttemptsInput.value) || 1,
+                    RandomizeQuestions: randomizeInput.checked
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+
+                // Add CSRF token if available
+                if (token) {
+                    headers['RequestVerificationToken'] = token;
+                }
+
+                const response = await fetch('@Url.Action("CreateAjax", "Test")', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    createTestModal.hide();
+
+                    // Update success modal
+                    document.getElementById('successMessage').textContent = result.message;
+                    document.getElementById('viewTestLink').href = `@Url.Action("Details", "Test")/${result.testId}`;
+
+                    successModal.show();
+                    showToast('Test created successfully!', 'success');
+                } else {
+                    if (result.errors) {
+                        showFormErrors(result.errors);
+                    } else {
+                        showToast(result.message || 'An error occurred', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating test:', error);
+                showToast('An error occurred while creating the test', 'error');
+            } finally {
+                hideLoading();
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
+
+        // Reset form when modal is hidden
+        document.getElementById('createTestModal').addEventListener('hidden.bs.modal', function() {
+            createTestForm.reset();
+            clearFormErrors();
+            updatePreview();
+
+            // Focus on title input when modal is shown again
+            titleInput.focus();
+        });
+
+        // Focus title input when modal is shown
+        document.getElementById('createTestModal').addEventListener('shown.bs.modal', function() {
+            titleInput.focus();
+        });
+
+        // Initialize preview with default values
+        updatePreview();
+        </text>
+        }
     });
 </script>
 }
