@@ -19,6 +19,10 @@ public class TestRepository : ITestRepository
     {
         return await _context.Tests
             .Where(t => t.UserId == userId)
+            .Include(x => x.Questions)
+            .Include(x => x.Attempts)
+            .Include(x => x.InvitedStudents)
+            .Include(x => x.User) // Include user details
             .AsNoTracking()
             .ToListAsync();
     }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using TestPlatform2.Data;
+using TestPlatform2.Data.Questions;
 using TestPlatform2.Models;
 using TestPlatform2.Repository;
 using System.Text.Json;
@@ -17,19 +18,22 @@ public class TestController : Controller
     private readonly ITestAttemptRepository _testAttemptRepository;
     private readonly ITestAnalyticsRepository _testAnalyticsRepository;
     private readonly ITestInviteRepository _testInviteRepository;
+    private readonly IQuestionRepository _questionRepository;
     
     public TestController(
         ITestRepository testRepository, 
         UserManager<User> userManager, 
         ITestAttemptRepository testAttemptRepository,
         ITestAnalyticsRepository testAnalyticsRepository,
-        ITestInviteRepository testInviteRepository)
+        ITestInviteRepository testInviteRepository,
+        IQuestionRepository questionRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
         _testAttemptRepository = testAttemptRepository;
         _testAnalyticsRepository = testAnalyticsRepository;
         _testInviteRepository = testInviteRepository;
+        _questionRepository = questionRepository;
     }
     
     // ========== TRADITIONAL MVC METHODS ==========
@@ -691,6 +695,7 @@ public class TestController : Controller
 
         try
         {
+            // Create the cloned test
             var clonedTest = new Test
             {
                 TestName = $"{originalTest.TestName} (Copy)",
@@ -704,17 +709,78 @@ public class TestController : Controller
 
             await _testRepository.Create(clonedTest);
 
+            // Clone all questions from the original test
+            var originalQuestions = originalTest.Questions.OrderBy(q => q.Position).ToList();
+            var clonedQuestions = new List<Question>();
+
+            foreach (var originalQuestion in originalQuestions)
+            {
+                Question clonedQuestion = null;
+
+                // Create new question based on type
+                switch (originalQuestion)
+                {
+                    case TrueFalseQuestion tfq:
+                        clonedQuestion = new TrueFalseQuestion
+                        {
+                            Text = tfq.Text,
+                            Points = tfq.Points,
+                            Position = tfq.Position,
+                            TestId = clonedTest.Id,
+                            CorrectAnswer = tfq.CorrectAnswer
+                        };
+                        break;
+
+                    case MultipleChoiceQuestion mcq:
+                        clonedQuestion = new MultipleChoiceQuestion
+                        {
+                            Text = mcq.Text,
+                            Points = mcq.Points,
+                            Position = mcq.Position,
+                            TestId = clonedTest.Id,
+                            Options = new List<string>(mcq.Options),
+                            CorrectAnswers = new List<string>(mcq.CorrectAnswers),
+                            AllowMultipleSelections = mcq.AllowMultipleSelections
+                        };
+                        break;
+
+                    case ShortAnswerQuestion saq:
+                        clonedQuestion = new ShortAnswerQuestion
+                        {
+                            Text = saq.Text,
+                            Points = saq.Points,
+                            Position = saq.Position,
+                            TestId = clonedTest.Id,
+                            ExpectedAnswer = saq.ExpectedAnswer,
+                            CaseSensitive = saq.CaseSensitive
+                        };
+                        break;
+                }
+
+                if (clonedQuestion != null)
+                {
+                    clonedQuestions.Add(clonedQuestion);
+                }
+            }
+
+            // Bulk create all cloned questions
+            if (clonedQuestions.Any())
+            {
+                await _questionRepository.BulkCreate(clonedQuestions);
+            }
+
             return Json(new
             {
                 success = true,
-                message = "Test cloned successfully",
+                message = $"Test cloned successfully with {clonedQuestions.Count} questions",
                 newTestId = clonedTest.Id,
-                newTestName = clonedTest.TestName
+                newTestName = clonedTest.TestName,
+                questionsCloned = clonedQuestions.Count
             });
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = "Error cloning test" });
+            return Json(new { success = false, message = "Error cloning test: " + ex.Message });
         }
     }
 

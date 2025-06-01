@@ -39,6 +39,13 @@ public class QuestionRepository : IQuestionRepository
         await _context.SaveChangesAsync();
     }
     
+    // bulk create questions
+    public async Task BulkCreate(IEnumerable<Question> questions)
+    {
+        await _context.Questions.AddRangeAsync(questions);
+        await _context.SaveChangesAsync();
+    }
+    
     // update a question
     public async Task Update(Question question)
     {
@@ -61,6 +68,7 @@ public interface IQuestionRepository
     Task<IEnumerable<Question>> GetQuestionsByTestIdAsync(string testId);
     Task<Question?> GetQuestionByIdAsync(string questionId);
     Task Create(Question question);
+    Task BulkCreate(IEnumerable<Question> questions);
     Task Update(Question question);
     Task Delete(Question question);
 }
