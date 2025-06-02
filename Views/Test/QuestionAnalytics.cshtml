@@ -1,338 +1,1758 @@
-@model TestPlatform2.Models.QuestionAnalyticsViewModel  
+@model TestPlatform2.Models.QuestionAnalyticsViewModel
 @using TestPlatform2.Data.Questions
 @{
-    ViewData["Title"] = "Question Analytics";
-    
-    // Determine question type for specific rendering
-    bool isMultipleChoice = Model.Question is MultipleChoiceQuestion;
-    bool isTrueFalse = Model.Question is TrueFalseQuestion;
-    bool isShortAnswer = Model.Question is ShortAnswerQuestion;
-    
-    // Cast to specific type if needed
-    MultipleChoiceQuestion mcQuestion = isMultipleChoice ? (MultipleChoiceQuestion)Model.Question : null;
-    TrueFalseQuestion tfQuestion = isTrueFalse ? (TrueFalseQuestion)Model.Question : null;
-    ShortAnswerQuestion saQuestion = isShortAnswer ? (ShortAnswerQuestion)Model.Question : null;
+ViewData["Title"] = "Question Analytics";
+
+// Determine question type for specific rendering
+bool isMultipleChoice = Model.Question is MultipleChoiceQuestion;
+bool isTrueFalse = Model.Question is TrueFalseQuestion;
+bool isShortAnswer = Model.Question is ShortAnswerQuestion;
+
+// Cast to specific type if needed
+MultipleChoiceQuestion mcQuestion = isMultipleChoice ? (MultipleChoiceQuestion)Model.Question : null;
+TrueFalseQuestion tfQuestion = isTrueFalse ? (TrueFalseQuestion)Model.Question : null;
+ShortAnswerQuestion saQuestion = isShortAnswer ? (ShortAnswerQuestion)Model.Question : null;
 }
 
-<div class="container py-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="mb-0">
-                <i class="fas fa-question-circle me-2 text-primary"></i>Question Analytics
-            </h1>
-            <p class="lead text-muted">Test: @Model.TestName</p>
-        </div>
-        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
-            <a asp-action="Analytics" asp-route-id="@Model.TestId" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Analytics
-            </a>
+<div class="question-analytics-container">
+    <!-- Enhanced Header Section -->
+    <div class="analytics-header">
+        <div class="header-content">
+            <div class="header-main">
+                <div class="breadcrumb-nav">
+                    <a asp-action="Analytics" asp-route-id="@Model.TestId" class="breadcrumb-link">
+                        <i class="fas fa-chart-line me-2"></i>Test Analytics
+                    </a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Question Analysis</span>
+                </div>
+
+                <div class="title-section">
+                    <h1 class="page-title">
+                        <i class="fas fa-question-circle me-3 title-icon"></i>
+                        Question Analytics
+                    </h1>
+                    <div class="test-info">
+                        <span class="test-label">Test:</span>
+                        <span class="test-name">@Model.TestName</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <a asp-action="Analytics" asp-route-id="@Model.TestId" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Test Analytics
+                </a>
+            </div>
         </div>
     </div>
-    
-    <!-- Question Card -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Question Details</h5>
-                <span class="badge bg-primary">Question @(Model.Question.Position + 1)</span>
+
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card performance-card">
+            <div class="metric-icon">
+                <i class="fas fa-chart-line"></i>
             </div>
-        </div>
-        <div class="card-body">
-            <div class="question-text mb-4">
-                <h4>@Model.Question.Text</h4>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <span class="fw-bold">Type:</span> 
-                        <span class="badge bg-info">@Model.Analytics.QuestionType</span>
-                    </div>
-                    <div class="mb-3">
-                        <span class="fw-bold">Points:</span> @Model.Question.Points
-                    </div>
-                    <div class="mb-3">
-                        <span class="fw-bold">Average Points Earned:</span> 
-                        <span class="@(Model.Analytics.AveragePoints >= (Model.Question.Points * 0.7) ? "text-success" : "text-danger")">
-                            @Model.Analytics.AveragePoints.ToString("0.00")
-                        </span>
-                    </div>
+            <div class="metric-content">
+                <div class="metric-value @(Model.Analytics.SuccessRate >= 70 ? "text-success" : Model.Analytics.SuccessRate >= 40 ? "text-warning" : "text-danger")">
+                    @Model.Analytics.SuccessRate.ToString("0.0")%
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <span class="fw-bold">Success Rate:</span> 
-                        <span class="@(Model.Analytics.SuccessRate >= 70 ? "text-success" : Model.Analytics.SuccessRate >= 40 ? "text-warning" : "text-danger")">
-                            @Model.Analytics.SuccessRate.ToString("0.0")%
-                        </span>
-                    </div>
-                    <div class="mb-3">
-                        <span class="fw-bold">Correct Answers:</span> @Model.Analytics.CorrectAnswers
-                    </div>
-                    <div class="mb-3">
-                        <span class="fw-bold">Incorrect Answers:</span> @Model.Analytics.IncorrectAnswers
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Question Type Specific Content -->
-            @if (isMultipleChoice)
-            {
-                <hr class="my-4">
-                <h5 class="mb-3">Answer Options</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="list-group">
-                            @foreach (var option in mcQuestion.Options)
-                            {
-                                var isCorrect = mcQuestion.CorrectAnswers.Contains(option);
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        @option
-                                        @if (isCorrect)
-                                        {
-                                            <i class="fas fa-check text-success ms-2"></i>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                        <div class="mt-2 small text-muted">
-                            @if (mcQuestion.AllowMultipleSelections)
-                            {
-                                <span><i class="fas fa-info-circle me-1"></i>Multiple selections allowed</span>
-                            }
-                            else
-                            {
-                                <span><i class="fas fa-info-circle me-1"></i>Single selection only</span>
-                            }
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-title">Answer Distribution</h6>
-                                <canvas id="answerDistributionChart" height="200"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-            else if (isTrueFalse)
-            {
-                <hr class="my-4">
-                <h5 class="mb-3">Answer Options</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="list-group">
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    True
-                                    @if (tfQuestion.CorrectAnswer)
-                                    {
-                                        <i class="fas fa-check text-success ms-2"></i>
-                                    }
-                                </div>
-                            </div>
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    False
-                                    @if (!tfQuestion.CorrectAnswer)
-                                    {
-                                        <i class="fas fa-check text-success ms-2"></i>
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-body">
-                                <h6 class="card-title">Answer Distribution</h6>
-                                <canvas id="answerDistributionChart" height="200"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-            else if (isShortAnswer)
-            {
-                <hr class="my-4">
-                <h5 class="mb-3">Correct Answer</h5>
-                <div class="alert alert-success">
-                    <i class="fas fa-check-circle me-2"></i>@saQuestion.ExpectedAnswer
-                </div>
-                <div class="mb-2 small text-muted">
-                    @if (saQuestion.CaseSensitive)
+                <div class="metric-label">Success Rate</div>
+                <div class="metric-trend">
+                    @if (Model.Analytics.SuccessRate >= 70)
                     {
-                        <span><i class="fas fa-info-circle me-1"></i>Case sensitive matching</span>
+                    <i class="fas fa-trending-up text-success me-1"></i>
+                    <span class="text-success">Excellent</span>
+                    }
+                    else if (Model.Analytics.SuccessRate >= 40)
+                    {
+                    <i class="fas fa-minus text-warning me-1"></i>
+                    <span class="text-warning">Moderate</span>
                     }
                     else
                     {
-                        <span><i class="fas fa-info-circle me-1"></i>Case insensitive matching</span>
+                    <i class="fas fa-trending-down text-danger me-1"></i>
+                    <span class="text-danger">Needs Review</span>
                     }
                 </div>
+            </div>
+        </div>
+
+        <div class="metric-card score-card">
+            <div class="metric-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-value">
+                    @Model.Analytics.AveragePoints.ToString("0.00")
+                </div>
+                <div class="metric-label">Average Points</div>
+                <div class="metric-subtitle">
+                    out of @Model.Question.Points points
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card attempts-card">
+            <div class="metric-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-value">
+                    @(Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers)
+                </div>
+                <div class="metric-label">Total Attempts</div>
+                <div class="metric-breakdown">
+                    <span class="correct-count">@Model.Analytics.CorrectAnswers correct</span>
+                    <span class="separator">•</span>
+                    <span class="incorrect-count">@Model.Analytics.IncorrectAnswers incorrect</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metric-card difficulty-card">
+            <div class="metric-icon">
+                <i class="fas fa-gauge-high"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-value">
+                    @if (Model.Analytics.SuccessRate >= 85)
+                    {
+                    <span class="text-success">Easy</span>
+                    }
+                    else if (Model.Analytics.SuccessRate >= 70)
+                    {
+                    <span class="text-info">Moderate</span>
+                    }
+                    else if (Model.Analytics.SuccessRate >= 50)
+                    {
+                    <span class="text-warning">Challenging</span>
+                    }
+                    else
+                    {
+                    <span class="text-danger">Difficult</span>
+                    }
+                </div>
+                <div class="metric-label">Difficulty Level</div>
+                <div class="metric-subtitle">
+                    Based on success rate
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Details Section -->
+    <div class="question-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-clipboard-question me-2"></i>
+                Question Details
+            </h2>
+            <div class="question-badge">
+                <span class="badge question-type-badge @(Model.Analytics.QuestionType.ToLower().Replace(" ", "-"))">
+                    @switch (Model.Analytics.QuestionType)
+                    {
+                    case "Multiple Choice":
+                    <i class="fas fa-list-ul me-1"></i>
+                    break;
+                    case "True/False":
+                    <i class="fas fa-check-circle me-1"></i>
+                    break;
+                    case "Short Answer":
+                    <i class="fas fa-pen me-1"></i>
+                    break;
+                    }
+                    @Model.Analytics.QuestionType
+                </span>
+                <span class="badge question-position-badge">
+                    Question @(Model.Question.Position + 1)
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-content">
+                <div class="question-text">
+                    <h3>@Model.Question.Text</h3>
+                </div>
+
+                <div class="question-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        <span class="meta-label">Points:</span>
+                        <span class="meta-value">@Model.Question.Points</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-hashtag text-info me-2"></i>
+                        <span class="meta-label">Position:</span>
+                        <span class="meta-value">@(Model.Question.Position + 1)</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-percentage text-primary me-2"></i>
+                        <span class="meta-label">Success Rate:</span>
+                        <span class="meta-value @(Model.Analytics.SuccessRate >= 70 ? "text-success" : Model.Analytics.SuccessRate >= 40 ? "text-warning" : "text-danger")">
+                            @Model.Analytics.SuccessRate.ToString("0.0")%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answer Analysis Section -->
+    <div class="answer-analysis-section">
+        <h2 class="section-title">
+            <i class="fas fa-chart-pie me-2"></i>
+            Answer Analysis
+        </h2>
+
+        <div class="analysis-grid">
+            <!-- Answer Options/Details -->
+            <div class="analysis-card options-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        @if (isMultipleChoice || isTrueFalse)
+                        {
+                        <span>Answer Options</span>
+                        }
+                        else
+                        {
+                        <span>Expected Answer</span>
+                        }
+                    </h3>
+                </div>
+                <div class="card-content">
+                    @if (isMultipleChoice)
+                    {
+                    <div class="options-list">
+                        @foreach (var option in mcQuestion.Options)
+                        {
+                        var isCorrect = mcQuestion.CorrectAnswers.Contains(option);
+                        <div class="option-item @(isCorrect ? "correct-option" : "")">
+                            <div class="option-indicator">
+                                @if (isCorrect)
+                                {
+                                <i class="fas fa-check-circle text-success"></i>
+                                }
+                                else
+                                {
+                                <i class="fas fa-circle text-muted"></i>
+                                }
+                            </div>
+                            <div class="option-text">@option</div>
+                            @if (isCorrect)
+                            {
+                            <div class="correct-label">
+                                <span class="badge bg-success">Correct</span>
+                            </div>
+                            }
+                        </div>
+                        }
+                    </div>
+                    <div class="options-meta">
+                        @if (mcQuestion.AllowMultipleSelections)
+                        {
+                        <div class="meta-badge">
+                            <i class="fas fa-check-double me-1"></i>
+                            Multiple selections allowed
+                        </div>
+                        }
+                        else
+                        {
+                        <div class="meta-badge">
+                            <i class="fas fa-check me-1"></i>
+                            Single selection only
+                        </div>
+                        }
+                    </div>
+                    }
+                    else if (isTrueFalse)
+                    {
+                    <div class="tf-options">
+                        <div class="tf-option @(tfQuestion.CorrectAnswer ? "correct-option" : "")">
+                            <div class="option-indicator">
+                                @if (tfQuestion.CorrectAnswer)
+                                {
+                                <i class="fas fa-check-circle text-success"></i>
+                                }
+                                else
+                                {
+                                <i class="fas fa-circle text-muted"></i>
+                                }
+                            </div>
+                            <div class="option-text">True</div>
+                            @if (tfQuestion.CorrectAnswer)
+                            {
+                            <div class="correct-label">
+                                <span class="badge bg-success">Correct</span>
+                            </div>
+                            }
+                        </div>
+                        <div class="tf-option @(!tfQuestion.CorrectAnswer ? "correct-option" : "")">
+                            <div class="option-indicator">
+                                @if (!tfQuestion.CorrectAnswer)
+                                {
+                                <i class="fas fa-check-circle text-success"></i>
+                                }
+                                else
+                                {
+                                <i class="fas fa-circle text-muted"></i>
+                                }
+                            </div>
+                            <div class="option-text">False</div>
+                            @if (!tfQuestion.CorrectAnswer)
+                            {
+                            <div class="correct-label">
+                                <span class="badge bg-success">Correct</span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+                    else if (isShortAnswer)
+                    {
+                    <div class="expected-answer">
+                        <div class="answer-display">
+                            <i class="fas fa-quote-left text-muted"></i>
+                            <span class="answer-text">@saQuestion.ExpectedAnswer</span>
+                            <i class="fas fa-quote-right text-muted"></i>
+                        </div>
+                        <div class="answer-settings">
+                            @if (saQuestion.CaseSensitive)
+                            {
+                            <div class="setting-badge case-sensitive">
+                                <i class="fas fa-text-height me-1"></i>
+                                Case Sensitive
+                            </div>
+                            }
+                            else
+                            {
+                            <div class="setting-badge case-insensitive">
+                                <i class="fas fa-text-height me-1"></i>
+                                Case Insensitive
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Answer Distribution Chart -->
+            @if (isMultipleChoice || isTrueFalse)
+            {
+            <div class="analysis-card chart-card">
+                <div class="card-header">
+                    <h3 class="card-title">Response Distribution</h3>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color correct"></div>
+                            <span>Correct Answer</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color incorrect"></div>
+                            <span>Incorrect Answer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <canvas id="answerDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
             }
         </div>
     </div>
-    
-    <!-- Performance Chart -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Success Rate Comparison</h5>
+
+    <!-- Performance Comparison Section -->
+    <div class="performance-section">
+        <h2 class="section-title">
+            <i class="fas fa-chart-bar me-2"></i>
+            Performance Comparison
+        </h2>
+
+        <div class="comparison-grid">
+            <div class="comparison-card">
+                <div class="card-header">
+                    <h3 class="card-title">Success Rate Comparison</h3>
+                    <div class="card-subtitle">This question vs. test average</div>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <canvas id="successRateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-summary">
+                <div class="summary-header">
+                    <h3>Performance Summary</h3>
+                </div>
+                <div class="summary-stats">
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <i class="fas fa-bullseye text-success me-2"></i>
+                            Correct Responses
+                        </div>
+                        <div class="stat-value text-success">
+                            @Model.Analytics.CorrectAnswers
+                            <span class="stat-percentage">
+                                (@Model.Analytics.SuccessRate.ToString("0.0")%)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Incorrect Responses
+                        </div>
+                        <div class="stat-value text-danger">
+                            @Model.Analytics.IncorrectAnswers
+                            <span class="stat-percentage">
+                                (@((100 - Model.Analytics.SuccessRate).ToString("0.0"))%)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-row">
+                        <div class="stat-label">
+                            <i class="fas fa-calculator text-info me-2"></i>
+                            Average Score
+                        </div>
+                        <div class="stat-value text-info">
+                            @Model.Analytics.AveragePoints.ToString("0.00") / @Model.Question.Points
+                            <span class="stat-percentage">
+                                (@((Model.Analytics.AveragePoints / Model.Question.Points * 100).ToString("0.0"))%)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="stat-row total-row">
+                        <div class="stat-label">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Total Responses
+                        </div>
+                        <div class="stat-value text-primary">
+                            @(Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers)
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <canvas id="successRateChart" height="100"></canvas>
+    </div>
+
+    <!-- Insights Section -->
+    <div class="insights-section">
+        <h2 class="section-title">
+            <i class="fas fa-lightbulb me-2"></i>
+            Insights & Recommendations
+        </h2>
+
+        <div class="insights-grid">
+            @if (Model.Analytics.SuccessRate < 40)
+            {
+            <div class="insight-card difficulty-insight">
+                <div class="insight-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="insight-content">
+                    <h4>High Difficulty Detected</h4>
+                    <p>This question has a low success rate of @Model.Analytics.SuccessRate.ToString("0.0")%. Consider reviewing the question clarity or adjusting the difficulty level.</p>
+                </div>
+            </div>
+            }
+            else if (Model.Analytics.SuccessRate > 90)
+            {
+            <div class="insight-card easy-insight">
+                <div class="insight-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="insight-content">
+                    <h4>Question May Be Too Easy</h4>
+                    <p>With a @Model.Analytics.SuccessRate.ToString("0.0")% success rate, most students are answering correctly. Consider increasing complexity for better assessment value.</p>
+                </div>
+            </div>
+            }
+            else
+            {
+            <div class="insight-card balanced-insight">
+                <div class="insight-icon">
+                    <i class="fas fa-balance-scale"></i>
+                </div>
+                <div class="insight-content">
+                    <h4>Well-Balanced Question</h4>
+                    <p>This question has an appropriate difficulty level with a @Model.Analytics.SuccessRate.ToString("0.0")% success rate, providing good discrimination between students.</p>
+                </div>
+            </div>
+            }
+
+            @if (isMultipleChoice && Model.Analytics.AnswerDistribution != null)
+            {
+            var mostSelectedIncorrect = Model.Analytics.AnswerDistribution
+            .Where(kvp => !mcQuestion.CorrectAnswers.Contains(kvp.Key))
+            .OrderByDescending(kvp => kvp.Value)
+            .FirstOrDefault();
+
+            if (mostSelectedIncorrect.Key != null && mostSelectedIncorrect.Value > 0)
+            {
+            <div class="insight-card distractor-insight">
+                <div class="insight-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="insight-content">
+                    <h4>Common Misconception</h4>
+                    <p>The option "@mostSelectedIncorrect.Key" was selected by @mostSelectedIncorrect.Value student(s). This might indicate a common misconception that could be addressed in class.</p>
+                </div>
+            </div>
+            }
+            }
+
+            <div class="insight-card action-insight">
+                <div class="insight-icon">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <div class="insight-content">
+                    <h4>Suggested Actions</h4>
+                    <ul class="action-list">
+                        @if (Model.Analytics.SuccessRate < 50)
+                        {
+                        <li>Review question wording for clarity</li>
+                        <li>Provide additional instruction on this topic</li>
+                        <li>Consider offering partial credit</li>
+                        }
+                        else if (Model.Analytics.SuccessRate > 85)
+                        {
+                        <li>Increase question complexity</li>
+                        <li>Add more challenging distractors</li>
+                        <li>Use for formative assessment</li>
+                        }
+                        else
+                        {
+                        <li>Question is performing well</li>
+                        <li>Monitor for consistency across tests</li>
+                        <li>Use as model for similar questions</li>
+                        }
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<style>
+    /* Enhanced Question Analytics Styles */
+    .question-analytics-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Enhanced Header */
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        color: white;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .analytics-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%),
+        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+        opacity: 0.2;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb-link {
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .breadcrumb-link:hover {
+        color: white;
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .breadcrumb-separator {
+        margin: 0 1rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 1.2rem;
+    }
+
+    .breadcrumb-current {
+        color: rgba(255,255,255,0.8);
+        font-weight: 600;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.2;
+    }
+
+    .title-icon {
+        background: rgba(255,255,255,0.2);
+        padding: 0.8rem;
+        border-radius: 16px;
+        margin-right: 1rem;
+    }
+
+    .test-info {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .test-label {
+        font-weight: 500;
+        margin-right: 0.5rem;
+    }
+
+    .test-name {
+        font-weight: 700;
+        background: rgba(255,255,255,0.15);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .header-actions .btn {
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.3);
+        font-weight: 600;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+
+    .header-actions .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        background: rgba(255,255,255,0.2);
+    }
+
+    /* Enhanced Metrics Grid */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .metric-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .metric-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: #3b82f6;
+    }
+
+    .metric-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 2rem;
+        transition: all 0.4s ease;
+        flex-shrink: 0;
+    }
+
+    .metric-card:hover .metric-icon {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .metric-content {
+        flex: 1;
+    }
+
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+        transition: color 0.3s ease;
+    }
+
+    .metric-card:hover .metric-value {
+        color: #2563eb;
+    }
+
+    .metric-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-subtitle {
+        font-size: 0.875rem;
+        color: #9ca3af;
+    }
+
+    .metric-trend {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+    }
+
+    .metric-breakdown {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .correct-count {
+        color: #22c55e;
+        font-weight: 600;
+    }
+
+    .incorrect-count {
+        color: #ef4444;
+        font-weight: 600;
+    }
+
+    .separator {
+        color: #d1d5db;
+    }
+
+    /* Enhanced Section Styles */
+    .question-section,
+    .answer-analysis-section,
+    .performance-section,
+    .insights-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #f3f4f6;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        margin: 0;
+    }
+
+    .question-badge {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .question-type-badge {
+        font-size: 0.875rem;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: 2px solid;
+    }
+
+    .question-type-badge.multiple-choice {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        border-color: #3b82f6;
+    }
+
+    .question-type-badge.true-false {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border-color: #10b981;
+    }
+
+    .question-type-badge.short-answer {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+        border-color: #0ea5e9;
+    }
+
+    .question-position-badge {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 2px solid #f59e0b;
+        font-size: 0.875rem;
+        font-weight: 700;
+        padding: 0.75rem 1.5rem;
+        border-radius: 30px;
+    }
+
+    /* Enhanced Question Card */
+    .question-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .question-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .question-text h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 16px;
+        border-left: 5px solid #3b82f6;
+    }
+
+    .question-meta {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .meta-item:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .meta-label {
+        font-weight: 600;
+        color: #6b7280;
+    }
+
+    .meta-value {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    /* Enhanced Analysis Grid */
+    .analysis-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .analysis-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .analysis-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .card-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+
+    .chart-legend {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+
+    .legend-color.correct {
+        background: #22c55e;
+    }
+
+    .legend-color.incorrect {
+        background: #ef4444;
+    }
+
+    .card-content {
+        padding: 2rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    /* Enhanced Options Display */
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .option-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .option-item.correct-option {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: #22c55e;
+    }
+
+    .option-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .option-indicator {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .option-text {
+        flex: 1;
+        font-weight: 500;
+        color: #1f2937;
+    }
+
+    .correct-label .badge {
+        font-size: 0.75rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+    }
+
+    .options-meta {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        color: #1d4ed8;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid #3b82f6;
+    }
+
+    /* True/False Options */
+    .tf-options {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .tf-option {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .tf-option.correct-option {
+        background: rgba(34, 197, 94, 0.05);
+        border-color: #22c55e;
+    }
+
+    .tf-option:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Short Answer Display */
+    .expected-answer {
+        text-align: center;
+    }
+
+    .answer-display {
+        padding: 2rem;
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        border-radius: 16px;
+        border: 2px solid #0ea5e9;
+        margin-bottom: 1.5rem;
+    }
+
+    .answer-text {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #0c4a6e;
+        margin: 0 1rem;
+    }
+
+    .answer-settings {
+        display: flex;
+        justify-content: center;
+    }
+
+    .setting-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .setting-badge.case-sensitive {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 2px solid #f59e0b;
+    }
+
+    .setting-badge.case-insensitive {
+        background: rgba(34, 197, 94, 0.1);
+        color: #059669;
+        border: 2px solid #10b981;
+    }
+
+    /* Performance Comparison */
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .comparison-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .stats-summary {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .summary-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .summary-header h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .summary-stats {
+        padding: 2rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+
+    .stat-row.total-row {
+        border-top: 2px solid #e5e7eb;
+        margin-top: 1rem;
+        padding-top: 1.5rem;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .stat-value {
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+
+    .stat-percentage {
+        font-size: 0.875rem;
+        font-weight: 500;
+        opacity: 0.8;
+    }
+
+    /* Enhanced Insights Section */
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .insight-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        display: flex;
+        gap: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .insight-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .difficulty-insight::before {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .easy-insight::before {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .balanced-insight::before {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .distractor-insight::before {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .action-insight::before {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .insight-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .insight-card:hover::before {
+        width: 8px;
+    }
+
+    .insight-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .difficulty-insight .insight-icon {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .easy-insight .insight-icon {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+
+    .balanced-insight .insight-icon {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .distractor-insight .insight-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .action-insight .insight-icon {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .insight-card:hover .insight-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .insight-content h4 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.75rem;
+    }
+
+    .insight-content p {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+
+    .action-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .action-list li {
+        padding: 0.5rem 0;
+        color: #6b7280;
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .action-list li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        color: #22c55e;
+        font-weight: bold;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1024px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .insights-grid {
+        grid-template-columns: 1fr;
+    }
+    }
+
+    @@media (max-width: 768px) {
+    .analytics-header {
+        padding: 2rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .title-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .metric-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .question-meta {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .tf-options {
+        flex-direction: column;
+    }
+
+    .insight-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    }
+
+    @@media (max-width: 576px) {
+    .analytics-header {
+        padding: 1.5rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+    }
+
+    .card-content {
+        padding: 1.5rem;
+    }
+
+    .question-text h3 {
+        font-size: 1.25rem;
+        padding: 1rem;
+    }
+
+    .chart-container {
+        height: 250px;
+    }
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .slide-up {
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bounce-in {
+        animation: bounceIn 0.6s ease-out;
+    }
+
+    @@keyframes bounceIn {
+        0% { opacity: 0; transform: scale(0.3); }
+        50% { opacity: 1; transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+</style>
+
 @section Scripts {
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Setup colors
-            const successColor = 'rgba(22, 163, 74, 0.7)';
-            const successBorder = 'rgba(22, 163, 74, 1)';
-            const dangerColor = 'rgba(220, 38, 38, 0.7)';
-            const dangerBorder = 'rgba(220, 38, 38, 1)';
-            
-            // Answer Distribution Chart for Multiple Choice or True/False
-            @if (isMultipleChoice || isTrueFalse)
-            {
-                <text>
-                // Get answer distribution data
-                const answerDistributionData = @Json.Serialize(Model.Analytics.AnswerDistribution);
-                
-                // For multiple choice, we want to display each option with its count
-                // For true/false, just display True and False counts
-                let labels = [];
-                let data = [];
-                let backgroundColor = [];
-                let borderColor = [];
-                
-                @if (isMultipleChoice)
-                {
-                    <text>
-                    // Ensure all options are included, even if no one selected them
-                    @foreach (var option in mcQuestion.Options)
-                    {
-                        <text>
-                        labels.push('@option');
-                        const count = answerDistributionData['@option'] || 0;
-                        data.push(count);
-                        
-                        // Check if this option is a correct answer
-                        const isCorrect = @Json.Serialize(mcQuestion.CorrectAnswers.Contains(option));
-                        backgroundColor.push(isCorrect ? successColor : dangerColor);
-                        borderColor.push(isCorrect ? successBorder : dangerBorder);
-                        </text>
-                    }
-                    </text>
-                }
-                else
-                {
-                    <text>
-                    // True/False - handle the two options
-                    labels = ['True', 'False'];
-                    data = [
-                        answerDistributionData['True'] || 0,
-                        answerDistributionData['False'] || 0
-                    ];
-                    
-                    // Correctly mark which option is correct
-                    const correctAnswer = @Json.Serialize(tfQuestion.CorrectAnswer);
-                    backgroundColor = [
-                        correctAnswer ? successColor : dangerColor,
-                        !correctAnswer ? successColor : dangerColor
-                    ];
-                    borderColor = [
-                        correctAnswer ? successBorder : dangerBorder,
-                        !correctAnswer ? successBorder : dangerBorder
-                    ];
-                    </text>
-                }
-                
-                // Create the chart
-                const answerDistributionCtx = document.getElementById('answerDistributionChart').getContext('2d');
-                new Chart(answerDistributionCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Number of Responses',
-                            data: data,
-                            backgroundColor: backgroundColor,
-                            borderColor: borderColor,
-                            borderWidth: 1
-                        }]
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced color palette
+        const colors = {
+            primary: '#3b82f6',
+            primaryLight: '#60a5fa',
+            secondary: '#6366f1',
+            success: '#22c55e',
+            successLight: '#4ade80',
+            danger: '#ef4444',
+            dangerLight: '#f87171',
+            warning: '#f59e0b',
+            info: '#0ea5e9',
+            gradient: {
+                primary: ['#3b82f6', '#1d4ed8'],
+                success: ['#22c55e', '#16a34a'],
+                danger: ['#ef4444', '#dc2626']
+            }
+        };
+
+        // Chart configuration options
+        const defaultChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: colors.primary,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
                     },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                }
+                    bodyFont: {
+                        size: 13
+                    }
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        };
+
+        // Answer Distribution Chart for Multiple Choice or True/False
+        @if (isMultipleChoice || isTrueFalse)
+        {
+        <text>
+        // Get answer distribution data
+        const answerDistributionData = @Html.Raw(Json.Serialize(Model.Analytics.AnswerDistribution));
+
+        let labels = [];
+        let data = [];
+        let backgroundColor = [];
+        let borderColor = [];
+
+        @if (isMultipleChoice)
+        {
+        <text>
+        // Process multiple choice options
+        @foreach (var option in mcQuestion.Options)
+        {
+        <text>
+        labels.push('@Html.Raw(Json.Serialize(option))');
+        const count = answerDistributionData['@Html.Raw(Json.Serialize(option))'] || 0;
+        data.push(count);
+
+        const isCorrect = @Html.Raw(Json.Serialize(mcQuestion.CorrectAnswers.Contains(option)));
+        if (isCorrect) {
+            backgroundColor.push(colors.success);
+            borderColor.push(colors.successLight);
+        } else {
+            backgroundColor.push(colors.danger);
+            borderColor.push(colors.dangerLight);
+        }
+        </text>
+        }
+        </text>
+        }
+        else
+        {
+        <text>
+        // Process True/False options
+        labels = ['True', 'False'];
+        data = [
+            answerDistributionData['True'] || 0,
+            answerDistributionData['False'] || 0
+        ];
+
+        const correctAnswer = @Html.Raw(Json.Serialize(tfQuestion.CorrectAnswer));
+        backgroundColor = [
+            correctAnswer ? colors.success : colors.danger,
+            !correctAnswer ? colors.success : colors.danger
+        ];
+        borderColor = [
+            correctAnswer ? colors.successLight : colors.dangerLight,
+            !correctAnswer ? colors.successLight : colors.dangerLight
+        ];
+        </text>
+        }
+
+        // Create enhanced answer distribution chart
+        const answerDistributionCtx = document.getElementById('answerDistributionChart').getContext('2d');
+        new Chart(answerDistributionCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Number of Responses',
+                    data: data,
+                    backgroundColor: backgroundColor,
+                    borderColor: borderColor,
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                ...defaultChartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            color: '#6b7280',
+                            font: {
+                                size: 12
                             }
                         },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-                </text>
-            }
-            
-            // Success Rate Horizontal Bar Chart comparing this question to overall average
-            const successRateCtx = document.getElementById('successRateChart').getContext('2d');
-            new Chart(successRateCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['This Question', 'Test Average'],
-                    datasets: [{
-                        axis: 'y',
-                        label: 'Success Rate (%)',
-                        data: [@Model.Analytics.SuccessRate, @Model.Analytics.SuccessRate], // Replace second value with test average when available
-                        backgroundColor: [
-                            @Model.Analytics.SuccessRate >= 70 ? 'successColor' : 
-                            @Model.Analytics.SuccessRate >= 40 ? 'rgba(245, 158, 11, 0.7)' : 'dangerColor',
-                            'rgba(37, 99, 235, 0.7)'
-                        ],
-                        borderColor: [
-                            @Model.Analytics.SuccessRate >= 70 ? 'successBorder' : 
-                            @Model.Analytics.SuccessRate >= 40 ? 'rgba(245, 158, 11, 1)' : 'dangerBorder',
-                            'rgba(37, 99, 235, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            }
+                        grid: {
+                            color: '#f3f4f6',
+                            lineWidth: 1
                         }
                     },
-                    plugins: {
-                        legend: {
+                    x: {
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        },
+                        grid: {
                             display: false
                         }
                     }
+                },
+                plugins: {
+                    ...defaultChartOptions.plugins,
+                    tooltip: {
+                        ...defaultChartOptions.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                return `${context.parsed.y} responses (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        </text>
+        }
+
+        // Enhanced Success Rate Comparison Chart
+        const successRateCtx = document.getElementById('successRateChart').getContext('2d');
+        const questionSuccessRate = @Model.Analytics.SuccessRate;
+        const testAverageRate = @Model.Analytics.SuccessRate; // Replace with actual test average when available
+
+        new Chart(successRateCtx, {
+            type: 'bar',
+            data: {
+                labels: ['This Question', 'Test Average'],
+                datasets: [{
+                    axis: 'y',
+                    label: 'Success Rate (%)',
+                    data: [questionSuccessRate, testAverageRate],
+                    backgroundColor: [
+                        questionSuccessRate >= 70 ? colors.success :
+                            questionSuccessRate >= 40 ? colors.warning : colors.danger,
+                        colors.info
+                    ],
+                    borderColor: [
+                        questionSuccessRate >= 70 ? colors.successLight :
+                            questionSuccessRate >= 40 ? '#fbbf24' : colors.dangerLight,
+                        '#38bdf8'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                ...defaultChartOptions,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: '#6b7280',
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#f3f4f6',
+                            lineWidth: 1
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 12,
+                                weight: '500'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    ...defaultChartOptions.plugins,
+                    tooltip: {
+                        ...defaultChartOptions.plugins.tooltip,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.x.toFixed(1)}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add smooth animations for cards
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
                 }
             });
+        }, observerOptions);
+
+        // Observe all cards for animation
+        document.querySelectorAll('.metric-card, .analysis-card, .insight-card, .question-card').forEach((card) => {
+            observer.observe(card);
         });
-    </script>
+
+        // Add hover effects for metric cards
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Add pulse animation to important metrics
+        const successRate = @Model.Analytics.SuccessRate;
+        if (successRate < 40 || successRate > 90) {
+            const performanceCard = document.querySelector('.performance-card');
+            if (performanceCard) {
+                performanceCard.style.animation = 'pulse 2s infinite';
+            }
+        }
+    });
+</script>
 }

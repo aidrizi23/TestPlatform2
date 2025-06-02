@@ -1,189 +1,2508 @@
 @model TestPlatform2.Models.TestAttemptsViewModel
 
 @{
-    ViewData["Title"] = "All Test Attempts";
+ViewData["Title"] = "Test Attempts";
 }
 
-<style>
-    /* General Styles */
-    body {
-        background-color: var(--primary-bg);
-        color: var(--text-primary);
-    }
-
-    .card {
-        background-color: var(--secondary-bg);
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        background: linear-gradient(90deg, var(--accent-purple), var(--accent-green));
-        color: var(--text-primary);
-        border-bottom: none;
-        border-radius: 12px 12px 0 0;
-        padding: 20px;
-    }
-
-    .card-body {
-        padding: 30px;
-    }
-
-    .btn {
-        border: none;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        padding: 10px 20px;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Custom Button Colors */
-    .btn-primary { background-color: var(--accent-green); color: var(--text-primary); }
-    .btn-primary:hover { background-color: var(--accent-purple); }
-    .btn-secondary { background-color: #6c757d; color: var(--text-primary); }
-    .btn-warning { background-color: #ffc107; color: #000; }
-    .btn-danger { background-color: #dc3545; color: var(--text-primary); }
-    .btn-info { background-color: #17a2b8; color: var(--text-primary); }
-    .btn-success { background-color: #28a745; color: var(--text-primary); }
-
-    /* Table Styles */
-    .table {
-        color: var(--text-primary);
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-
-    .table thead th {
-        background-color: var(--secondary-bg);
-        border: none;
-        padding: 15px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .table tbody td {
-        background-color: rgba(255, 255, 255, 0.05);
-        border: none;
-        padding: 15px;
-        vertical-align: middle;
-    }
-
-    .table tbody tr {
-        transition: all 0.3s ease;
-    }
-
-    /* Modified hover styles to maintain text color */
-    .table tbody tr:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        color: var(--text-primary) !important;
-    }
-
-    .table tbody tr:hover td {
-        color: var(--text-primary);
-    }
-
-    .table-striped tbody tr:nth-of-type(odd) {
-        background-color: rgba(255, 255, 255, 0.02);
-    }
-
-    /* Filter Buttons */
-    .filter-buttons {
-        margin-bottom: 20px;
-    }
-
-    .filter-buttons .btn {
-        margin-right: 10px;
-    }
-
-    /* Status Badge */
-    .badge {
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-
-    .badge-success { background-color: #28a745; }
-    .badge-warning { background-color: #ffc107; color: #000; }
-</style>
-
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="card-title mb-0">All Test Attempts</h2>
+<div class="attempts-container">
+    <!-- Enhanced Header Section -->
+    <div class="attempts-header">
+        <div class="header-background">
+            <div class="header-pattern"></div>
+            <div class="header-glow"></div>
         </div>
-        <div class="card-body">
-            <!-- Filter Buttons -->
-            <div class="filter-buttons">
-                <a asp-action="AllAttempts" asp-route-testId="@Model.TestId" asp-route-filter="All" class="btn btn-primary @(Model.CurrentFilter == "All" ? "active" : "")">All Attempts</a>
-                <a asp-action="AllAttempts" asp-route-testId="@Model.TestId" asp-route-filter="Finished" class="btn btn-success @(Model.CurrentFilter == "Finished" ? "active" : "")">Finished Attempts</a>
-                <a asp-action="AllAttempts" asp-route-testId="@Model.TestId" asp-route-filter="Unfinished" class="btn btn-warning @(Model.CurrentFilter == "Unfinished" ? "active" : "")">Unfinished Attempts</a>
+        <div class="header-content">
+            <div class="header-main">
+                <div class="breadcrumb-nav">
+                    <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="breadcrumb-link">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Test</span>
+                    </a>
+                    <div class="breadcrumb-separator">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    <span class="breadcrumb-current">Test Attempts</span>
+                </div>
+
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <div class="title-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <span class="title-text">Test Attempts</span>
+                        <div class="title-accent"></div>
+                    </h1>
+                    <p class="page-subtitle">Monitor and analyze student performance with detailed insights</p>
+                </div>
             </div>
 
-            @{
+            <div class="header-actions">
+                <div class="action-group">
+                    <a asp-controller="Test" asp-action="Analytics" asp-route-id="@Model.TestId" class="action-btn primary">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <button type="button" class="action-btn secondary" onclick="refreshAttempts()">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <div class="dropdown">
+                        <button class="action-btn secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download"></i>
+                            <span>Export</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportData('csv')">
+                                    <i class="fas fa-file-csv"></i>Export as CSV
+                                </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportData('pdf')">
+                                    <i class="fas fa-file-pdf"></i>Export as PDF
+                                </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Statistics Dashboard -->
+    <div class="stats-dashboard">
+        @{
+        var totalAttempts = Model.AllAttempts?.Count() ?? 0;
+        var finishedAttempts = Model.FinishedAttempts?.Count() ?? 0;
+        var unfinishedAttempts = Model.UnfinishedAttempts?.Count() ?? 0;
+        var completionRate = totalAttempts > 0 ? (double)finishedAttempts / totalAttempts * 100 : 0;
+        var averageScore = Model.FinishedAttempts?.Any() == true ? Model.FinishedAttempts.Average(a => a.Score) : 0;
+        }
+
+        <div class="stat-card-modern" data-stat="total" onclick="filterAttempts('All')">
+            <div class="stat-background">
+                <div class="stat-gradient gradient-blue"></div>
+                <div class="stat-pattern"></div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="badge-text">Total</span>
+                    </div>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-number">@totalAttempts</div>
+                    <div class="stat-label">All Attempts</div>
+                </div>
+                <div class="stat-footer">
+                    <div class="stat-trend neutral">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>View All</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card-modern" data-stat="completed" onclick="filterAttempts('Finished')">
+            <div class="stat-background">
+                <div class="stat-gradient gradient-green"></div>
+                <div class="stat-pattern"></div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <div class="stat-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="badge-text">Done</span>
+                    </div>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-number">@finishedAttempts</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-footer">
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>@completionRate.ToString("0")% Rate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card-modern" data-stat="progress" onclick="filterAttempts('Unfinished')">
+            <div class="stat-background">
+                <div class="stat-gradient gradient-orange"></div>
+                <div class="stat-pattern"></div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="badge-text">Active</span>
+                    </div>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-number">@unfinishedAttempts</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-footer">
+                    <div class="stat-trend warning">
+                        <i class="fas fa-clock"></i>
+                        <span>Ongoing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card-modern" data-stat="average">
+            <div class="stat-background">
+                <div class="stat-gradient gradient-purple"></div>
+                <div class="stat-pattern"></div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-badge">
+                        <span class="badge-text">Avg</span>
+                    </div>
+                </div>
+                <div class="stat-body">
+                    <div class="stat-number">@averageScore.ToString("0.0")</div>
+                    <div class="stat-label">Average Score</div>
+                </div>
+                <div class="stat-footer">
+                    <div class="stat-trend @(averageScore >= 70 ? "positive" : averageScore >= 50 ? "warning" : "negative")">
+                        <i class="fas @(averageScore >= 70 ? "fa-trending-up" : averageScore >= 50 ? "fa-minus" : "fa-trending-down")"></i>
+                        <span>@(averageScore >= 70 ? "Excellent" : averageScore >= 50 ? "Good" : "Needs Work")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Filter and Content Section -->
+    <div class="content-section">
+        <div class="content-wrapper">
+            <div class="content-header">
+                <div class="header-left">
+                    <h2 class="section-title">
+                        <i class="fas fa-users"></i>
+                        Student Attempts
+                    </h2>
+                    <p class="section-subtitle">Detailed view of all test submissions</p>
+                </div>
+
+                <div class="header-controls">
+                    <div class="filter-section">
+                        <div class="filter-tabs">
+                            <button type="button" class="filter-tab @(Model.CurrentFilter == "All" ? "active" : "")"
+                                    onclick="filterAttempts('All')" data-filter="All">
+                                <i class="fas fa-list"></i>
+                                <span class="tab-label">All</span>
+                                <span class="tab-count">@totalAttempts</span>
+                            </button>
+                            <button type="button" class="filter-tab @(Model.CurrentFilter == "Finished" ? "active" : "")"
+                                    onclick="filterAttempts('Finished')" data-filter="Finished">
+                                <i class="fas fa-check"></i>
+                                <span class="tab-label">Completed</span>
+                                <span class="tab-count">@finishedAttempts</span>
+                            </button>
+                            <button type="button" class="filter-tab @(Model.CurrentFilter == "Unfinished" ? "active" : "")"
+                                    onclick="filterAttempts('Unfinished')" data-filter="Unfinished">
+                                <i class="fas fa-clock"></i>
+                                <span class="tab-label">Active</span>
+                                <span class="tab-count">@unfinishedAttempts</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="search-section">
+                        <div class="search-input-wrapper">
+                            <input type="text" id="searchInput" class="search-input" placeholder="Search students..."
+                                   oninput="searchAttempts(this.value)">
+                            <div class="search-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                        </div>
+
+                        <div class="sort-wrapper">
+                            <select id="sortSelect" class="sort-select" onchange="sortAttempts(this.value)">
+                                <option value="date-desc">Latest First</option>
+                                <option value="date-asc">Oldest First</option>
+                                <option value="score-desc">Highest Score</option>
+                                <option value="score-asc">Lowest Score</option>
+                                <option value="name-asc">Name A-Z</option>
+                                <option value="name-desc">Name Z-A</option>
+                            </select>
+                            <div class="sort-icon">
+                                <i class="fas fa-sort"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="attempts-content">
+                @{
                 IEnumerable<TestPlatform2.Data.TestAttempt> attemptsToShow = Model.CurrentFilter switch
                 {
-                    "Finished" => Model.FinishedAttempts,
-                    "Unfinished" => Model.UnfinishedAttempts,
-                    _ => Model.AllAttempts
+                "Finished" => Model.FinishedAttempts,
+                "Unfinished" => Model.UnfinishedAttempts,
+                _ => Model.AllAttempts
                 };
-            }
+                }
 
-            @if (attemptsToShow == null || !attemptsToShow.Any())
-            {
-                <p class="text-info">No test attempts found.</p>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Start Time</th>
-                            <th>End Time</th>
-                            <th>Status</th>
-                            <th>Score</th>
-                            <th>Actions</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        @foreach (var attempt in attemptsToShow)
-                        {
-                            <tr>
-                                <td>@($"{attempt.FirstName} {attempt.LastName}")</td>
-                                <td>@attempt.StudentEmail</td>
-                                <td>@attempt.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
-                                <td>@(attempt.EndTime.HasValue ? attempt.EndTime.Value.ToString("yyyy-MM-dd HH:mm") : "-")</td>
-                                <td>
-                                    @if (attempt.IsCompleted)
-                                    {
-                                        <span class="badge badge-success">Completed</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge badge-warning">In Progress</span>
-                                    }
-                                </td>
-                                <td>@attempt.Score</td>
-                                <td>
-                                    <a asp-controller="TestAttempt" asp-action="Delete" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Delete</a>
-                                    <a asp-controller="TestAttempt" asp-action="Details" asp-route-id="@attempt.Id" class="btn btn-sm btn-info">Details</a>
-                                </td>
-                            </tr>
-                        }
-                        </tbody>
-                    </table>
+                @if (attemptsToShow == null || !attemptsToShow.Any())
+                {
+                <div class="empty-state-modern">
+                    <div class="empty-background">
+                        <div class="empty-circle circle-1"></div>
+                        <div class="empty-circle circle-2"></div>
+                        <div class="empty-circle circle-3"></div>
+                    </div>
+                    <div class="empty-content">
+                        <div class="empty-icon">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <h3 class="empty-title">No Attempts Found</h3>
+                        <p class="empty-description">
+                            @if (Model.CurrentFilter == "All")
+                            {
+                            <text>No students have taken this test yet. Send invitations to get started!</text>
+                            }
+                            else if (Model.CurrentFilter == "Finished")
+                            {
+                            <text>No completed attempts found. Students may still be working on the test.</text>
+                            }
+                            else
+                            {
+                            <text>No active attempts. All students have either completed or haven't started the test.</text>
+                            }
+                        </p>
+                        <div class="empty-actions">
+                            <a asp-controller="Test" asp-action="Details" asp-route-id="@Model.TestId" class="empty-btn">
+                                <i class="fas fa-paper-plane"></i>
+                                <span>Send Invitations</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            }
+                }
+                else
+                {
+                <!-- Enhanced Attempts Grid -->
+                <div class="attempts-grid">
+                    @foreach (var attempt in attemptsToShow.OrderByDescending(a => a.StartTime))
+                    {
+                    <div class="attempt-card-enhanced" data-attempt-id="@attempt.Id"
+                         data-student-name="@($"{attempt.FirstName} {attempt.LastName}".ToLower())"
+                         data-email="@attempt.StudentEmail.ToLower()"
+                         data-status="@(attempt.IsCompleted ? "completed" : "progress")"
+                         data-score="@attempt.Score"
+                         data-start-time="@attempt.StartTime.Ticks"
+                         data-end-time="@(attempt.EndTime?.Ticks ?? 0)">
+
+                        <div class="card-background">
+                            <div class="card-glow"></div>
+                        </div>
+
+                        <div class="card-header-enhanced">
+                            <div class="student-section">
+                                <div class="student-avatar-modern">
+                                    <div class="avatar-background"></div>
+                                    <div class="avatar-text">
+                                        @(attempt.FirstName?.Substring(0, 1).ToUpper())@(attempt.LastName?.Substring(0, 1).ToUpper())
+                                    </div>
+                                </div>
+                                <div class="student-info-modern">
+                                    <div class="student-name">@($"{attempt.FirstName} {attempt.LastName}")</div>
+                                    <div class="student-email">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>@attempt.StudentEmail</span>
+                                        <button type="button" class="copy-btn" onclick="copyEmail('@attempt.StudentEmail')" title="Copy email">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="status-section">
+                                @if (attempt.IsCompleted)
+                                {
+                                <div class="status-badge completed-badge">
+                                    <div class="badge-icon">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <span class="badge-text">Completed</span>
+                                </div>
+                                }
+                                else
+                                {
+                                <div class="status-badge progress-badge">
+                                    <div class="badge-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <span class="badge-text">In Progress</span>
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-body-enhanced">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-icon blue">
+                                        <i class="fas fa-play"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Started</div>
+                                        <div class="info-value">
+                                            <div class="time-primary">@attempt.StartTime.ToString("MMM dd, yyyy")</div>
+                                            <div class="time-secondary">@attempt.StartTime.ToString("HH:mm")</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (attempt.EndTime.HasValue)
+                                {
+                                <div class="info-item">
+                                    <div class="info-icon green">
+                                        <i class="fas fa-stop"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Finished</div>
+                                        <div class="info-value">
+                                            <div class="time-primary">@attempt.EndTime.Value.ToString("MMM dd, yyyy")</div>
+                                            <div class="time-secondary">@attempt.EndTime.Value.ToString("HH:mm")</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                                else
+                                {
+                                <div class="info-item">
+                                    <div class="info-icon orange">
+                                        <i class="fas fa-hourglass-half"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Duration</div>
+                                        <div class="info-value">
+                                            @{
+                                            var elapsed = DateTime.UtcNow - attempt.StartTime;
+                                            }
+                                            <div class="time-primary">@elapsed.ToString(@"hh\:mm\:ss")</div>
+                                            <div class="time-secondary">Elapsed</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+
+                                @if (attempt.IsCompleted)
+                                {
+                                var scorePercentage = attempt.Score;
+                                <div class="info-item score-item">
+                                    <div class="info-icon purple">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <div class="info-label">Score</div>
+                                        <div class="info-value">
+                                            <div class="score-display-modern">
+                                                <div class="score-number @(scorePercentage >= 70 ? "score-excellent" : scorePercentage >= 50 ? "score-good" : "score-poor")">
+                                                    @scorePercentage.ToString("0.0")%
+                                                </div>
+                                                <div class="score-bar-modern">
+                                                    <div class="score-track"></div>
+                                                    <div class="score-fill @(scorePercentage >= 70 ? "score-excellent" : scorePercentage >= 50 ? "score-good" : "score-poor")"
+                                                         style="width: @Math.Min(scorePercentage, 100)%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card-footer-enhanced">
+                            <div class="action-buttons-modern">
+                                <a asp-controller="TestAttempt" asp-action="Details" asp-route-id="@attempt.Id" class="action-btn-modern primary">
+                                    <i class="fas fa-eye"></i>
+                                    <span>View Details</span>
+                                </a>
+
+                                @if (attempt.IsCompleted)
+                                {
+                                <button type="button" class="action-btn-modern secondary" onclick="downloadReport('@attempt.Id')">
+                                    <i class="fas fa-download"></i>
+                                    <span>Report</span>
+                                </button>
+                                }
+
+                                <button type="button" class="action-btn-modern danger" onclick="deleteAttempt('@attempt.Id', '@($"{attempt.FirstName} {attempt.LastName}")')">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+                }
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Enhanced Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header danger">
+                <div class="header-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Delete Test Attempt</h5>
+                    <p class="modal-subtitle">This action cannot be undone</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="confirmation-text">
+                        <p>Are you sure you want to permanently delete the test attempt by <strong id="studentName"></strong>?</p>
+                        <div class="warning-note">
+                            <i class="fas fa-info-circle"></i>
+                            <span>All associated data including answers and scores will be permanently removed.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Attempt</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Toast Container -->
+<div class="toast-container-modern" id="toastContainer"></div>
+
+<style>
+    /* Modern Attempts View - Enhanced Styling */
+    * {
+        box-sizing: border-box;
+    }
+
+    .attempts-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Enhanced Header Section */
+    .attempts-header {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 40px rgba(16, 52, 166, 0.15);
+    }
+
+    .header-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #1034a6 0%, #2563eb 35%, #3b82f6 100%);
+    }
+
+    .header-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+            radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+            radial-gradient(circle at 40% 20%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 60px 60px, 60px 60px, 30px 30px;
+        animation: patternFloat 20s ease-in-out infinite;
+    }
+
+    @@keyframes patternFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(1deg); }
+    }
+
+    .header-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    @@keyframes glowPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        padding: 2.5rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .breadcrumb-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .breadcrumb-separator {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .breadcrumb-current {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    .page-title-section {
+        position: relative;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        position: relative;
+    }
+
+    .title-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .title-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    .title-accent {
+        position: absolute;
+        bottom: -8px;
+        left: 80px;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), transparent);
+        border-radius: 2px;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.875rem;
+    }
+
+    .action-btn.primary {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        border: none;
+    }
+
+    .action-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Enhanced Statistics Dashboard */
+    .stats-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card-modern {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-card-modern:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-background {
+        position: absolute;
+        inset: 0;
+    }
+
+    .stat-gradient {
+        position: absolute;
+        inset: 0;
+    }
+
+    .gradient-blue {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+
+    .gradient-green {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .gradient-orange {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .gradient-purple {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .stat-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+            radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+        background-size: 40px 40px;
+        opacity: 0.6;
+    }
+
+    .stat-content {
+        position: relative;
+        z-index: 2;
+        padding: 1.75rem;
+        color: white;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.25rem;
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card-modern:hover .stat-icon {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .stat-badge {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 0.5rem 0.875rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-text {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-body {
+        flex: 1;
+        margin-bottom: 1rem;
+    }
+
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.8) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        font-size: 0.975rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+    }
+
+    .stat-footer {
+        margin-top: auto;
+    }
+
+    .stat-trend {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .stat-trend.positive {
+        background: rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .stat-trend.negative {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .stat-trend.warning {
+        background: rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .stat-trend.neutral {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Content Section */
+    .content-section {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        overflow: hidden;
+    }
+
+    .content-wrapper {
+        position: relative;
+    }
+
+    .content-header {
+        padding: 2rem 2.5rem 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .header-left {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title i {
+        color: #3b82f6;
+    }
+
+    .section-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .header-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .filter-section {
+        display: flex;
+        justify-content: center;
+    }
+
+    .filter-tabs {
+        display: flex;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(16, 52, 166, 0.08);
+        border: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .filter-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.25rem;
+        border: none;
+        background: transparent;
+        color: #64748b;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        position: relative;
+        font-size: 0.875rem;
+    }
+
+    .filter-tab:hover {
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .filter-tab.active {
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+
+    .tab-label {
+        font-weight: 600;
+    }
+
+    .tab-count {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        min-width: 24px;
+        text-align: center;
+    }
+
+    .filter-tab.active .tab-count {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .search-section {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.875rem 1rem 0.875rem 3rem;
+        border: 2px solid rgba(16, 52, 166, 0.1);
+        border-radius: 12px;
+        background: white;
+        color: #1e293b;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(16, 52, 166, 0.05);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .sort-wrapper {
+        position: relative;
+        min-width: 180px;
+    }
+
+    .sort-select {
+        width: 100%;
+        padding: 0.875rem 2.5rem 0.875rem 1rem;
+        border: 2px solid rgba(16, 52, 166, 0.1);
+        border-radius: 12px;
+        background: white;
+        color: #1e293b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+        box-shadow: 0 2px 4px rgba(16, 52, 166, 0.05);
+    }
+
+    .sort-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .sort-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    /* Enhanced Attempts Grid */
+    .attempts-content {
+        padding: 2rem 2.5rem;
+    }
+
+    .attempts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .attempt-card-enhanced {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        box-shadow: 0 4px 12px rgba(16, 52, 166, 0.08);
+    }
+
+    .attempt-card-enhanced:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(16, 52, 166, 0.15);
+        border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .card-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    .card-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .attempt-card-enhanced:hover .card-glow {
+        opacity: 1;
+    }
+
+    .card-header-enhanced {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .student-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .student-avatar-modern {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .avatar-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+
+    .avatar-text {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .student-info-modern {
+        min-width: 0;
+    }
+
+    .student-name {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.375rem;
+    }
+
+    .student-email {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .copy-btn {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        opacity: 0;
+    }
+
+    .student-email:hover .copy-btn {
+        opacity: 1;
+    }
+
+    .copy-btn:hover {
+        color: #3b82f6;
+        background: rgba(59, 130, 246, 0.1);
+    }
+
+    .status-section {
+        flex-shrink: 0;
+    }
+
+    .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.625rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .completed-badge {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .progress-badge {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .badge-icon {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card-body-enhanced {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .info-icon.blue {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .info-icon.green {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .info-icon.orange {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .info-icon.purple {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .info-content {
+        min-width: 0;
+        flex: 1;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.375rem;
+    }
+
+    .info-value {
+        color: #1e293b;
+    }
+
+    .time-primary {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.125rem;
+    }
+
+    .time-secondary {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
+
+    .score-item {
+        grid-column: 1 / -1;
+    }
+
+    .score-display-modern {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .score-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .score-number.score-excellent {
+        color: #059669;
+    }
+
+    .score-number.score-good {
+        color: #d97706;
+    }
+
+    .score-number.score-poor {
+        color: #dc2626;
+    }
+
+    .score-bar-modern {
+        position: relative;
+        height: 8px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .score-track {
+        position: absolute;
+        inset: 0;
+        background: #e2e8f0;
+    }
+
+    .score-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+
+    .score-fill.score-excellent {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .score-fill.score-good {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .score-fill.score-poor {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .card-footer-enhanced {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+        background: rgba(248, 250, 252, 0.8);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .action-buttons-modern {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .action-btn-modern {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+    .action-btn-modern.primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .action-btn-modern.primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+
+    .action-btn-modern.secondary {
+        background: white;
+        color: #64748b;
+        border-color: #e2e8f0;
+    }
+
+    .action-btn-modern.secondary:hover {
+        background: #f8fafc;
+        color: #3b82f6;
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+    }
+
+    .action-btn-modern.danger {
+        background: white;
+        color: #dc2626;
+        border-color: rgba(220, 38, 38, 0.2);
+    }
+
+    .action-btn-modern.danger:hover {
+        background: rgba(220, 38, 38, 0.05);
+        color: #dc2626;
+        border-color: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    /* Enhanced Empty State */
+    .empty-state-modern {
+        position: relative;
+        padding: 4rem 2rem;
+        text-align: center;
+        border-radius: 20px;
+        margin: 2rem;
+        overflow: hidden;
+    }
+
+    .empty-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .empty-circle {
+        position: absolute;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+        animation: floatCircle 6s ease-in-out infinite;
+    }
+
+    .circle-1 {
+        width: 100px;
+        height: 100px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+
+    .circle-2 {
+        width: 60px;
+        height: 60px;
+        top: 60%;
+        right: 15%;
+        animation-delay: 2s;
+    }
+
+    .circle-3 {
+        width: 80px;
+        height: 80px;
+        bottom: 20%;
+        left: 60%;
+        animation-delay: 4s;
+    }
+
+    @@keyframes floatCircle {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    .empty-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .empty-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+
+    .empty-description {
+        font-size: 1.125rem;
+        color: #64748b;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .empty-actions {
+        display: flex;
+        justify-content: center;
+    }
+
+    .empty-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        text-decoration: none;
+        border-radius: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .empty-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+
+    /* Enhanced Modal Styles */
+    .modern-modal {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .modern-header {
+        padding: 2rem;
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .modern-header.danger {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-bottom-color: rgba(220, 38, 38, 0.1);
+    }
+
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .header-content {
+        flex: 1;
+    }
+
+    .modal-title {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .modal-subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .modern-close {
+        background: rgba(15, 23, 42, 0.05);
+        border: none;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .modern-close:hover {
+        background: rgba(15, 23, 42, 0.1);
+    }
+
+    .modern-body {
+        padding: 2rem;
+    }
+
+    .confirmation-content {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .confirmation-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .confirmation-text {
+        flex: 1;
+    }
+
+    .confirmation-text p {
+        margin-bottom: 1rem;
+        color: #374151;
+        line-height: 1.6;
+    }
+
+    .warning-note {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 12px;
+        font-size: 0.875rem;
+        color: #92400e;
+    }
+
+    .modern-footer {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border-top: 1px solid rgba(16, 52, 166, 0.08);
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .btn-modern.secondary {
+        background: white;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-modern.secondary:hover {
+        background: #f8fafc;
+        color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .btn-modern.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-modern.danger:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Enhanced Toast Container */
+    .toast-modern {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        min-width: 300px;
+        overflow: hidden;
+        animation: slideInToast 0.4s ease-out;
+    }
+
+    @@keyframes slideInToast {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast-header-modern {
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .toast-header-modern.success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+        color: #059669;
+    }
+
+    .toast-header-modern.error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+        color: #dc2626;
+    }
+
+    .toast-header-modern.info {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(29, 78, 216, 0.05));
+        color: #1d4ed8;
+    }
+
+    .toast-icon-modern {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .toast-content-modern {
+        flex: 1;
+    }
+
+    .toast-title-modern {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .toast-body-modern {
+        padding: 1rem 1.25rem;
+        color: #374151;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .toast-close-modern {
+        background: none;
+        border: none;
+        color: currentColor;
+        opacity: 0.6;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: opacity 0.2s ease;
+    }
+
+    .toast-close-modern:hover {
+        opacity: 1;
+    }
+
+    /* Dropdown Menu Enhancement */
+    .dropdown-menu {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(16, 52, 166, 0.15);
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #374151;
+        text-decoration: none;
+    }
+
+    .dropdown-item:hover {
+        background: rgba(59, 130, 246, 0.05);
+        color: #3b82f6;
+        transform: translateX(4px);
+    }
+
+    .dropdown-item i {
+        width: 16px;
+        opacity: 0.7;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1200px) {
+    .attempts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    }
+    }
+
+    @@media (max-width: 1024px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .action-group {
+        justify-content: center;
+    }
+
+    .stats-dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .attempts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-controls {
+        align-items: stretch;
+    }
+
+    .search-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-input-wrapper {
+        max-width: none;
+    }
+    }
+
+    @@media (max-width: 768px) {
+    .attempts-container {
+        padding: 1rem;
+    }
+
+    .header-content {
+        padding: 2rem 1.5rem;
+    }
+
+    .page-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .title-text {
+        font-size: 2rem;
+    }
+
+    .stats-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-content {
+        padding: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+    }
+
+    .content-header {
+        padding: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .filter-tabs {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-tab {
+        justify-content: flex-start;
+    }
+
+    .attempts-content {
+        padding: 1.5rem;
+    }
+
+    .attempts-grid {
+        gap: 1rem;
+    }
+
+    .card-header-enhanced {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .student-section {
+        width: 100%;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .action-buttons-modern {
+        flex-direction: column;
+    }
+    }
+
+    @@media (max-width: 480px) {
+    .attempts-container {
+        padding: 0.75rem;
+    }
+
+    .header-content {
+        padding: 1.5rem 1rem;
+    }
+
+    .title-text {
+        font-size: 1.75rem;
+    }
+
+    .action-group {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .stat-content {
+        padding: 1.25rem;
+    }
+
+    .content-header {
+        padding: 1rem;
+    }
+
+    .attempts-content {
+        padding: 1rem;
+    }
+
+    .card-header-enhanced,
+    .card-body-enhanced,
+    .card-footer-enhanced {
+        padding: 1rem;
+    }
+
+    .student-section {
+        gap: 0.75rem;
+    }
+
+    .student-avatar-modern {
+        width: 48px;
+        height: 48px;
+    }
+
+    .student-name {
+        font-size: 1rem;
+    }
+
+    .modern-body {
+        padding: 1.5rem;
+    }
+
+    .modern-footer {
+        padding: 1rem 1.5rem;
+        flex-direction: column;
+    }
+
+    .toast-container-modern {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+    }
+
+    .toast-modern {
+        min-width: auto;
+    }
+    }
+
+    /* Loading and Animation States */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .slide-up {
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* Focus and Accessibility */
+    .action-btn:focus-visible,
+    .filter-tab:focus-visible,
+    .search-input:focus-visible,
+    .sort-select:focus-visible,
+    .action-btn-modern:focus-visible,
+    .btn-modern:focus-visible {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+    }
+
+    /* Print Styles */
+    @@media print {
+        .attempts-header,
+        .action-buttons-modern,
+        .toast-container-modern {
+            display: none;
+        }
+
+        .attempts-container {
+            padding: 0;
+        }
+
+        .attempt-card-enhanced {
+            break-inside: avoid;
+            box-shadow: none;
+            border: 1px solid #ccc;
+        }
+    }
+
+    /* High Contrast Mode */
+    @@media (prefers-contrast: high) {
+    .stat-gradient,
+    .card-background,
+    .header-background {
+        background: white;
+        border: 2px solid #000;
+    }
+
+    .stat-content,
+    .header-content {
+        color: #000;
+    }
+
+    .action-btn,
+    .action-btn-modern {
+        border: 2px solid #000;
+        background: white;
+        color: #000;
+    }
+    }
+
+    /* Reduced Motion */
+    @@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .pattern-float,
+    .glow-pulse,
+    .float-circle {
+        animation: none;
+    }
+    }
+</style>
+
+@section Scripts {
+<script>
+    let currentDeleteAttemptId = '';
+    let currentStudentName = '';
+
+    // Filter functionality
+    function filterAttempts(filter) {
+        showToast('Applying filter...', 'info', 1500);
+        setTimeout(() => {
+            window.location.href = `@Url.Action("AllAttempts", "Test")?testId=@Model.TestId&filter=${filter}`;
+        }, 200);
+    }
+
+    // Search functionality
+    function searchAttempts(searchTerm) {
+        const cards = document.querySelectorAll('.attempt-card-enhanced');
+        const term = searchTerm.toLowerCase();
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const studentName = card.dataset.studentName || '';
+            const email = card.dataset.email || '';
+
+            if (studentName.includes(term) || email.includes(term)) {
+                card.style.display = '';
+                card.classList.add('fade-in');
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('fade-in');
+            }
+        });
+
+        updateEmptyState(visibleCount);
+    }
+
+    // Sort functionality
+    function sortAttempts(sortBy) {
+        const container = document.querySelector('.attempts-grid');
+        if (!container) return;
+
+        const cards = Array.from(container.children);
+
+        cards.sort((a, b) => {
+            switch (sortBy) {
+                case 'date-desc':
+                    return parseInt(b.dataset.startTime) - parseInt(a.dataset.startTime);
+                case 'date-asc':
+                    return parseInt(a.dataset.startTime) - parseInt(b.dataset.startTime);
+                case 'score-desc':
+                    return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+                case 'score-asc':
+                    return parseFloat(a.dataset.score) - parseFloat(b.dataset.score);
+                case 'name-asc':
+                    return a.dataset.studentName.localeCompare(b.dataset.studentName);
+                case 'name-desc':
+                    return b.dataset.studentName.localeCompare(a.dataset.studentName);
+                default:
+                    return 0;
+            }
+        });
+
+        cards.forEach((card, index) => {
+            container.appendChild(card);
+            card.classList.add('slide-up');
+            setTimeout(() => card.classList.remove('slide-up'), 400);
+        });
+
+        showToast('Attempts sorted successfully', 'success', 2000);
+    }
+
+    // Update empty state
+    function updateEmptyState(visibleCount) {
+        const existingEmpty = document.getElementById('searchEmptyState');
+
+        if (visibleCount === 0 && !existingEmpty) {
+            showEmptySearchState();
+        } else if (visibleCount > 0 && existingEmpty) {
+            existingEmpty.remove();
+        }
+    }
+
+    function showEmptySearchState() {
+        const container = document.querySelector('.attempts-content');
+        const emptyState = document.createElement('div');
+        emptyState.id = 'searchEmptyState';
+        emptyState.className = 'empty-state-modern';
+        emptyState.innerHTML = `
+            <div class="empty-background">
+                <div class="empty-circle circle-1"></div>
+                <div class="empty-circle circle-2"></div>
+                <div class="empty-circle circle-3"></div>
+            </div>
+            <div class="empty-content">
+                <div class="empty-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="empty-title">No Results Found</h3>
+                <p class="empty-description">
+                    No attempts match your search criteria. Try adjusting your search terms or filters.
+                </p>
+            </div>
+        `;
+        container.appendChild(emptyState);
+    }
+
+    // Enhanced toast notification system
+    function showToast(message, type = 'info', duration = 5000) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastId = 'toast-' + Date.now();
+
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'toast-modern';
+        toast.innerHTML = `
+            <div class="toast-header-modern ${type}">
+                <div class="toast-icon-modern">
+                    <i class="fas ${getToastIcon(type)}"></i>
+                </div>
+                <div class="toast-content-modern">
+                    <div class="toast-title-modern">${getToastTitle(type)}</div>
+                </div>
+                <button type="button" class="toast-close-modern" onclick="closeToast('${toastId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-body-modern">
+                ${message}
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Auto-hide toast
+        setTimeout(() => {
+            closeToast(toastId);
+        }, duration);
+    }
+
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.animation = 'slideInToast 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }
+
+    function getToastIcon(type) {
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle'
+        };
+        return icons[type] || icons.info;
+    }
+
+    function getToastTitle(type) {
+        const titles = {
+            success: 'Success',
+            error: 'Error',
+            info: 'Information'
+        };
+        return titles[type] || titles.info;
+    }
+
+    // Copy email functionality
+    async function copyEmail(email) {
+        try {
+            await navigator.clipboard.writeText(email);
+            showToast(`Email copied: ${email}`, 'success', 3000);
+        } catch (err) {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = email;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showToast(`Email copied: ${email}`, 'success', 3000);
+        }
+    }
+
+    // Delete attempt functionality
+    function deleteAttempt(attemptId, studentName) {
+        currentDeleteAttemptId = attemptId;
+        currentStudentName = studentName;
+
+        document.getElementById('studentName').textContent = studentName;
+
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+
+    async function confirmDelete() {
+        if (!currentDeleteAttemptId) return;
+
+        const submitButton = event.target;
+        const originalText = submitButton.innerHTML;
+
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Deleting...</span>';
+
+        try {
+            const response = await fetch(`/TestAttempt/Delete/${currentDeleteAttemptId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            });
+
+            if (response.ok) {
+                // Remove the card from DOM with animation
+                const card = document.querySelector(`[data-attempt-id="${currentDeleteAttemptId}"]`);
+                if (card) {
+                    card.style.animation = 'slideUp 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        card.remove();
+                        updateStatistics();
+                        updateEmptyState(document.querySelectorAll('.attempt-card-enhanced').length);
+                    }, 300);
+                }
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+
+                showToast(`Attempt by ${currentStudentName} deleted successfully`, 'success');
+            } else {
+                throw new Error('Failed to delete attempt');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Error deleting attempt. Please try again.', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+            currentDeleteAttemptId = '';
+            currentStudentName = '';
+        }
+    }
+
+    // Download report functionality
+    function downloadReport(attemptId) {
+        showToast('Preparing report download...', 'info');
+
+        // Create a temporary link to trigger download
+        const link = document.createElement('a');
+        link.href = `/TestAttempt/DownloadReport/${attemptId}`;
+        link.download = `attempt-report-${attemptId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+            showToast('Report download started', 'success');
+        }, 1000);
+    }
+
+    // Export data functionality
+    function exportData(format) {
+        showToast(`Preparing ${format.toUpperCase()} export...`, 'info');
+
+        const testId = '@Model.TestId';
+        const filter = '@Model.CurrentFilter';
+
+        // Create download link
+        const link = document.createElement('a');
+        link.href = `/Test/ExportAttempts/${testId}?format=${format}&filter=${filter}`;
+        link.download = `test-attempts-${testId}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+            showToast(`${format.toUpperCase()} export download started`, 'success');
+        }, 1000);
+    }
+
+    // Refresh attempts
+    function refreshAttempts() {
+        showToast('Refreshing attempts...', 'info');
+
+        // Add loading state to refresh button
+        const refreshBtn = event.target.closest('.action-btn');
+        refreshBtn.classList.add('loading');
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    }
+
+    // Update statistics after deletion
+    function updateStatistics() {
+        const cards = document.querySelectorAll('.attempt-card-enhanced');
+        const totalAttempts = cards.length;
+        const completedAttempts = Array.from(cards).filter(card =>
+            card.dataset.status === 'completed'
+        ).length;
+        const inProgressAttempts = totalAttempts - completedAttempts;
+
+        // Update stat cards
+        const statCards = document.querySelectorAll('.stat-card-modern');
+        statCards.forEach(card => {
+            const statType = card.dataset.stat;
+            const numberElement = card.querySelector('.stat-number');
+
+            switch (statType) {
+                case 'total':
+                    numberElement.textContent = totalAttempts;
+                    break;
+                case 'completed':
+                    numberElement.textContent = completedAttempts;
+                    break;
+                case 'progress':
+                    numberElement.textContent = inProgressAttempts;
+                    break;
+            }
+        });
+
+        // Update filter counts
+        document.querySelector('[data-filter="All"] .tab-count').textContent = totalAttempts;
+        document.querySelector('[data-filter="Finished"] .tab-count').textContent = completedAttempts;
+        document.querySelector('[data-filter="Unfinished"] .tab-count').textContent = inProgressAttempts;
+
+        // Add pulse animation to updated stats
+        statCards.forEach(card => {
+            card.classList.add('pulse');
+            setTimeout(() => card.classList.remove('pulse'), 2000);
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips if Bootstrap is available
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+
+        // Auto-focus search on Ctrl+F or Cmd+F
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+        });
+
+        // Clear search on Escape
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    searchAttempts('');
+                    this.blur();
+                }
+            });
+        }
+
+        // Add loading states to action buttons
+        document.querySelectorAll('.action-btn, .action-btn-modern').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (!this.disabled && !this.closest('[onclick*="delete"]')) {
+                    this.classList.add('loading');
+                    setTimeout(() => this.classList.remove('loading'), 2000);
+                }
+            });
+        });
+
+        // Add entrance animations to cards
+        const cards = document.querySelectorAll('.attempt-card-enhanced');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+            card.classList.add('fade-in');
+        });
+
+        // Smooth scroll for stat card clicks
+        document.querySelectorAll('.stat-card-modern').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.add('pulse');
+                setTimeout(() => this.classList.remove('pulse'), 600);
+            });
+        });
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        // Clear any timeouts or intervals if needed
+    });
+</script>
+}
