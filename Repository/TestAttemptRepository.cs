@@ -73,7 +73,7 @@ public class TestAttemptRepository : ITestAttemptRepository
             // .Include(a => a.Answers)
             // .Include(a => a.Test)
             // .ThenInclude(t => t.User)
-            // .AsNoTracking()
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == attemptId);
     }
 
