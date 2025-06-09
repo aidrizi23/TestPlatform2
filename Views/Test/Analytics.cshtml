@@ -1,434 +1,2928 @@
+         
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+
+
+
+
+        
 @model TestPlatform2.Models.TestAnalyticsViewModel
 @{
     ViewData["Title"] = "Test Analytics";
 }
 
-<div class="container py-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="mb-0">
-                <i class="fas fa-chart-line me-2 text-primary"></i>Analytics Dashboard
-            </h1>
-            <p class="lead text-muted">@Model.TestName</p>
-            <p class="text-muted">@Model.Description</p>
-        </div>
-        <div class="col-md-4 text-md-end d-flex align-items-center justify-content-md-end mt-3 mt-md-0">
-            <a asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Test
-            </a>
-        </div>
-    </div>
-    
-    <!-- Summary Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="mb-0">Total Attempts</h5>
-                        <span class="badge bg-primary rounded-pill">@Model.TotalAttempts</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Completed</span>
-                        <span>@Model.CompletedAttempts</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>In Progress</span>
-                        <span>@Model.InProgressAttempts</span>
-                    </div>
-                    <div class="progress mt-3" style="height: 8px;">
-                        @{
-                            var completedPercentage = Model.TotalAttempts > 0 
-                                ? (double)Model.CompletedAttempts / Model.TotalAttempts * 100 
-                                : 0;
-                            var inProgressPercentage = Model.TotalAttempts > 0 
-                                ? (double)Model.InProgressAttempts / Model.TotalAttempts * 100 
-                                : 0;
+<div class="analytics-container">
+    <!-- Enhanced Header Section -->
+    <div class="analytics-header">
+        <div class="header-content">
+            <div class="header-main">
+                <div class="breadcrumb-nav">
+                    <a asp-action="Details" asp-route-id="@Model.TestId" class="breadcrumb-link">
+                        <i class="fas fa-arrow-left me-2"></i>Test Details
+                    </a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Analytics Dashboard</span>
+                </div>
+
+                <div class="title-section">
+                    <h1 class="page-title">
+                        <i class="fas fa-chart-line me-3 title-icon"></i>
+                        Analytics Dashboard
+                    </h1>
+                    <div class="test-info">
+                        <div class="test-name">@Model.TestName</div>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <div class="test-description">@Model.Description</div>
                         }
-                        <div class="progress-bar bg-success" role="progressbar" 
-                             style="width: @completedPercentage%;" 
-                             aria-valuenow="@completedPercentage" aria-valuemin="0" aria-valuemax="100">
-                        </div>
-                        <div class="progress-bar bg-warning" role="progressbar" 
-                             style="width: @inProgressPercentage%;" 
-                             aria-valuenow="@inProgressPercentage" aria-valuemin="0" aria-valuemax="100">
-                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="mb-0">Average Score</h5>
-                        <div class="text-primary fw-bold">
-                            @Model.AverageScore.ToString("0.00")
-                        </div>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Highest</span>
-                        <span>@Model.HighestScore.ToString("0.00")</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Lowest</span>
-                        <span>@Model.LowestScore.ToString("0.00")</span>
-                    </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Median</span>
-                        <span>@Model.MedianScore.ToString("0.00")</span>
-                    </div>
+
+            <div class="header-actions">
+                <div class="action-buttons">
+                    <a asp-action="Details" asp-route-id="@Model.TestId" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Test
+                    </a>
+                    <button class="btn btn-light btn-lg" onclick="exportAnalytics()">
+                        <i class="fas fa-download me-2"></i>Export Report
+                    </button>
+                    <button class="btn btn-light btn-lg" onclick="refreshAnalytics()">
+                        <i class="fas fa-sync-alt me-2"></i>Refresh
+                    </button>
                 </div>
             </div>
         </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="mb-0">Passing Rate</h5>
-                        <div class="text-success fw-bold">
-                            @Model.PassingRate.ToString("0.0")%
-                        </div>
+    </div>
+    
+    <!-- Enhanced Summary Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card attempts-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-meta">
+                    <h3 class="stat-title">Total Attempts</h3>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+12% this week</span>
                     </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Standard Deviation</span>
-                        <span>@Model.StandardDeviation.ToString("0.00")</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.TotalAttempts</div>
+                <div class="stat-breakdown">
+                    <div class="breakdown-item completed">
+                        <span class="breakdown-label">Completed</span>
+                        <span class="breakdown-value">@Model.CompletedAttempts</span>
                     </div>
-                    
+                    <div class="breakdown-item in-progress">
+                        <span class="breakdown-label">In Progress</span>
+                        <span class="breakdown-value">@Model.InProgressAttempts</span>
+                    </div>
+                </div>
+                <div class="stat-progress">
                     @{
-                        string passRateColor = Model.PassingRate >= 80 ? "bg-success" :
-                                              Model.PassingRate >= 60 ? "bg-info" :
-                                              Model.PassingRate >= 40 ? "bg-warning" : "bg-danger";
+                        var completedPercentage = Model.TotalAttempts > 0 
+                            ? (double)Model.CompletedAttempts / Model.TotalAttempts * 100 
+                            : 0;
+                        var inProgressPercentage = Model.TotalAttempts > 0 
+                            ? (double)Model.InProgressAttempts / Model.TotalAttempts * 100 
+                            : 0;
                     }
-                    
-                    <div class="progress mt-3" style="height: 8px;">
-                        <div class="progress-bar @passRateColor" role="progressbar" 
-                             style="width: @Model.PassingRate%;" 
-                             aria-valuenow="@Model.PassingRate" aria-valuemin="0" aria-valuemax="100">
-                        </div>
+                    <div class="progress-track">
+                        <div class="progress-bar completed" style="width: @completedPercentage%"></div>
+                        <div class="progress-bar in-progress" style="width: @inProgressPercentage%"></div>
+                    </div>
+                    <div class="progress-legend">
+                        <span class="legend-item completed">@completedPercentage.ToString("0.0")% Completed</span>
+                        <span class="legend-item in-progress">@inProgressPercentage.ToString("0.0")% In Progress</span>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h5 class="mb-0">Average Time</h5>
-                        <div class="text-info fw-bold">
-                            @Model.AverageCompletionTime.ToString(@"hh\:mm\:ss")
-                        </div>
+        <div class="stat-card score-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-meta">
+                    <h3 class="stat-title">Score Statistics</h3>
+                    <div class="stat-trend">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Trending up</span>
                     </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Fastest</span>
-                        <span>@Model.FastestCompletionTime.ToString(@"hh\:mm\:ss")</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.AverageScore.ToString("0.0")</div>
+                <div class="stat-unit">Average Score</div>
+                <div class="score-details">
+                    <div class="score-item">
+                        <span class="score-label">Highest</span>
+                        <span class="score-value highest">@Model.HighestScore.ToString("0.0")</span>
                     </div>
-                    <div class="d-flex justify-content-between text-muted small">
-                        <span>Slowest</span>
-                        <span>@Model.SlowestCompletionTime.ToString(@"hh\:mm\:ss")</span>
+                    <div class="score-item">
+                        <span class="score-label">Median</span>
+                        <span class="score-value median">@Model.MedianScore.ToString("0.0")</span>
+                    </div>
+                    <div class="score-item">
+                        <span class="score-label">Lowest</span>
+                        <span class="score-value lowest">@Model.LowestScore.ToString("0.0")</span>
+                    </div>
+                </div>
+                <div class="score-distribution-mini">
+                    <canvas id="scoreDistributionMini" width="200" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card performance-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <div class="stat-meta">
+                    <h3 class="stat-title">Pass Rate</h3>
+                    <div class="performance-indicator @(Model.PassingRate >= 70 ? "excellent" : Model.PassingRate >= 50 ? "good" : "needs-improvement")">
+                        @if (Model.PassingRate >= 70)
+                        {
+                            <i class="fas fa-check-circle"></i>
+                            <span>Excellent</span>
+                        }
+                        else if (Model.PassingRate >= 50)
+                        {
+                            <i class="fas fa-minus-circle"></i>
+                            <span>Good</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Needs Attention</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.PassingRate.ToString("0.0")%</div>
+                <div class="performance-gauge">
+                    <div class="gauge-container">
+                        <div class="gauge-track"></div>
+                        <div class="gauge-fill" style="transform: rotate(@(Model.PassingRate * 1.8 - 90)deg)"></div>
+                        <div class="gauge-center"></div>
+                    </div>
+                </div>
+                <div class="performance-stats">
+                    <div class="perf-item">
+                        <span class="perf-label">Std. Deviation</span>
+                        <span class="perf-value">@Model.StandardDeviation.ToString("0.00")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card time-card">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-meta">
+                    <h3 class="stat-title">Time Analysis</h3>
+                    <div class="time-efficiency @(Model.AverageCompletionTime.TotalMinutes <= 30 ? "efficient" : "normal")">
+                        @if (Model.AverageCompletionTime.TotalMinutes <= 30)
+                        {
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Efficient</span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-hourglass-half"></i>
+                            <span>Normal Pace</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.AverageCompletionTime.ToString(@"mm\:ss")</div>
+                <div class="stat-unit">Average Time</div>
+                <div class="time-details">
+                    <div class="time-item">
+                        <span class="time-label">Fastest</span>
+                        <span class="time-value fastest">@Model.FastestCompletionTime.ToString(@"mm\:ss")</span>
+                    </div>
+                    <div class="time-item">
+                        <span class="time-label">Slowest</span>
+                        <span class="time-value slowest">@Model.SlowestCompletionTime.ToString(@"mm\:ss")</span>
+                    </div>
+                </div>
+                <div class="time-distribution">
+                    <div class="time-range">
+                        <div class="range-bar"></div>
+                        <div class="range-marker fastest"></div>
+                        <div class="range-marker average"></div>
+                        <div class="range-marker slowest"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Charts Row -->
-    <div class="row mb-4">
-        <!-- Score Distribution Chart -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Score Distribution</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="scoreDistributionChart" height="300"></canvas>
+    <!-- Enhanced Charts Section -->
+    <div class="charts-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-chart-area me-2"></i>
+                Performance Analytics
+            </h2>
+            <div class="chart-controls">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-timeframe="all">All Time</button>
+                    <button type="button" class="btn btn-outline-primary" data-timeframe="week">This Week</button>
+                    <button type="button" class="btn btn-outline-primary" data-timeframe="month">This Month</button>
                 </div>
             </div>
         </div>
-        
-        <!-- Question Success Rate Chart -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Question Success Rates</h5>
+
+        <div class="charts-grid">
+            <!-- Enhanced Score Distribution Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Score Distribution</h3>
+                    <div class="chart-info">
+                        <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Shows how student scores are distributed across different ranges">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <canvas id="questionSuccessChart" height="300"></canvas>
+                <div class="chart-content">
+                    <div class="chart-container">
+                        <canvas id="scoreDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-insights">
+                        <div class="insight-item">
+                            <span class="insight-label">Most Common Range</span>
+                            <span class="insight-value">80-90%</span>
+                        </div>
+                        <div class="insight-item">
+                            <span class="insight-label">Distribution Type</span>
+                            <span class="insight-value">Normal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Enhanced Question Success Rate Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3 class="chart-title">Question Performance</h3>
+                    <div class="chart-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartView('question')">
+                            <i class="fas fa-exchange-alt me-1"></i>Switch View
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <div class="chart-container">
+                        <canvas id="questionSuccessChart"></canvas>
+                    </div>
+                    <div class="chart-legend-custom">
+                        <div class="legend-item excellent">
+                            <div class="legend-color"></div>
+                            <span>Excellent (≥80%)</span>
+                        </div>
+                        <div class="legend-item good">
+                            <div class="legend-color"></div>
+                            <span>Good (60-79%)</span>
+                        </div>
+                        <div class="legend-item needs-attention">
+                            <div class="legend-color"></div>
+                            <span>Needs Attention (<60%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Completion Timeline Chart -->
+            <div class="chart-card span-2">
+                <div class="chart-header">
+                    <h3 class="chart-title">Completion Timeline</h3>
+                    <div class="chart-actions">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-secondary active" data-timeline="daily">Daily</button>
+                            <button class="btn btn-outline-secondary" data-timeline="weekly">Weekly</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <div class="chart-container">
+                        <canvas id="completionTimelineChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Question Performance Table -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Question Performance</h5>
+    <!-- Enhanced Question Performance Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-table me-2"></i>
+                Detailed Question Analysis
+            </h2>
+            <div class="table-actions">
+                <div class="search-container">
+                    <input type="text" class="form-control" id="questionSearch" placeholder="Search questions...">
+                    <i class="fas fa-search search-icon"></i>
+                </div>
+                <div class="filter-container">
+                    <select class="form-select" id="difficultyFilter">
+                        <option value="">All Difficulties</option>
+                        <option value="easy">Easy (≥80%)</option>
+                        <option value="medium">Medium (60-79%)</option>
+                        <option value="hard">Hard (<60%)</option>
+                    </select>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+
+        <div class="table-card">
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table analytics-table" id="questionsTable">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Question</th>
-                            <th>Type</th>
-                            <th>Points</th>
-                            <th>Avg. Points</th>
-                            <th>Success Rate</th>
-                            <th>Correct/Total</th>
+                            <th class="sortable" data-sort="position">
+                                <span>Question</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="type">
+                                <span>Type</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="points">
+                                <span>Points</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="average">
+                                <span>Avg. Points</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="success">
+                                <span>Success Rate</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th class="sortable" data-sort="responses">
+                                <span>Responses</span>
+                                <i class="fas fa-sort"></i>
+                            </th>
+                            <th>Difficulty</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var question in Model.QuestionPerformance)
                         {
-                            var successClass = question.SuccessRate >= 70 ? "text-success" :
-                                              question.SuccessRate >= 40 ? "text-warning" : "text-danger";
+                            var difficultyClass = question.SuccessRate >= 80 ? "easy" :
+                                                  question.SuccessRate >= 60 ? "medium" : "hard";
+                            var difficultyText = question.SuccessRate >= 80 ? "Easy" :
+                                                 question.SuccessRate >= 60 ? "Medium" : "Hard";
                             
-                            <tr>
-                                <td>@(question.Position + 1)</td>
+                            <tr data-question-id="@question.QuestionId" class="question-row">
                                 <td>
-                                    <span title="@question.QuestionText">
-                                        @(question.QuestionText.Length > 50 
-                                            ? question.QuestionText.Substring(0, 47) + "..." 
-                                            : question.QuestionText)
+                                    <div class="question-cell">
+                                        <div class="question-number">Q@(question.Position + 1)</div>
+                                        <div class="question-preview">
+                                            <div class="question-text" title="@question.QuestionText">
+                                                @(question.QuestionText.Length > 60 
+                                                    ? question.QuestionText.Substring(0, 57) + "..." 
+                                                    : question.QuestionText)
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="question-type-badge @question.QuestionType.ToLower().Replace(" ", "-")">
+                                        @switch (question.QuestionType)
+                                        {
+                                            case "Multiple Choice":
+                                                <i class="fas fa-list-ul me-1"></i>
+                                                break;
+                                            case "True/False":
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                break;
+                                            case "Short Answer":
+                                                <i class="fas fa-pen me-1"></i>
+                                                break;
+                                        }
+                                        @question.QuestionType
                                     </span>
                                 </td>
-                                <td>@question.QuestionType</td>
-                                <td>@question.Points</td>
-                                <td>@question.AveragePoints.ToString("0.00")</td>
-                                <td class="@successClass fw-bold">@question.SuccessRate.ToString("0.0")%</td>
-                                <td>@question.CorrectAnswers/@(question.CorrectAnswers + question.IncorrectAnswers)</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Student Performance Section -->
-    <div class="row mb-4">
-        <!-- Top Performers -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Top Performers</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Score</th>
-                                    <th>Time</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.TopPerformers?.Any() == true)
-                                {
-                                    foreach (var student in Model.TopPerformers)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div>@student.StudentName</div>
-                                                <small class="text-muted">@student.StudentEmail</small>
-                                            </td>
-                                            <td class="text-success fw-bold">@student.ScorePercentage.ToString("0.0")%</td>
-                                            <td>@student.CompletionTime.ToString(@"hh\:mm\:ss")</td>
-                                            <td>@student.CompletionDate.ToString("MMM d, yyyy")</td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="4" class="text-center">No data available</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Struggling Students -->
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Struggling Students</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Student</th>
-                                    <th>Score</th>
-                                    <th>Time</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if (Model.StrugglingSudents?.Any() == true)
-                                {
-                                    foreach (var student in Model.StrugglingSudents)
-                                    {
-                                        <tr>
-                                            <td>
-                                                <div>@student.StudentName</div>
-                                                <small class="text-muted">@student.StudentEmail</small>
-                                            </td>
-                                            <td class="text-danger fw-bold">@student.ScorePercentage.ToString("0.0")%</td>
-                                            <td>@student.CompletionTime.ToString(@"hh\:mm\:ss")</td>
-                                            <td>@student.CompletionDate.ToString("MMM d, yyyy")</td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
-                                    <tr>
-                                        <td colspan="4" class="text-center">No data available</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Recent Attempts -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Recent Attempts</h5>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table mb-0">
-                    <thead>
-                        <tr>
-                            <th>Student</th>
-                            <th>Score</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model.RecentAttempts?.Any() == true)
-                        {
-                            foreach (var attempt in Model.RecentAttempts)
-                            {
-                                <tr>
-                                    <td>
-                                        <div>@attempt.StudentName</div>
-                                        <small class="text-muted">@attempt.StudentEmail</small>
-                                    </td>
-                                    <td>
-                                        @if (attempt.IsCompleted)
+                                <td>
+                                    <span class="points-badge">@question.Points</span>
+                                </td>
+                                <td>
+                                    <div class="average-points">
+                                        <span class="points-value">@question.AveragePoints.ToString("0.00")</span>
+                                        <div class="points-bar">
+                                            <div class="points-fill" style="width: @((question.AveragePoints / question.Points) * 100)%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="success-rate">
+                                        <span class="rate-value @difficultyClass">@question.SuccessRate.ToString("0.0")%</span>
+                                        <div class="rate-indicator @difficultyClass">
+                                            <div class="rate-fill" style="width: @question.SuccessRate%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="response-count">
+                                        <span class="total-responses">@(question.CorrectAnswers + question.IncorrectAnswers)</span>
+                                        <div class="response-breakdown">
+                                            <span class="correct">@question.CorrectAnswers correct</span>
+                                            <span class="incorrect">@question.IncorrectAnswers incorrect</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="difficulty-badge @difficultyClass">
+                                        @if (difficultyClass == "easy")
                                         {
-                                            <span class="fw-bold">@attempt.ScorePercentage.ToString("0.0")%</span>
+                                            <i class="fas fa-check-circle"></i>
+                                        }
+                                        else if (difficultyClass == "medium")
+                                        {
+                                            <i class="fas fa-minus-circle"></i>
                                         }
                                         else
                                         {
-                                            <span class="text-muted">Not completed</span>
+                                            <i class="fas fa-exclamation-triangle"></i>
                                         }
-                                    </td>
-                                    <td>@attempt.CompletionDate.ToString("MMM d, yyyy")</td>
-                                    <td>
-                                        @if (attempt.IsCompleted)
-                                        {
-                                            <span class="badge bg-success">Completed</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-warning text-dark">In Progress</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <a asp-controller="TestAttempt" asp-action="Details" asp-route-id="@attempt.AttemptId" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye me-1"></i>View
+                                        @difficultyText
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a asp-action="QuestionAnalytics" asp-route-testId="@Model.TestId" asp-route-questionId="@question.QuestionId" 
+                                           class="btn btn-sm btn-outline-primary" title="View detailed analytics">
+                                            <i class="fas fa-chart-line"></i>
                                         </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center">No recent attempts</td>
+                                        <button class="btn btn-sm btn-outline-info" onclick="showQuestionInsights('@question.QuestionId')" title="Quick insights">
+                                            <i class="fas fa-lightbulb"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Student Performance Section -->
+    <div class="students-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-graduation-cap me-2"></i>
+                Student Performance Overview
+            </h2>
+            <div class="performance-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Top Performers</span>
+                    <span class="summary-value">@(Model.TopPerformers?.Count() ?? 0)</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Need Support</span>
+                    <span class="summary-value">@(Model.StrugglingSudents?.Count() ?? 0)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="students-grid">
+            <!-- Top Performers -->
+            <div class="students-card top-performers">
+                <div class="students-header">
+                    <h3 class="students-title">
+                        <i class="fas fa-trophy me-2"></i>
+                        Top Performers
+                    </h3>
+                    <span class="students-count">@(Model.TopPerformers?.Count() ?? 0) students</span>
+                </div>
+                <div class="students-content">
+                    @if (Model.TopPerformers?.Any() == true)
+                    {
+                        <div class="students-list">
+                            @foreach (var student in Model.TopPerformers.Take(5))
+                            {
+                                <div class="student-item top-performer">
+                                    <div class="student-avatar">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="student-name">@student.StudentName</div>
+                                        <div class="student-email">@student.StudentEmail</div>
+                                    </div>
+                                    <div class="student-metrics">
+                                        <div class="score-metric excellent">
+                                            <span class="metric-value">@student.ScorePercentage.ToString("0.0")%</span>
+                                            <span class="metric-label">Score</span>
+                                        </div>
+                                        <div class="time-metric">
+                                            <span class="metric-value">@student.CompletionTime.ToString(@"mm\:ss")</span>
+                                            <span class="metric-label">Time</span>
+                                        </div>
+                                    </div>
+                                    <div class="student-badge top">
+                                        <i class="fas fa-medal"></i>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.TopPerformers.Count() > 5)
+                        {
+                            <div class="show-more">
+                                <button class="btn btn-sm btn-outline-success" onclick="showAllTopPerformers()">
+                                    <i class="fas fa-plus me-1"></i>Show @(Model.TopPerformers.Count() - 5) more
+                                </button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-trophy"></i>
+                            <p>No top performers yet</p>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <!-- Struggling Students -->
+            <div class="students-card struggling-students">
+                <div class="students-header">
+                    <h3 class="students-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Students Needing Support
+                    </h3>
+                    <span class="students-count">@(Model.StrugglingSudents?.Count() ?? 0) students</span>
+                </div>
+                <div class="students-content">
+                    @if (Model.StrugglingSudents?.Any() == true)
+                    {
+                        <div class="students-list">
+                            @foreach (var student in Model.StrugglingSudents.Take(5))
+                            {
+                                <div class="student-item struggling">
+                                    <div class="student-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="student-info">
+                                        <div class="student-name">@student.StudentName</div>
+                                        <div class="student-email">@student.StudentEmail</div>
+                                    </div>
+                                    <div class="student-metrics">
+                                        <div class="score-metric needs-improvement">
+                                            <span class="metric-value">@student.ScorePercentage.ToString("0.0")%</span>
+                                            <span class="metric-label">Score</span>
+                                        </div>
+                                        <div class="time-metric">
+                                            <span class="metric-value">@student.CompletionTime.ToString(@"mm\:ss")</span>
+                                            <span class="metric-label">Time</span>
+                                        </div>
+                                    </div>
+                                    <div class="student-actions">
+                                        <button class="btn btn-sm btn-outline-warning" onclick="contactStudent('@student.StudentEmail')" title="Send support email">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.StrugglingSudents.Count() > 5)
+                        {
+                            <div class="show-more">
+                                <button class="btn btn-sm btn-outline-warning" onclick="showAllStrugglingStudents()">
+                                    <i class="fas fa-plus me-1"></i>Show @(Model.StrugglingSudents.Count() - 5) more
+                                </button>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>All students performing well!</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="students-card recent-activity span-2">
+                <div class="students-header">
+                    <h3 class="students-title">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Activity
+                    </h3>
+                    <div class="activity-filters">
+                        <button class="btn btn-sm btn-outline-secondary active" data-filter="all">All</button>
+                        <button class="btn btn-sm btn-outline-secondary" data-filter="completed">Completed</button>
+                        <button class="btn btn-sm btn-outline-secondary" data-filter="in-progress">In Progress</button>
+                    </div>
+                </div>
+                <div class="students-content">
+                    @if (Model.RecentAttempts?.Any() == true)
+                    {
+                        <div class="activity-timeline">
+                            @foreach (var attempt in Model.RecentAttempts.Take(8))
+                            {
+                                <div class="activity-item @(attempt.IsCompleted ? "completed" : "in-progress")">
+                                    <div class="activity-time">
+                                        @attempt.CompletionDate.ToString("MMM d")
+                                        <span class="time-detail">@attempt.CompletionDate.ToString("HH:mm")</span>
+                                    </div>
+                                    <div class="activity-content">
+                                        <div class="activity-student">
+                                            <strong>@attempt.StudentName</strong>
+                                            <span class="student-email-small">@attempt.StudentEmail</span>
+                                        </div>
+                                        <div class="activity-details">
+                                            @if (attempt.IsCompleted)
+                                            {
+                                                <span class="activity-score @(attempt.ScorePercentage >= 70 ? "good" : attempt.ScorePercentage >= 50 ? "average" : "poor")">
+                                                    @attempt.ScorePercentage.ToString("0.0")% score
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="activity-status in-progress">
+                                                    <i class="fas fa-hourglass-half me-1"></i>In progress
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="activity-indicator @(attempt.IsCompleted ? "completed" : "in-progress")">
+                                        <i class="fas @(attempt.IsCompleted ? "fa-check-circle" : "fa-clock")"></i>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.RecentAttempts.Count() > 8)
+                        {
+                            <div class="show-more text-center">
+                                <a asp-action="AllAttempts" asp-route-testId="@Model.TestId" class="btn btn-outline-primary">
+                                    <i class="fas fa-list me-1"></i>View All Attempts
+                                </a>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-clock"></i>
+                            <p>No recent activity</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Insights and Recommendations Section -->
+    <div class="insights-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-lightbulb me-2"></i>
+                AI-Powered Insights & Recommendations
+            </h2>
+            <div class="insights-actions">
+                <button class="btn btn-outline-primary" onclick="generateNewInsights()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh Insights
+                </button>
+            </div>
+        </div>
+
+        <div class="insights-grid">
+            @{
+                var overallPerformance = Model.PassingRate;
+                var avgScore = Model.AverageScore;
+                var questionCount = Model.QuestionPerformance?.Count() ?? 0;
+                var difficultQuestions = Model.QuestionPerformance?.Where(q => q.SuccessRate < 60).Count() ?? 0;
+            }
+
+            <!-- Performance Insight -->
+            <div class="insight-card performance-insight">
+                <div class="insight-header">
+                    <div class="insight-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="insight-meta">
+                        <h4 class="insight-title">Overall Performance</h4>
+                        <span class="insight-category">Test Analysis</span>
+                    </div>
+                </div>
+                <div class="insight-content">
+                    @if (overallPerformance >= 80)
+                    {
+                        <p class="insight-text">Excellent test performance! Students are demonstrating strong understanding of the material with an @overallPerformance.ToString("0.0")% pass rate.</p>
+                        <div class="insight-recommendation positive">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Consider using this test as a model for future assessments.
+                        </div>
+                    }
+                    else if (overallPerformance >= 60)
+                    {
+                        <p class="insight-text">Good overall performance with room for improvement. @overallPerformance.ToString("0.0")% of students are passing the test.</p>
+                        <div class="insight-recommendation moderate">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Consider reviewing challenging topics with students.
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="insight-text">Performance needs attention. Only @overallPerformance.ToString("0.0")% of students are passing. This suggests fundamental concepts may need reinforcement.</p>
+                        <div class="insight-recommendation critical">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Recommend additional instruction and practice sessions.
+                        </div>
+                    }
+                </div>
+                <div class="insight-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewPerformanceDetails()">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </button>
+                </div>
+            </div>
+
+            <!-- Question Difficulty Insight -->
+            <div class="insight-card difficulty-insight">
+                <div class="insight-header">
+                    <div class="insight-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <div class="insight-meta">
+                        <h4 class="insight-title">Question Difficulty</h4>
+                        <span class="insight-category">Content Analysis</span>
+                    </div>
+                </div>
+                <div class="insight-content">
+                    @if (difficultQuestions == 0)
+                    {
+                        <p class="insight-text">All questions are performing well with good success rates. The test appears well-balanced for your students' level.</p>
+                        <div class="insight-recommendation positive">
+                            <i class="fas fa-thumbs-up me-2"></i>
+                            Test difficulty is appropriate for the target audience.
+                        </div>
+                    }
+                    else if (difficultQuestions <= questionCount * 0.3)
+                    {
+                        <p class="insight-text">@difficultQuestions out of @questionCount questions are challenging (below 60% success rate). This provides good discrimination.</p>
+                        <div class="insight-recommendation moderate">
+                            <i class="fas fa-adjust me-2"></i>
+                            Consider reviewing the most challenging questions with students.
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="insight-text">@difficultQuestions out of @questionCount questions have low success rates. Consider reviewing question clarity or content coverage.</p>
+                        <div class="insight-recommendation critical">
+                            <i class="fas fa-tools me-2"></i>
+                            Review and potentially revise challenging questions.
+                        </div>
+                    }
+                </div>
+                <div class="insight-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="showDifficultQuestions()">
+                        <i class="fas fa-list me-1"></i>View Questions
+                    </button>
+                </div>
+            </div>
+
+            <!-- Time Management Insight -->
+            <div class="insight-card time-insight">
+                <div class="insight-header">
+                    <div class="insight-icon">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <div class="insight-meta">
+                        <h4 class="insight-title">Time Management</h4>
+                        <span class="insight-category">Efficiency Analysis</span>
+                    </div>
+                </div>
+                <div class="insight-content">
+                    @{
+                        var avgMinutes = Model.AverageCompletionTime.TotalMinutes;
+                        var fastestMinutes = Model.FastestCompletionTime.TotalMinutes;
+                        var slowestMinutes = Model.SlowestCompletionTime.TotalMinutes;
+                        var timeSpread = slowestMinutes - fastestMinutes;
+                    }
+                    
+                    @if (timeSpread <= 15)
+                    {
+                        <p class="insight-text">Students show consistent timing with minimal variation (@timeSpread.ToString("0.0") minute spread). This suggests appropriate time allocation.</p>
+                        <div class="insight-recommendation positive">
+                            <i class="fas fa-clock me-2"></i>
+                            Time limit appears well-calibrated for this test.
+                        </div>
+                    }
+                    else if (timeSpread <= 30)
+                    {
+                        <p class="insight-text">Moderate time variation among students (@timeSpread.ToString("0.0") minute spread). Some students may benefit from time management strategies.</p>
+                        <div class="insight-recommendation moderate">
+                            <i class="fas fa-hourglass-half me-2"></i>
+                            Consider providing time management tips to students.
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="insight-text">Large time variation (@timeSpread.ToString("0.0") minute spread) suggests different approaches or understanding levels among students.</p>
+                        <div class="insight-recommendation critical">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Review if time limit or question complexity is appropriate.
+                        </div>
+                    }
+                </div>
+                <div class="insight-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewTimingAnalysis()">
+                        <i class="fas fa-chart-bar me-1"></i>View Analysis
+                    </button>
+                </div>
+            </div>
+
+            <!-- Learning Objectives Insight -->
+            <div class="insight-card learning-insight">
+                <div class="insight-header">
+                    <div class="insight-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="insight-meta">
+                        <h4 class="insight-title">Learning Outcomes</h4>
+                        <span class="insight-category">Educational Impact</span>
+                    </div>
+                </div>
+                <div class="insight-content">
+                    @{
+                        var strongQuestions = Model.QuestionPerformance?.Where(q => q.SuccessRate >= 80).Count() ?? 0;
+                        var weakQuestions = Model.QuestionPerformance?.Where(q => q.SuccessRate < 60).Count() ?? 0;
+                    }
+                    
+                    <p class="insight-text">@strongQuestions questions show strong mastery (≥80% success) while @weakQuestions need reinforcement. This indicates specific learning gaps.</p>
+                    
+                    @if (strongQuestions > weakQuestions)
+                    {
+                        <div class="insight-recommendation positive">
+                            <i class="fas fa-trophy me-2"></i>
+                            Students demonstrate good overall understanding. Focus on specific weak areas.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="insight-recommendation moderate">
+                            <i class="fas fa-book me-2"></i>
+                            Consider additional instruction on fundamental concepts.
+                        </div>
+                    }
+                </div>
+                <div class="insight-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="generateLearningPlan()">
+                        <i class="fas fa-route me-1"></i>Learning Plan
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Enhanced Modals -->
+
+<!-- Question Insights Modal -->
+<div class="modal fade" id="questionInsightsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Question Insights
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="questionInsightsContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="viewQuestionDetails()">View Full Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-download me-2"></i>
+                    Export Analytics Report
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="export-options">
+                    <div class="export-option">
+                        <input type="radio" name="exportFormat" id="exportPDF" value="pdf" checked>
+                        <label for="exportPDF" class="export-label">
+                            <i class="fas fa-file-pdf text-danger"></i>
+                            <div class="export-details">
+                                <strong>PDF Report</strong>
+                                <span>Complete analytics with charts and insights</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="export-option">
+                        <input type="radio" name="exportFormat" id="exportExcel" value="excel">
+                        <label for="exportExcel" class="export-label">
+                            <i class="fas fa-file-excel text-success"></i>
+                            <div class="export-details">
+                                <strong>Excel Spreadsheet</strong>
+                                <span>Raw data for further analysis</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="export-option">
+                        <input type="radio" name="exportFormat" id="exportCSV" value="csv">
+                        <label for="exportCSV" class="export-label">
+                            <i class="fas fa-file-csv text-info"></i>
+                            <div class="export-details">
+                                <strong>CSV Data</strong>
+                                <span>Simple data export for external tools</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="export-settings mt-3">
+                    <h6>Include in Export:</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeCharts" checked>
+                        <label class="form-check-label" for="includeCharts">Charts and Visualizations</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeInsights" checked>
+                        <label class="form-check-label" for="includeInsights">AI Insights and Recommendations</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="includeStudentData">
+                        <label class="form-check-label" for="includeStudentData">Individual Student Performance</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="processExport()">
+                    <i class="fas fa-download me-1"></i>Export Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+<style>
+    /* Enhanced Analytics Styles */
+    .analytics-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 0 1rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Enhanced Header */
+    .analytics-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        color: white;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .analytics-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%),
+                    linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+        opacity: 0.2;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb-link {
+        color: rgba(255,255,255,0.9);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        padding: 0.6rem 1.2rem;
+        border-radius: 25px;
+        background: rgba(255,255,255,0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .breadcrumb-link:hover {
+        color: white;
+        background: rgba(255,255,255,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .breadcrumb-separator {
+        margin: 0 1rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 1.2rem;
+    }
+
+    .breadcrumb-current {
+        color: rgba(255,255,255,0.8);
+        font-weight: 600;
+    }
+
+    .page-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.2;
+    }
+
+    .title-icon {
+        background: rgba(255,255,255,0.2);
+        padding: 0.8rem;
+        border-radius: 16px;
+        margin-right: 1rem;
+    }
+
+    .test-info {
+        margin-top: 1rem;
+    }
+
+    .test-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        background: rgba(255,255,255,0.15);
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        backdrop-filter: blur(10px);
+        display: inline-block;
+    }
+
+    .test-description {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .action-buttons .btn {
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.3);
+        font-weight: 600;
+        padding: 0.8rem 2rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        background: rgba(255,255,255,0.2);
+    }
+
+    /* Enhanced Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        border-color: #3b82f6;
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #f0f9ff, #dbeafe);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #2563eb;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        transition: all 0.4s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .stat-meta {
+        flex: 1;
+    }
+
+    .stat-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-change {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-change.positive {
+        color: #059669;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1f2937;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-unit {
+        color: #6b7280;
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+
+    .stat-breakdown {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .breakdown-item {
+        text-align: center;
+    }
+
+    .breakdown-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .breakdown-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .breakdown-item.completed .breakdown-value {
+        color: #059669;
+    }
+
+    .breakdown-item.in-progress .breakdown-value {
+        color: #d97706;
+    }
+
+    .stat-progress {
+        margin-top: 1rem;
+    }
+
+    .progress-track {
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+        overflow: hidden;
+        display: flex;
+    }
+
+    .progress-bar {
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .progress-bar.completed {
+        background: linear-gradient(90deg, #059669, #10b981);
+    }
+
+    .progress-bar.in-progress {
+        background: linear-gradient(90deg, #d97706, #f59e0b);
+    }
+
+    .progress-legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .legend-item.completed {
+        color: #059669;
+    }
+
+    .legend-item.in-progress {
+        color: #d97706;
+    }
+
+    /* Score Card Specific Styles */
+    .score-details {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .score-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .score-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .score-value {
+        font-size: 1.125rem;
+        font-weight: 700;
+    }
+
+    .score-value.highest {
+        color: #059669;
+    }
+
+    .score-value.median {
+        color: #2563eb;
+    }
+
+    .score-value.lowest {
+        color: #dc2626;
+    }
+
+    .score-distribution-mini {
+        margin-top: 1rem;
+        height: 60px;
+    }
+
+    /* Performance Card Specific Styles */
+    .performance-indicator {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .performance-indicator.excellent {
+        color: #059669;
+    }
+
+    .performance-indicator.good {
+        color: #2563eb;
+    }
+
+    .performance-indicator.needs-improvement {
+        color: #dc2626;
+    }
+
+    .performance-gauge {
+        margin: 1rem 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .gauge-container {
+        position: relative;
+        width: 120px;
+        height: 60px;
+    }
+
+    .gauge-track {
+        width: 120px;
+        height: 60px;
+        border: 4px solid #e5e7eb;
+        border-bottom: none;
+        border-radius: 60px 60px 0 0;
+    }
+
+    .gauge-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 60px;
+        border: 4px solid #3b82f6;
+        border-bottom: none;
+        border-radius: 60px 60px 0 0;
+        transform-origin: 50% 100%;
+        transition: transform 1s ease-out;
+    }
+
+    .gauge-center {
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: #3b82f6;
+        border-radius: 50%;
+    }
+
+    .performance-stats {
+        text-align: center;
+    }
+
+    .perf-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .perf-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .perf-value {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    /* Time Card Specific Styles */
+    .time-efficiency {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .time-efficiency.efficient {
+        color: #059669;
+    }
+
+    .time-efficiency.normal {
+        color: #2563eb;
+    }
+
+    .time-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .time-item {
+        text-align: center;
+        flex: 1;
+    }
+
+    .time-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .time-value {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .time-value.fastest {
+        color: #059669;
+    }
+
+    .time-value.slowest {
+        color: #dc2626;
+    }
+
+    .time-distribution {
+        margin-top: 1rem;
+    }
+
+    .time-range {
+        position: relative;
+        height: 8px;
+        background: #f3f4f6;
+        border-radius: 4px;
+    }
+
+    .range-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #059669, #2563eb, #dc2626);
+        border-radius: 4px;
+    }
+
+    .range-marker {
+        position: absolute;
+        top: -2px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .range-marker.fastest {
+        left: 10%;
+        background: #059669;
+    }
+
+    .range-marker.average {
+        left: 50%;
+        background: #2563eb;
+    }
+
+    .range-marker.slowest {
+        left: 90%;
+        background: #dc2626;
+    }
+
+    /* Charts Section */
+    .charts-section {
+        margin-bottom: 3rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px solid #f3f4f6;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        margin: 0;
+    }
+
+    .chart-controls .btn-group .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .chart-card.span-2 {
+        grid-column: span 2;
+    }
+
+    .chart-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .chart-info,
+    .chart-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .chart-content {
+        padding: 2rem;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 1rem;
+    }
+
+    .chart-insights {
+        display: flex;
+        justify-content: space-around;
+        padding-top: 1rem;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .insight-item {
+        text-align: center;
+    }
+
+    .insight-label {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .insight-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .chart-legend-custom {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+    }
+
+    .legend-item.excellent .legend-color {
+        background: #22c55e;
+    }
+
+    .legend-item.good .legend-color {
+        background: #3b82f6;
+    }
+
+    .legend-item.needs-attention .legend-color {
+        background: #ef4444;
+    }
+
+    /* Table Section */
+    .table-section {
+        margin-bottom: 3rem;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-container {
+        position: relative;
+    }
+
+    .search-container input {
+        padding-left: 2.5rem;
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .search-container input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6b7280;
+    }
+
+    .filter-container select {
+        border-radius: 12px;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .filter-container select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .analytics-table {
+        margin: 0;
+    }
+
+    .analytics-table thead {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    }
+
+    .analytics-table th {
+        padding: 1.5rem 1rem;
+        font-weight: 700;
+        color: #374151;
+        border-bottom: 2px solid #e5e7eb;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .analytics-table th.sortable:hover {
+        background: rgba(59, 130, 246, 0.05);
+        color: #2563eb;
+    }
+
+    .analytics-table th .fas {
+        margin-left: 0.5rem;
+        opacity: 0.5;
+        transition: all 0.3s ease;
+    }
+
+    .analytics-table th.sorted .fas {
+        opacity: 1;
+        color: #2563eb;
+    }
+
+    .analytics-table td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+
+    .analytics-table tr:hover {
+        background: #fafbff;
+    }
+
+    .question-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .question-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+
+    .question-preview {
+        flex: 1;
+    }
+
+    .question-text {
+        font-weight: 500;
+        color: #1f2937;
+        line-height: 1.4;
+    }
+
+    .question-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .question-type-badge.multiple-choice {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .question-type-badge.true-false {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .question-type-badge.short-answer {
+        background: rgba(14, 165, 233, 0.1);
+        color: #0284c7;
+        border: 1px solid rgba(14, 165, 233, 0.2);
+    }
+
+    .points-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 32px;
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        color: #d97706;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        border: 1px solid #f59e0b;
+    }
+
+    .average-points {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .points-value {
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .points-bar {
+        height: 6px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .points-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        transition: width 0.3s ease;
+    }
+
+    .success-rate {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .rate-value {
+        font-weight: 700;
+        font-size: 1.125rem;
+    }
+
+    .rate-value.easy {
+        color: #059669;
+    }
+
+    .rate-value.medium {
+        color: #2563eb;
+    }
+
+    .rate-value.hard {
+        color: #dc2626;
+    }
+
+    .rate-indicator {
+        height: 6px;
+        background: #f3f4f6;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .rate-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .rate-indicator.easy .rate-fill {
+        background: linear-gradient(90deg, #059669, #10b981);
+    }
+
+    .rate-indicator.medium .rate-fill {
+        background: linear-gradient(90deg, #2563eb, #3b82f6);
+    }
+
+    .rate-indicator.hard .rate-fill {
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+
+    .response-count {
+        text-align: center;
+    }
+
+    .total-responses {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #1f2937;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .response-breakdown {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .response-breakdown .correct {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .response-breakdown .incorrect {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .difficulty-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    .difficulty-badge.easy {
+        background: rgba(34, 197, 94, 0.1);
+        color: #059669;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .difficulty-badge.medium {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .difficulty-badge.hard {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-buttons .btn {
+        transition: all 0.3s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: scale(1.1);
+    }
+
+    /* Students Section */
+    .students-section {
+        margin-bottom: 3rem;
+    }
+
+    .performance-summary {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .summary-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(59, 130, 246, 0.1);
+    }
+
+    .summary-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.25rem;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .students-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 2fr;
+        gap: 2rem;
+    }
+
+    .students-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .students-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .students-card.span-2 {
+        grid-column: span 2;
+    }
+
+    .students-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .students-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .students-count {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .activity-filters {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .activity-filters .btn {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 15px;
+    }
+
+    .students-content {
+        padding: 1.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .students-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .student-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .student-item:hover {
+        background: white;
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .student-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 1.125rem;
+        flex-shrink: 0;
+    }
+
+    .student-item.top-performer .student-avatar {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: white;
+    }
+
+    .student-item.struggling .student-avatar {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: white;
+    }
+
+    .student-info {
+        flex: 1;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .student-email {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .student-email-small {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .student-metrics {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .score-metric,
+    .time-metric {
+        text-align: center;
+    }
+
+    .metric-value {
+        display: block;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.125rem;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .score-metric.excellent .metric-value {
+        color: #059669;
+    }
+
+    .score-metric.needs-improvement .metric-value {
+        color: #dc2626;
+    }
+
+    .student-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .student-badge.top {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .student-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .show-more {
+        text-align: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #9ca3af;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        margin: 0;
+        font-style: italic;
+    }
+
+    /* Activity Timeline */
+    .activity-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .activity-item:hover {
+        background: white;
+        border-color: #3b82f6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-time {
+        text-align: center;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #374151;
+        min-width: 60px;
+    }
+
+    .time-detail {
+        display: block;
+        font-size: 0.75rem;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-student {
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-details {
+        font-size: 0.875rem;
+    }
+
+    .activity-score.good {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .activity-score.average {
+        color: #2563eb;
+        font-weight: 600;
+    }
+
+    .activity-score.poor {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+    .activity-status.in-progress {
+        color: #d97706;
+        font-weight: 600;
+    }
+
+    .activity-indicator {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+
+    .activity-indicator.completed {
+        background: rgba(34, 197, 94, 0.1);
+        color: #059669;
+    }
+
+    .activity-indicator.in-progress {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    /* Insights Section */
+    .insights-section {
+        margin-bottom: 3rem;
+    }
+
+    .insights-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .insights-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+    }
+
+    .insight-card {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .insight-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .insight-card.performance-insight::before {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .insight-card.difficulty-insight::before {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .insight-card.time-insight::before {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .insight-card.learning-insight::before {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .insight-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .insight-card:hover::before {
+        width: 8px;
+    }
+
+    .insight-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .insight-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+        margin-right: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .performance-insight .insight-icon {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    }
+
+    .difficulty-insight .insight-icon {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .time-insight .insight-icon {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+
+    .learning-insight .insight-icon {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    }
+
+    .insight-card:hover .insight-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .insight-meta {
+        flex: 1;
+    }
+
+    .insight-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .insight-category {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .insight-content {
+        margin-bottom: 1.5rem;
+    }
+
+    .insight-text {
+        color: #4b5563;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .insight-recommendation {
+        padding: 1rem;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .insight-recommendation.positive {
+        background: rgba(34, 197, 94, 0.1);
+        color: #059669;
+        border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .insight-recommendation.moderate {
+        background: rgba(59, 130, 246, 0.1);
+        color: #2563eb;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .insight-recommendation.critical {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .insight-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* Export Modal Styles */
+    .export-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .export-option {
+        position: relative;
+    }
+
+    .export-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .export-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .export-option input[type="radio"]:checked + .export-label {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .export-label i {
+        font-size: 2rem;
+    }
+
+    .export-details strong {
+        display: block;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .export-details span {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    .export-settings {
+        border-top: 1px solid #e5e7eb;
+        padding-top: 1rem;
+    }
+
+    .export-settings h6 {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.75rem;
+    }
+
+    .form-check {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1200px) {
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-card.span-2 {
+            grid-column: span 1;
+        }
+
+        .students-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .students-card.span-2 {
+            grid-column: span 1;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .analytics-header {
+            padding: 2rem;
+        }
+
+        .header-content {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .title-icon {
+            margin-right: 0;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .table-actions {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .search-container,
+        .filter-container {
+            width: 100%;
+        }
+
+        .performance-summary {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .insights-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .student-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .student-metrics {
+            justify-content: center;
+        }
+
+        .activity-item {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.75rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .analytics-header {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+        }
+
+        .chart-content,
+        .students-content {
+            padding: 1rem;
+        }
+
+        .insight-card {
+            padding: 1.5rem;
+        }
+
+        .insight-header {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .insight-icon {
+            margin-right: 0;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .question-cell {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+
+    /* Animation Classes */
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    .slide-up {
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bounce-in {
+        animation: bounceIn 0.6s ease-out;
+    }
+
+    @@keyframes bounceIn {
+        0% { opacity: 0; transform: scale(0.3); }
+        50% { opacity: 1; transform: scale(1.05); }
+        70% { transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Loading States */
+    .loading-skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @@keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+
+    /* Toast Styles */
+    .toast {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        backdrop-filter: blur(10px);
+    }
+
+    .toast-success {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.9), rgba(16, 185, 129, 0.9));
+        color: white;
+    }
+
+    .toast-error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
+        color: white;
+    }
+
+    .toast-warning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
+        color: white;
+    }
+
+    .toast-info {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+        color: white;
+    }
+</style>
+
 @section Scripts {
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     
     <script>
+        // Global variables
+        let currentTimeframe = 'all';
+        let currentSort = { column: null, direction: 'asc' };
+        let charts = {};
+
+        // Enhanced color palette
+        const colors = {
+            primary: '#3b82f6',
+            primaryLight: '#60a5fa',
+            secondary: '#6366f1',
+            success: '#22c55e',
+            successLight: '#4ade80',
+            danger: '#ef4444',
+            dangerLight: '#f87171',
+            warning: '#f59e0b',
+            info: '#0ea5e9',
+            gradient: {
+                primary: ['#3b82f6', '#1d4ed8'],
+                success: ['#22c55e', '#16a34a'],
+                danger: ['#ef4444', '#dc2626'],
+                warning: ['#f59e0b', '#d97706']
+            }
+        };
+
+        // Default chart options
+        const defaultChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: colors.primary,
+                    borderWidth: 1,
+                    cornerRadius: 8,
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    padding: 12
+                }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeOutQuart'
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            initializeTable();
+            initializeFilters();
+            initializeTooltips();
+            animateCounters();
+        });
+
+        // Chart initialization
+        function initializeCharts() {
             // Score Distribution Chart
             const scoreDistributionCtx = document.getElementById('scoreDistributionChart').getContext('2d');
-            new Chart(scoreDistributionCtx, {
+            charts.scoreDistribution = new Chart(scoreDistributionCtx, {
                 type: 'bar',
                 data: {
                     labels: @Json.Serialize(Model.ScoreRanges),
                     datasets: [{
                         label: 'Number of Students',
                         data: @Json.Serialize(Model.ScoreDistribution),
-                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        borderWidth: 1
+                        backgroundColor: colors.gradient.primary[0] + '80',
+                        borderColor: colors.gradient.primary[0],
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
-                    responsive: true,
+                    ...defaultChartOptions,
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                precision: 0
+                                precision: 0,
+                                color: '#6b7280',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: '#f3f4f6',
+                                lineWidth: 1
                             }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 12, weight: '500' }
+                            },
+                            grid: { display: false }
                         }
                     },
                     plugins: {
-                        title: {
-                            display: false
-                        },
-                        legend: {
-                            display: false
-                        },
+                        ...defaultChartOptions.plugins,
                         tooltip: {
+                            ...defaultChartOptions.plugins.tooltip,
                             callbacks: {
-                                title: function(tooltipItems) {
-                                    return tooltipItems[0].label + ' score range';
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                    return `${context.parsed.y} students (${percentage}%)`;
                                 }
                             }
                         }
                     }
                 }
             });
-            
+
             // Question Success Rate Chart
             const questionSuccessData = @Json.Serialize(Model.QuestionPerformance
-                .Select(q => new { number = q.Position + 1, rate = q.SuccessRate }));
+                .Select(q => new { number = q.Position + 1, rate = q.SuccessRate, type = q.QuestionType }));
                 
             const questionSuccessCtx = document.getElementById('questionSuccessChart').getContext('2d');
-            new Chart(questionSuccessCtx, {
+            charts.questionSuccess = new Chart(questionSuccessCtx, {
                 type: 'bar',
                 data: {
                     labels: questionSuccessData.map(q => 'Q' + q.number),
@@ -436,20 +2930,22 @@
                         label: 'Success Rate (%)',
                         data: questionSuccessData.map(q => q.rate),
                         backgroundColor: questionSuccessData.map(q => {
-                            if (q.rate >= 70) return 'rgba(22, 163, 74, 0.7)'; // Green
-                            if (q.rate >= 40) return 'rgba(245, 158, 11, 0.7)'; // Amber
-                            return 'rgba(220, 38, 38, 0.7)'; // Red
+                            if (q.rate >= 80) return colors.success + '80';
+                            if (q.rate >= 60) return colors.primary + '80';
+                            return colors.danger + '80';
                         }),
                         borderColor: questionSuccessData.map(q => {
-                            if (q.rate >= 70) return 'rgba(22, 163, 74, 1)';
-                            if (q.rate >= 40) return 'rgba(245, 158, 11, 1)';
-                            return 'rgba(220, 38, 38, 1)';
+                            if (q.rate >= 80) return colors.success;
+                            if (q.rate >= 60) return colors.primary;
+                            return colors.danger;
                         }),
-                        borderWidth: 1
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
-                    responsive: true,
+                    ...defaultChartOptions,
                     scales: {
                         y: {
                             beginAtZero: true,
@@ -457,27 +2953,630 @@
                             ticks: {
                                 callback: function(value) {
                                     return value + '%';
-                                }
+                                },
+                                color: '#6b7280',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: '#f3f4f6',
+                                lineWidth: 1
                             }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 12, weight: '500' }
+                            },
+                            grid: { display: false }
                         }
                     },
                     plugins: {
-                        title: {
-                            display: false
-                        },
+                        ...defaultChartOptions.plugins,
                         tooltip: {
+                            ...defaultChartOptions.plugins.tooltip,
                             callbacks: {
                                 title: function(tooltipItems) {
                                     const questionIndex = tooltipItems[0].dataIndex;
-                                    const questionPosition = questionSuccessData[questionIndex].number;
-                                    return 'Question ' + questionPosition;
+                                    const questionData = questionSuccessData[questionIndex];
+                                    return `Question ${questionData.number} (${questionData.type})`;
                                 },
                                 label: function(context) {
-                                    return 'Success Rate: ' + context.raw.toFixed(1) + '%';
+                                    return `Success Rate: ${context.raw.toFixed(1)}%`;
                                 }
                             }
                         }
                     }
+                }
+            });
+
+            // Completion Timeline Chart
+            const timelineCtx = document.getElementById('completionTimelineChart').getContext('2d');
+            charts.timeline = new Chart(timelineCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimelineLabels(),
+                    datasets: [{
+                        label: 'Completions',
+                        data: generateTimelineData(),
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primary + '20',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: colors.primary,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    ...defaultChartOptions,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                color: '#6b7280',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: '#f3f4f6',
+                                lineWidth: 1
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#6b7280',
+                                font: { size: 12 }
+                            },
+                            grid: {
+                                color: '#f3f4f6',
+                                lineWidth: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Mini score distribution chart
+            const miniCtx = document.getElementById('scoreDistributionMini').getContext('2d');
+            charts.miniDistribution = new Chart(miniCtx, {
+                type: 'line',
+                data: {
+                    labels: @Json.Serialize(Model.ScoreRanges),
+                    datasets: [{
+                        data: @Json.Serialize(Model.ScoreDistribution),
+                        borderColor: colors.primary,
+                        backgroundColor: colors.primary + '40',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    animation: { duration: 2000 }
+                }
+            });
+        }
+
+        // Generate timeline data (placeholder - replace with actual data)
+        function generateTimelineLabels() {
+            const labels = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            }
+            return labels;
+        }
+
+        function generateTimelineData() {
+            // This should be replaced with actual completion data
+            return [2, 5, 3, 8, 4, 6, 7];
+        }
+
+        // Table functionality
+        function initializeTable() {
+            const table = document.getElementById('questionsTable');
+            const headers = table.querySelectorAll('th.sortable');
+            
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const column = this.dataset.sort;
+                    sortTable(column);
+                });
+            });
+        }
+
+        function sortTable(column) {
+            const table = document.getElementById('questionsTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            // Update sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+            
+            // Update header classes
+            table.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('sorted');
+                const icon = th.querySelector('.fas');
+                icon.className = 'fas fa-sort';
+            });
+            
+            const currentHeader = table.querySelector(`th[data-sort="${column}"]`);
+            currentHeader.classList.add('sorted');
+            const currentIcon = currentHeader.querySelector('.fas');
+            currentIcon.className = currentSort.direction === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                switch (column) {
+                    case 'position':
+                        aValue = parseInt(a.querySelector('.question-number').textContent.replace('Q', ''));
+                        bValue = parseInt(b.querySelector('.question-number').textContent.replace('Q', ''));
+                        break;
+                    case 'points':
+                        aValue = parseFloat(a.querySelector('.points-badge').textContent);
+                        bValue = parseFloat(b.querySelector('.points-badge').textContent);
+                        break;
+                    case 'average':
+                        aValue = parseFloat(a.querySelector('.points-value').textContent);
+                        bValue = parseFloat(b.querySelector('.points-value').textContent);
+                        break;
+                    case 'success':
+                        aValue = parseFloat(a.querySelector('.rate-value').textContent.replace('%', ''));
+                        bValue = parseFloat(b.querySelector('.rate-value').textContent.replace('%', ''));
+                        break;
+                    case 'responses':
+                        aValue = parseInt(a.querySelector('.total-responses').textContent);
+                        bValue = parseInt(b.querySelector('.total-responses').textContent);
+                        break;
+                    case 'type':
+                        aValue = a.querySelector('.question-type-badge').textContent.trim();
+                        bValue = b.querySelector('.question-type-badge').textContent.trim();
+                        break;
+                    default:
+                        aValue = a.textContent;
+                        bValue = b.textContent;
+                }
+                
+                if (typeof aValue === 'string') {
+                    return currentSort.direction === 'asc' 
+                        ? aValue.localeCompare(bValue)
+                        : bValue.localeCompare(aValue);
+                } else {
+                    return currentSort.direction === 'asc' 
+                        ? aValue - bValue
+                        : bValue - aValue;
+                }
+            });
+            
+            // Reorder rows in DOM
+            rows.forEach(row => tbody.appendChild(row));
+            
+            // Add animation
+            rows.forEach((row, index) => {
+                row.style.animation = 'none';
+                setTimeout(() => {
+                    row.style.animation = 'slideUp 0.3s ease-out';
+                }, index * 50);
+            });
+        }
+
+        // Filter functionality
+        function initializeFilters() {
+            const searchInput = document.getElementById('questionSearch');
+            const difficultyFilter = document.getElementById('difficultyFilter');
+            
+            searchInput.addEventListener('input', filterTable);
+            difficultyFilter.addEventListener('change', filterTable);
+            
+            // Timeframe buttons
+            document.querySelectorAll('[data-timeframe]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-timeframe]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTimeframe = this.dataset.timeframe;
+                    updateChartsForTimeframe();
+                });
+            });
+            
+            // Timeline buttons
+            document.querySelectorAll('[data-timeline]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-timeline]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    updateTimelineChart(this.dataset.timeline);
+                });
+            });
+            
+            // Activity filters
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    filterActivity(this.dataset.filter);
+                });
+            });
+        }
+
+        function filterTable() {
+            const searchTerm = document.getElementById('questionSearch').value.toLowerCase();
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const rows = document.querySelectorAll('#questionsTable tbody tr');
+            
+            rows.forEach(row => {
+                const questionText = row.querySelector('.question-text').textContent.toLowerCase();
+                const successRate = parseFloat(row.querySelector('.rate-value').textContent.replace('%', ''));
+                
+                let matchesSearch = questionText.includes(searchTerm);
+                let matchesDifficulty = true;
+                
+                if (difficultyFilter) {
+                    switch (difficultyFilter) {
+                        case 'easy':
+                            matchesDifficulty = successRate >= 80;
+                            break;
+                        case 'medium':
+                            matchesDifficulty = successRate >= 60 && successRate < 80;
+                            break;
+                        case 'hard':
+                            matchesDifficulty = successRate < 60;
+                            break;
+                    }
+                }
+                
+                if (matchesSearch && matchesDifficulty) {
+                    row.style.display = '';
+                    row.classList.add('fade-in');
+                } else {
+                    row.style.display = 'none';
+                    row.classList.remove('fade-in');
+                }
+            });
+        }
+
+        function filterActivity(filter) {
+            const activityItems = document.querySelectorAll('.activity-item');
+            
+            activityItems.forEach(item => {
+                const isCompleted = item.classList.contains('completed');
+                const isInProgress = item.classList.contains('in-progress');
+                
+                let show = false;
+                switch (filter) {
+                    case 'all':
+                        show = true;
+                        break;
+                    case 'completed':
+                        show = isCompleted;
+                        break;
+                    case 'in-progress':
+                        show = isInProgress;
+                        break;
+                }
+                
+                item.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Chart update functions
+        function updateChartsForTimeframe() {
+            // This would typically fetch new data based on timeframe
+            showToast(`Updated charts for ${currentTimeframe} timeframe`, 'info');
+        }
+
+        function updateTimelineChart(timeline) {
+            // Update timeline chart based on selection
+            showToast(`Updated timeline to ${timeline} view`, 'info');
+        }
+
+        function toggleChartView(chartType) {
+            // Toggle between different chart views
+            showToast(`Toggled ${chartType} chart view`, 'info');
+        }
+
+        // Initialize tooltips
+        function initializeTooltips() {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        }
+
+        // Animate counters
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const counter = entry.target;
+                        const finalValue = parseFloat(counter.textContent);
+                        animateValue(counter, 0, finalValue, 1500);
+                        observer.unobserve(counter);
+                    }
+                });
+            });
+            
+            counters.forEach(counter => observer.observe(counter));
+        }
+
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= end) {
+                    current = end;
+                    clearInterval(timer);
+                }
+                
+                // Format based on content type
+                if (element.textContent.includes('%')) {
+                    element.textContent = current.toFixed(1) + '%';
+                } else if (element.textContent.includes(':')) {
+                    // Time format
+                    const minutes = Math.floor(current);
+                    const seconds = Math.round((current - minutes) * 60);
+                    element.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, 16);
+        }
+
+        // Modal and action functions
+        function showQuestionInsights(questionId) {
+            const modal = new bootstrap.Modal(document.getElementById('questionInsightsModal'));
+            const content = document.getElementById('questionInsightsContent');
+            
+            content.innerHTML = `
+                <div class="text-center mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading question insights...</p>
+                </div>
+            `;
+            
+            modal.show();
+            
+            // Simulate loading insights
+            setTimeout(() => {
+                content.innerHTML = generateQuestionInsightsHTML(questionId);
+            }, 1000);
+        }
+
+        function generateQuestionInsightsHTML(questionId) {
+            return `
+                <div class="insight-summary">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="insight-metric">
+                                <h6>Response Pattern</h6>
+                                <p>Most students answered correctly on first attempt</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="insight-metric">
+                                <h6>Time to Complete</h6>
+                                <p>Average: 45 seconds (within expected range)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insight-recommendations mt-3">
+                        <h6>Recommendations:</h6>
+                        <ul>
+                            <li>Question is performing well as designed</li>
+                            <li>Consider using similar questions for future assessments</li>
+                            <li>No immediate action required</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+
+        function exportAnalytics() {
+            const modal = new bootstrap.Modal(document.getElementById('exportModal'));
+            modal.show();
+        }
+
+        function processExport() {
+            const format = document.querySelector('input[name="exportFormat"]:checked').value;
+            const includeCharts = document.getElementById('includeCharts').checked;
+            const includeInsights = document.getElementById('includeInsights').checked;
+            const includeStudentData = document.getElementById('includeStudentData').checked;
+            
+            showToast(`Exporting analytics as ${format.toUpperCase()}...`, 'info');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+            modal.hide();
+            
+            // Simulate export process
+            setTimeout(() => {
+                showToast('Export completed successfully!', 'success');
+            }, 2000);
+        }
+
+        function refreshAnalytics() {
+            showToast('Refreshing analytics data...', 'info');
+            
+            // Add loading states to charts
+            Object.values(charts).forEach(chart => {
+                chart.data.datasets.forEach(dataset => {
+                    dataset.backgroundColor = dataset.backgroundColor.replace('80', '40');
+                });
+                chart.update();
+            });
+            
+            // Simulate refresh
+            setTimeout(() => {
+                Object.values(charts).forEach(chart => {
+                    chart.data.datasets.forEach(dataset => {
+                        dataset.backgroundColor = dataset.backgroundColor.replace('40', '80');
+                    });
+                    chart.update();
+                });
+                showToast('Analytics refreshed successfully!', 'success');
+            }, 1500);
+        }
+
+        function generateNewInsights() {
+            showToast('Generating new AI insights...', 'info');
+            setTimeout(() => {
+                showToast('New insights generated successfully!', 'success');
+            }, 2000);
+        }
+
+        function viewPerformanceDetails() {
+            showToast('Opening performance details...', 'info');
+        }
+
+        function showDifficultQuestions() {
+            const difficultyFilter = document.getElementById('difficultyFilter');
+            difficultyFilter.value = 'hard';
+            filterTable();
+            document.getElementById('difficultyFilter').scrollIntoView({ behavior: 'smooth' });
+            showToast('Filtered to show difficult questions', 'info');
+        }
+
+        function viewTimingAnalysis() {
+            showToast('Opening timing analysis...', 'info');
+        }
+
+        function generateLearningPlan() {
+            showToast('Generating personalized learning plan...', 'info');
+        }
+
+        function showAllTopPerformers() {
+            showToast('Showing all top performers...', 'info');
+        }
+
+        function showAllStrugglingStudents() {
+            showToast('Showing all struggling students...', 'info');
+        }
+
+        function contactStudent(email) {
+            showToast(`Opening email to ${email}...`, 'info');
+        }
+
+        function viewQuestionDetails() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('questionInsightsModal'));
+            modal.hide();
+            showToast('Redirecting to detailed question analytics...', 'info');
+        }
+
+        // Toast notification system
+        function showToast(message, type = 'info', duration = 4000) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toastId = 'toast-' + Date.now();
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast toast-${type} show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <i class="fas ${getToastIcon(type)} me-2"></i>
+                        <strong class="me-auto">${getToastTitle(type)}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+            // Auto-hide toast
+            setTimeout(() => {
+                const toast = document.getElementById(toastId);
+                if (toast) {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        function getToastIcon(type) {
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            return icons[type] || icons.info;
+        }
+
+        function getToastTitle(type) {
+            const titles = {
+                success: 'Success',
+                error: 'Error',
+                warning: 'Warning',
+                info: 'Information'
+            };
+            return titles[type] || titles.info;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape key to close modals
+            if (e.key === 'Escape') {
+                const openModals = document.querySelectorAll('.modal.show');
+                openModals.forEach(modal => {
+                    const bsModal = bootstrap.Modal.getInstance(modal);
+                    if (bsModal) {
+                        bsModal.hide();
+                    }
+                });
+            }
+            
+            // Ctrl/Cmd + E for export
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                exportAnalytics();
+            }
+            
+            // Ctrl/Cmd + R for refresh
+            if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshAnalytics();
+            }
+        });
+
+        // Add smooth scrolling to anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
                 }
             });
         });

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TestPlatform2")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1ca0990f479043889328c1f53adef5a0dea3afb2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7b98e3b026ee59a04dcc4efe439e8a65ec698733")]
 [assembly: System.Reflection.AssemblyProductAttribute("TestPlatform2")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TestPlatform2")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
