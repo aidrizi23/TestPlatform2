@@ -7,6 +7,7 @@ using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Models;
 using TestPlatform2.Repository;
+using TestPlatform2.Services;
 using System.Text.Json;
 
 namespace TestPlatform2.Controllers;
@@ -19,6 +20,7 @@ public class TestController : Controller
     private readonly ITestAnalyticsRepository _testAnalyticsRepository;
     private readonly ITestInviteRepository _testInviteRepository;
     private readonly IQuestionRepository _questionRepository;
+    private readonly IExportService _exportService;
     
     public TestController(
         ITestRepository testRepository, 
@@ -26,7 +28,8 @@ public class TestController : Controller
         ITestAttemptRepository testAttemptRepository,
         ITestAnalyticsRepository testAnalyticsRepository,
         ITestInviteRepository testInviteRepository,
-        IQuestionRepository questionRepository)
+        IQuestionRepository questionRepository,
+        IExportService exportService)
     {
         _testRepository = testRepository;
         _userManager = userManager;
@@ -34,6 +37,7 @@ public class TestController : Controller
         _testAnalyticsRepository = testAnalyticsRepository;
         _testInviteRepository = testInviteRepository;
         _questionRepository = questionRepository;
+        _exportService = exportService;
     }
     
     // ========== TRADITIONAL MVC METHODS ==========
@@ -652,37 +656,26 @@ public class TestController : Controller
         if (request.TestIds == null || !request.TestIds.Any())
             return Json(new { success = false, message = "No tests selected" });
 
-        var deletedCount = 0;
-        var errors = new List<string>();
-
-        foreach (var testId in request.TestIds)
+        try
         {
-            try
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to delete" });
+
+            await _testRepository.BulkDeleteAsync(tests);
+
+            return Json(new
             {
-                var test = await _testRepository.GetTestByIdAsync(testId);
-                if (test != null && test.User == user)
-                {
-                    await _testRepository.Delete(test);
-                    deletedCount++;
-                }
-                else
-                {
-                    errors.Add($"Could not delete test {testId}");
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"Error deleting test {testId}");
-            }
+                success = true,
+                message = $"Successfully deleted {tests.Count} test(s)",
+                deletedCount = tests.Count
+            });
         }
-
-        return Json(new
+        catch (Exception ex)
         {
-            success = deletedCount > 0,
-            message = $"Deleted {deletedCount} test(s)",
-            deletedCount,
-            errors
-        });
+            return Json(new { success = false, message = "An error occurred while deleting tests" });
+        }
     }
 
     // POST: /Test/BulkArchiveTestsAjax
@@ -697,40 +690,73 @@ public class TestController : Controller
         if (request.TestIds == null || !request.TestIds.Any())
             return Json(new { success = false, message = "No tests selected" });
 
-        var updatedCount = 0;
-        var errors = new List<string>();
-
-        foreach (var testId in request.TestIds)
+        try
         {
-            try
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to update" });
+
+            foreach (var test in tests)
             {
-                var test = await _testRepository.GetTestByIdAsync(testId);
-                if (test != null && test.User == user)
-                {
-                    test.IsArchived = request.Archive;
-                    test.ArchivedAt = request.Archive ? DateTime.UtcNow : null;
-                    await _testRepository.Update(test);
-                    updatedCount++;
-                }
-                else
-                {
-                    errors.Add($"Could not update test {testId}");
-                }
+                test.IsArchived = request.Archive;
+                test.ArchivedAt = request.Archive ? DateTime.UtcNow : null;
             }
-            catch (Exception ex)
+
+            await _testRepository.BulkUpdateAsync(tests);
+
+            var action = request.Archive ? "archived" : "unarchived";
+            return Json(new
             {
-                errors.Add($"Error updating test {testId}");
-            }
+                success = true,
+                message = $"Successfully {action} {tests.Count} test(s)",
+                updatedCount = tests.Count
+            });
         }
-
-        var action = request.Archive ? "archived" : "unarchived";
-        return Json(new
+        catch (Exception ex)
         {
-            success = updatedCount > 0,
-            message = $"{action.Substring(0, 1).ToUpper()}{action.Substring(1)} {updatedCount} test(s)",
-            updatedCount,
-            errors
-        });
+            return Json(new { success = false, message = "An error occurred while updating tests" });
+        }
+    }
+
+    // POST: /Test/BulkLockTestsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> BulkLockTestsAjax([FromBody] BulkLockRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (request.TestIds == null || !request.TestIds.Any())
+            return Json(new { success = false, message = "No tests selected" });
+
+        try
+        {
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to update" });
+
+            foreach (var test in tests)
+            {
+                test.IsLocked = request.Lock;
+            }
+
+            await _testRepository.BulkUpdateAsync(tests);
+
+            var action = request.Lock ? "locked" : "unlocked";
+            return Json(new
+            {
+                success = true,
+                message = $"Successfully {action} {tests.Count} test(s)",
+                updatedCount = tests.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating test lock status" });
+        }
     }
 
     // POST: /Test/CloneTestAjax
@@ -1029,6 +1055,157 @@ public class TestController : Controller
         }
     }
 
+    // ========== EXPORT METHODS ==========
+
+    // GET: /Test/ExportResultsPdf
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsPdf(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        
+        try
+        {
+            var pdfBytes = await _exportService.ExportTestResultsToPdfAsync(test, attempts);
+            var fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+            
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating PDF export";
+            return RedirectToAction("AllAttempts", new { testId = testId });
+        }
+    }
+
+    // GET: /Test/ExportResultsExcel
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsExcel(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        
+        try
+        {
+            var excelBytes = await _exportService.ExportTestResultsToExcelAsync(test, attempts);
+            var fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.xlsx";
+            
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating Excel export";
+            return RedirectToAction("AllAttempts", new { testId = testId });
+        }
+    }
+
+    // GET: /Test/ExportTestSummaryPdf
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportTestSummaryPdf(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        try
+        {
+            var pdfBytes = await _exportService.ExportTestSummaryToPdfAsync(test);
+            var fileName = $"TestSummary_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+            
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating test summary PDF";
+            return RedirectToAction("Details", new { id = testId });
+        }
+    }
+
+    // POST: /Test/ExportResultsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsAjax([FromBody] ExportRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(request.TestId);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(request.TestId);
+            byte[] fileBytes;
+            string fileName;
+            string contentType;
+
+            switch (request.Format.ToLower())
+            {
+                case "pdf":
+                    fileBytes = await _exportService.ExportTestResultsToPdfAsync(test, attempts);
+                    fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+                    contentType = "application/pdf";
+                    break;
+                case "excel":
+                    fileBytes = await _exportService.ExportTestResultsToExcelAsync(test, attempts);
+                    fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    break;
+                default:
+                    return Json(new { success = false, message = "Unsupported export format" });
+            }
+
+            // Convert to base64 for AJAX response
+            var base64File = Convert.ToBase64String(fileBytes);
+            
+            return Json(new { 
+                success = true, 
+                fileName = fileName,
+                fileData = base64File,
+                contentType = contentType
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Error generating export file" });
+        }
+    }
+
     // ========== REQUEST DTOs FOR AJAX METHODS ==========
     
     public class DeleteTestRequest
@@ -1055,5 +1232,17 @@ public class TestController : Controller
     {
         public List<string> TestIds { get; set; }
         public bool Archive { get; set; }
+    }
+
+    public class BulkLockRequest
+    {
+        public List<string> TestIds { get; set; }
+        public bool Lock { get; set; }
+    }
+
+    public class ExportRequest
+    {
+        public string TestId { get; set; }
+        public string Format { get; set; } // "pdf" or "excel"
     }
 }

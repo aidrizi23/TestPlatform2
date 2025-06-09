@@ -45,6 +45,20 @@ ViewData["Title"] = "Test Details";
                     <button class="btn btn-outline-info" onclick="openTestStatsModal('@Model.Id')">
                         <i class="fas fa-chart-bar me-2"></i>Statistics
                     </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-2"></i>Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-controller="Test" asp-action="ExportTestSummaryPdf" asp-route-testId="@Model.Id">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>Test Summary (PDF)
+                                </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" asp-controller="Test" asp-action="AllAttempts" asp-route-testId="@Model.Id">
+                                    <i class="fas fa-chart-bar me-2"></i>View Results to Export
+                                </a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

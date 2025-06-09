@@ -47,6 +47,7 @@ public class Program
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
         builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        builder.Services.AddScoped<IExportService, ExportService>();
         
         // Background services
         builder.Services.AddHostedService<SubscriptionCleanupService>();

@@ -1,12 +1,12 @@
 ﻿// FUTURE IMPROVEMENTS:
-// 1. Add email verification for new user registrations
-// 2. Implement password reset functionality
-// 3. Add bulk test operations (delete multiple, archive, etc.)
-// 4. Create test templates for common question patterns
-// 5. Add export functionality for test results (PDF, Excel)
+// 1. Add email verification for new user registrations --done
+// 2. Implement password reset functionality --done
+// 3. Add bulk test operations (delete multiple, archive, etc.) --done
+// 4. Create test templates for common question patterns (--do not do)
+// 5. Add export functionality for test results (PDF, Excel) --done
 // 6. Implement test categories/tags for better organization
 // 7. Add collaborative features (share tests with other teachers)
-// 8. Create mobile app for test taking
+// 8. Create mobile app for test taking (--do not do)
 // 9. Add plagiarism detection for written answers
 // 10. Implement advanced question types (drag & drop, image-based)
 // 11. Add test scheduling and automatic publishing

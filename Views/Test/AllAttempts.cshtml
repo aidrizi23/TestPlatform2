@@ -52,11 +52,18 @@ ViewData["Title"] = "Test Attempts";
                             <span>Export</span>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="exportData('csv')">
-                                    <i class="fas fa-file-csv"></i>Export as CSV
+                            <li><a class="dropdown-item" asp-controller="Test" asp-action="ExportResultsPdf" asp-route-testId="@Model.TestId">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>Export as PDF
                                 </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="exportData('pdf')">
-                                    <i class="fas fa-file-pdf"></i>Export as PDF
+                            <li><a class="dropdown-item" asp-controller="Test" asp-action="ExportResultsExcel" asp-route-testId="@Model.TestId">
+                                    <i class="fas fa-file-excel text-success me-2"></i>Export as Excel
+                                </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportDataAjax('pdf')">
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>Download PDF (AJAX)
+                                </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportDataAjax('excel')">
+                                    <i class="fas fa-file-excel text-success me-2"></i>Download Excel (AJAX)
                                 </a></li>
                         </ul>
                     </div>
@@ -2499,6 +2506,42 @@ ViewData["Title"] = "Test Attempts";
             });
         });
     });
+
+    // Export functionality via AJAX
+    window.exportDataAjax = async function(format) {
+        const testId = '@Model.TestId';
+        
+        try {
+            showToast(`Generating ${format.toUpperCase()} export...`, 'info');
+            
+            const response = await fetch('@Url.Action("ExportResultsAjax", "Test")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ TestId: testId, Format: format })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Create download link for the base64 file
+                const linkSource = `data:${result.contentType};base64,${result.fileData}`;
+                const downloadLink = document.createElement("a");
+                downloadLink.href = linkSource;
+                downloadLink.download = result.fileName;
+                downloadLink.click();
+                
+                showToast(`${format.toUpperCase()} export downloaded successfully!`, 'success');
+            } else {
+                showToast(result.message || `Error generating ${format.toUpperCase()} export`, 'error');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast(`Error generating ${format.toUpperCase()} export`, 'error');
+        }
+    };
 
     // Cleanup on page unload
     window.addEventListener('beforeunload', function() {

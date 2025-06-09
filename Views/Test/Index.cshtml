@@ -3145,45 +3145,82 @@ ViewData["Title"] = "My Tests";
         async function bulkLockUnlock(lock) {
             const testIds = Array.from(selectedTests);
 
+            if (testIds.length === 0) {
+                showToast('No tests selected', 'warning');
+                return;
+            }
+
             showLoading();
 
             try {
-                // Process each test individually since we don't have a bulk lock endpoint
-                let successCount = 0;
-                for (const testId of testIds) {
-                    try {
-                        const response = await fetch(`@Url.Action("LockTestAjax", "Test")`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: JSON.stringify({ Id: testId })
-                        });
+                const response = await fetch(`@Url.Action("BulkLockTestsAjax", "Test")`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ TestIds: testIds, Lock: lock })
+                });
 
-                        const result = await response.json();
-                        if (result.success && result.isLocked === lock) {
-                            successCount++;
-                        }
-                    } catch (error) {
-                        console.error(`Error processing test ${testId}:`, error);
-                    }
-                }
+                const result = await response.json();
 
-                if (successCount > 0) {
-                    showToast(`Successfully ${lock ? 'locked' : 'unlocked'} ${successCount} test(s)! Refreshing page...`, 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
+                if (result.success) {
+                    showToast(`Successfully ${lock ? 'locked' : 'unlocked'} ${result.updatedCount} test(s)!`, 'success');
+                    
+                    // Update test cards in DOM instead of full refresh
+                    updateTestCardsLockStatus(testIds, lock);
+                    
+                    // Clear selection and hide bulk actions
+                    selectedTests.clear();
+                    updateBulkActionsVisibility();
                 } else {
-                    showToast('No tests were updated', 'warning');
+                    showToast(result.message || `Error ${lock ? 'locking' : 'unlocking'} tests`, 'error');
                 }
             } catch (error) {
-                console.error('Error in bulk operation:', error);
-                showToast('Error processing bulk operation', 'error');
+                console.error('Error in bulk lock operation:', error);
+                showToast(`Error ${lock ? 'locking' : 'unlocking'} tests`, 'error');
             } finally {
                 hideLoading();
             }
+        }
+
+        function updateTestCardsLockStatus(testIds, isLocked) {
+            testIds.forEach(testId => {
+                const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+                if (testCard) {
+                    // Update status badge
+                    const statusBadge = testCard.querySelector('.status-badge');
+                    if (statusBadge) {
+                        if (isLocked) {
+                            statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
+                            statusBadge.className = 'status-badge status-locked';
+                        } else {
+                            statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
+                            statusBadge.className = 'status-badge status-active';
+                        }
+                    }
+
+                    // Update data attributes
+                    testCard.dataset.locked = isLocked.toString().toLowerCase();
+
+                    // Update dropdown lock button
+                    const lockBtn = testCard.querySelector('.lock-test-btn');
+                    if (lockBtn) {
+                        lockBtn.dataset.locked = isLocked.toString().toLowerCase();
+                        const icon = lockBtn.querySelector('i');
+                        if (icon) {
+                            icon.className = `fas ${isLocked ? 'fa-unlock' : 'fa-lock'} me-2`;
+                        }
+                        lockBtn.innerHTML = `<i class="fas ${isLocked ? 'fa-unlock' : 'fa-lock'} me-2"></i>${isLocked ? 'Unlock' : 'Lock'} Test`;
+                    }
+
+                    // Uncheck the checkbox
+                    const checkbox = testCard.querySelector('.test-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                }
+            });
         }
 
         if (bulkLockBtn) {
