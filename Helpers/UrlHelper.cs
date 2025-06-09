@@ -8,4 +8,13 @@ public static class UrlHelper
         var baseUrl = $"{request.Scheme}://{request.Host}"; // Automatically handles localhost/production
         return $"{baseUrl}/testattempt/starttest?testId={testId}&token={token}";
     }
+
+    public static string BuildAbsoluteUrl(HttpRequest request, string? relativeUrl)
+    {
+        if (string.IsNullOrEmpty(relativeUrl))
+            return $"{request.Scheme}://{request.Host}";
+            
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+        return $"{baseUrl}{relativeUrl}";
+    }
 }

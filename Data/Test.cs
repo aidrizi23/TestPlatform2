@@ -22,5 +22,7 @@ public class Test
     public List<TestInvite> InvitedStudents { get; set; } = new();
     public List<TestAttempt> Attempts { get; set; } = new();
     public bool IsLocked { get; set; } = false; // Default values
+    public bool IsArchived { get; set; } = false;
+    public DateTime? ArchivedAt { get; set; }
     
 }

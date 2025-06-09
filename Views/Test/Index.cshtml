@@ -80,6 +80,13 @@ ViewData["Title"] = "My Tests";
                         <input type="text" id="searchTests" class="form-control" placeholder="Search tests...">
                     </div>
                 </div>
+                <div class="archive-toggle">
+                    <a href="@Url.Action("Index", new { showArchived = !(ViewBag.ShowArchived ?? false) })" 
+                       class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")">
+                        <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
+                        @(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")
+                    </a>
+                </div>
                 <div class="view-options">
                     <button class="view-btn active" data-view="grid" title="Grid View">
                         <i class="fas fa-th-large"></i>
@@ -112,10 +119,22 @@ ViewData["Title"] = "My Tests";
                 <button class="btn btn-sm btn-success" id="bulkUnlockBtn">
                     <i class="fas fa-unlock me-1"></i>Unlock Selected
                 </button>
+                @if (ViewBag.ShowArchived == true)
+                {
+                    <button class="btn btn-sm btn-info" id="bulkUnarchiveBtn">
+                        <i class="fas fa-box-open me-1"></i>Unarchive Selected
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-secondary" id="bulkArchiveBtn">
+                        <i class="fas fa-archive me-1"></i>Archive Selected
+                    </button>
+                }
                 <button class="btn btn-sm btn-danger" id="bulkDeleteBtn">
                     <i class="fas fa-trash me-1"></i>Delete Selected
                 </button>
-                <button class="btn btn-sm btn-secondary" id="clearSelectionBtn">
+                <button class="btn btn-sm btn-outline-secondary" id="clearSelectionBtn">
                     <i class="fas fa-times me-1"></i>Clear Selection
                 </button>
             </div>
@@ -133,9 +152,9 @@ ViewData["Title"] = "My Tests";
                         <div class="form-check">
                             <input class="form-check-input test-checkbox" type="checkbox" data-test-id="@test.Id">
                         </div>
-                        <span class="status-badge @(test.IsLocked ? "status-locked" : "status-active")">
-                            <i class="fas @(test.IsLocked ? "fa-lock" : "fa-unlock")"></i>
-                            @(test.IsLocked ? "Locked" : "Active")
+                        <span class="status-badge @(test.IsArchived ? "status-archived" : (test.IsLocked ? "status-locked" : "status-active"))">
+                            <i class="fas @(test.IsArchived ? "fa-archive" : (test.IsLocked ? "fa-lock" : "fa-unlock"))"></i>
+                            @(test.IsArchived ? "Archived" : (test.IsLocked ? "Locked" : "Active"))
                         </span>
                     </div>
                     <div class="test-actions">
@@ -160,6 +179,9 @@ ViewData["Title"] = "My Tests";
                                         <i class="fas fa-chart-line me-2"></i>View Analytics
                                     </a></li>
                                 <li><hr class="dropdown-divider"></li>
+                                <li><button class="dropdown-item archive-test-btn" data-test-id="@test.Id" data-test-name="@test.TestName" data-archived="@test.IsArchived.ToString().ToLower()">
+                                        <i class="fas @(test.IsArchived ? "fa-box-open" : "fa-archive") me-2"></i>@(test.IsArchived ? "Unarchive" : "Archive") Test
+                                    </button></li>
                                 <li><button class="dropdown-item text-danger delete-test-btn" data-test-id="@test.Id" data-test-name="@test.TestName">
                                         <i class="fas fa-trash me-2"></i>Delete Test
                                     </button></li>
@@ -537,6 +559,66 @@ ViewData["Title"] = "My Tests";
                 </button>
                 <button type="button" class="btn btn-danger" id="confirmBulkDelete">
                     <i class="fas fa-trash me-2"></i>Delete Tests
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Archive Modal -->
+<div class="modal fade" id="bulkArchiveModal" tabindex="-1" aria-labelledby="bulkArchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="bulkArchiveModalLabel">
+                    <i class="fas fa-archive text-info me-2"></i>
+                    Confirm Bulk Archive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to archive <strong><span id="bulkArchiveCount"></span> selected tests</strong>?</p>
+                <div class="alert alert-info border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Archived tests will be hidden from the main view but can be restored at any time.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-info" id="confirmBulkArchive">
+                    <i class="fas fa-archive me-2"></i>Archive Tests
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Unarchive Modal -->
+<div class="modal fade" id="bulkUnarchiveModal" tabindex="-1" aria-labelledby="bulkUnarchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="bulkUnarchiveModalLabel">
+                    <i class="fas fa-box-open text-success me-2"></i>
+                    Confirm Bulk Unarchive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to unarchive <strong><span id="bulkUnarchiveCount"></span> selected tests</strong>?</p>
+                <div class="alert alert-success border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Unarchived tests will be restored to the active tests view.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="confirmBulkUnarchive">
+                    <i class="fas fa-box-open me-2"></i>Unarchive Tests
                 </button>
             </div>
         </div>
@@ -3110,6 +3192,114 @@ ViewData["Title"] = "My Tests";
 
         if (bulkUnlockBtn) {
             bulkUnlockBtn.addEventListener('click', () => bulkLockUnlock(false));
+        }
+
+        // Bulk archive/unarchive functionality
+        const bulkArchiveBtn = document.getElementById('bulkArchiveBtn');
+        const bulkUnarchiveBtn = document.getElementById('bulkUnarchiveBtn');
+        const confirmBulkArchiveBtn = document.getElementById('confirmBulkArchive');
+        const confirmBulkUnarchiveBtn = document.getElementById('confirmBulkUnarchive');
+        const bulkArchiveModal = new bootstrap.Modal(document.getElementById('bulkArchiveModal'));
+        const bulkUnarchiveModal = new bootstrap.Modal(document.getElementById('bulkUnarchiveModal'));
+
+        if (bulkArchiveBtn) {
+            bulkArchiveBtn.addEventListener('click', function() {
+                document.getElementById('bulkArchiveCount').textContent = selectedTests.size;
+                bulkArchiveModal.show();
+            });
+        }
+
+        if (bulkUnarchiveBtn) {
+            bulkUnarchiveBtn.addEventListener('click', function() {
+                document.getElementById('bulkUnarchiveCount').textContent = selectedTests.size;
+                bulkUnarchiveModal.show();
+            });
+        }
+
+        if (confirmBulkArchiveBtn) {
+            confirmBulkArchiveBtn.addEventListener('click', async function() {
+                const testIds = Array.from(selectedTests);
+
+                const submitButton = this;
+                const originalText = submitButton.innerHTML;
+
+                showLoading();
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Archiving...';
+
+                try {
+                    const response = await fetch(`@Url.Action("BulkArchiveTestsAjax", "Test")`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ TestIds: testIds, Archive: true })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        bulkArchiveModal.hide();
+                        showToast(`${result.message}! Refreshing page...`, 'success');
+
+                        // Remove selected test cards from DOM
+                        removeSelectedTestCardsFromDOM();
+                    } else {
+                        showToast(result.message || 'Error archiving tests', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error archiving tests:', error);
+                    showToast('Error archiving tests', 'error');
+                } finally {
+                    hideLoading();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
+        }
+
+        if (confirmBulkUnarchiveBtn) {
+            confirmBulkUnarchiveBtn.addEventListener('click', async function() {
+                const testIds = Array.from(selectedTests);
+
+                const submitButton = this;
+                const originalText = submitButton.innerHTML;
+
+                showLoading();
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Unarchiving...';
+
+                try {
+                    const response = await fetch(`@Url.Action("BulkArchiveTestsAjax", "Test")`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ TestIds: testIds, Archive: false })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        bulkUnarchiveModal.hide();
+                        showToast(`${result.message}! Refreshing page...`, 'success');
+
+                        // Remove selected test cards from DOM
+                        removeSelectedTestCardsFromDOM();
+                    } else {
+                        showToast(result.message || 'Error unarchiving tests', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error unarchiving tests:', error);
+                    showToast('Error unarchiving tests', 'error');
+                } finally {
+                    hideLoading();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
         }
 
         // View toggle functionality

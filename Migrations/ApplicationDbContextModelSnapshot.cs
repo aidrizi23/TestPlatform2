@@ -344,9 +344,15 @@ namespace TestPlatform2.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsLocked")
                         .HasColumnType("boolean");

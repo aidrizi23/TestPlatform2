@@ -1,46 +1,4 @@
-﻿    Invite Students:
-
-        A professor adds student emails to TestInvite.
-
-        Emails are sent with a unique link: https://yourapp.com/test/{testId}?token={UniqueToken}.
-
-    Start Test:
-
-        Students click the link and enter their name/email (no login).
-
-        The system validates the token and creates a TestAttempt.
-
-    Track Activity:
-
-        IsUsed in TestInvite marks if a student started the test.
-
-        TestAttempt records timestamps and whether they finished (IsCompleted).
-
-    Store Answers:
-
-        Answers are saved to the Answer table with the AttemptId to link them to a specific session.
-        
-        
-
-// view to edit a submission and it's points ????????????
-// view to edit a question and it's points ????????????
-
-
-// add the ability to only show a certain amount of questions based on their type.
-
-// ADD TEST LOCKING FEATURE
-
-
-// MAKE IT SO THAT THE TEST ALREADY HAS ANY ATTEMPTS THAT HAVE BEEN MADE ON IT THE TEACHER CAN NOT DELETE THE QUESTIONS ANYMORE
-// Make it so that the user can not send a test invite if the test does not have any questions  ==> DONE
-
-
-
-
-// Add the details of the attempts that are completed to the attempts page of the test. make it so that the teacher can see the questions that the student had and also the 
-// amswers to the questions. Also make it so that the teacher can see the score of the student on the test.
-
-// FUTURE IMPROVEMENTS:
+﻿// FUTURE IMPROVEMENTS:
 // 1. Add email verification for new user registrations
 // 2. Implement password reset functionality
 // 3. Add bulk test operations (delete multiple, archive, etc.)

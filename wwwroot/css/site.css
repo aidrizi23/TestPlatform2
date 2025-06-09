@@ -942,6 +942,12 @@ a:hover {
     border-color: rgba(239, 68, 68, 0.5);
 }
 
+.status-badge.status-archived {
+    background: rgba(107, 114, 128, 0.2);
+    color: #f3f4f6;
+    border-color: rgba(107, 114, 128, 0.5);
+}
+
 .hero-description {
     font-size: 1.25rem;
     color: rgba(255, 255, 255, 0.9);

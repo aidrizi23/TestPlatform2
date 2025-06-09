@@ -41,10 +41,18 @@ public class TestController : Controller
     // GET: /Test/Index
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(bool showArchived = false)
     {
         var user = await _userManager.GetUserAsync(User);
         var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
+        
+        // Filter archived tests based on the parameter
+        if (!showArchived)
+        {
+            tests = tests.Where(t => !t.IsArchived).ToList();
+        }
+        
+        ViewBag.ShowArchived = showArchived;
         return View(tests);
     }
     
@@ -677,6 +685,54 @@ public class TestController : Controller
         });
     }
 
+    // POST: /Test/BulkArchiveTestsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> BulkArchiveTestsAjax([FromBody] BulkArchiveRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (request.TestIds == null || !request.TestIds.Any())
+            return Json(new { success = false, message = "No tests selected" });
+
+        var updatedCount = 0;
+        var errors = new List<string>();
+
+        foreach (var testId in request.TestIds)
+        {
+            try
+            {
+                var test = await _testRepository.GetTestByIdAsync(testId);
+                if (test != null && test.User == user)
+                {
+                    test.IsArchived = request.Archive;
+                    test.ArchivedAt = request.Archive ? DateTime.UtcNow : null;
+                    await _testRepository.Update(test);
+                    updatedCount++;
+                }
+                else
+                {
+                    errors.Add($"Could not update test {testId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"Error updating test {testId}");
+            }
+        }
+
+        var action = request.Archive ? "archived" : "unarchived";
+        return Json(new
+        {
+            success = updatedCount > 0,
+            message = $"{action.Substring(0, 1).ToUpper()}{action.Substring(1)} {updatedCount} test(s)",
+            updatedCount,
+            errors
+        });
+    }
+
     // POST: /Test/CloneTestAjax
     [HttpPost]
     [Authorize]
@@ -993,5 +1049,11 @@ public class TestController : Controller
     public class CloneTestRequest
     {
         public string Id { get; set; }
+    }
+
+    public class BulkArchiveRequest
+    {
+        public List<string> TestIds { get; set; }
+        public bool Archive { get; set; }
     }
 }
