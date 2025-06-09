@@ -253,6 +253,37 @@ ViewData["Title"] = "Test Details";
                             </span>
                     </div>
                 </div>
+                
+                <!-- Question Filters -->
+                <div class="question-filters">
+                    <div class="filter-group">
+                        <label class="filter-label">Filter by Type:</label>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all" onclick="filterQuestions('all')">
+                                <i class="fas fa-list me-1"></i>All (@Model.Questions.Count)
+                            </button>
+                            <button class="filter-btn" data-filter="multiple-choice" onclick="filterQuestions('multiple-choice')">
+                                <i class="fas fa-list-ul me-1"></i>Multiple Choice (@(Model.Questions.OfType<MultipleChoiceQuestion>().Count()))
+                            </button>
+                            <button class="filter-btn" data-filter="true-false" onclick="filterQuestions('true-false')">
+                                <i class="fas fa-check-circle me-1"></i>True/False (@(Model.Questions.OfType<TrueFalseQuestion>().Count()))
+                            </button>
+                            <button class="filter-btn" data-filter="short-answer" onclick="filterQuestions('short-answer')">
+                                <i class="fas fa-pen me-1"></i>Short Answer (@(Model.Questions.OfType<ShortAnswerQuestion>().Count()))
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Sort by:</label>
+                        <select class="filter-select" id="sortQuestions" onchange="sortQuestions(this.value)">
+                            <option value="position">Position</option>
+                            <option value="type">Question Type</option>
+                            <option value="points-high">Points (High to Low)</option>
+                            <option value="points-low">Points (Low to High)</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="questions-list" id="questionsList">
                     @foreach (var question in Model.Questions.OrderBy(q => q.Position))
@@ -1344,6 +1375,83 @@ ViewData["Title"] = "Test Details";
         border: 1px solid #f59e0b;
     }
 
+    /* Question Filters */
+    .question-filters {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f9fafb;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e5e7eb;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e5e7eb;
+        background: white;
+        color: #6b7280;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .filter-btn:hover {
+        border-color: #3b82f6;
+        color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .filter-btn.active {
+        border-color: #3b82f6;
+        background: #3b82f6;
+        color: white;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+        color: #374151;
+        font-weight: 500;
+        cursor: pointer;
+        transition: border-color 0.2s ease;
+        min-width: 150px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
     .questions-list {
         display: flex;
         flex-direction: column;
@@ -2422,7 +2530,7 @@ ViewData["Title"] = "Test Details";
             showLoading();
 
             try {
-                const response = await fetch('/Test/LockTestAjax', {
+                const response = await fetch('/Test/ToggleLockAjax', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -3962,6 +4070,72 @@ ViewData["Title"] = "Test Details";
                 }
             }
 });
+
+        // Question filtering and sorting functions
+        function filterQuestions(filterType) {
+            const questionItems = document.querySelectorAll('.question-item');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            
+            // Update active filter button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-filter="${filterType}"]`).classList.add('active');
+            
+            questionItems.forEach(item => {
+                if (filterType === 'all') {
+                    item.style.display = 'flex';
+                } else {
+                    const questionType = item.querySelector('.question-type-badge').className;
+                    const matchesFilter = questionType.includes(filterType);
+                    item.style.display = matchesFilter ? 'flex' : 'none';
+                }
+            });
+            
+            // Update visible count
+            updateVisibleQuestionCount();
+        }
+        
+        function sortQuestions(sortType) {
+            const questionsList = document.getElementById('questionsList');
+            const questionItems = Array.from(questionsList.querySelectorAll('.question-item'));
+            
+            questionItems.sort((a, b) => {
+                switch(sortType) {
+                    case 'position':
+                        const posA = parseInt(a.querySelector('.question-number').textContent);
+                        const posB = parseInt(b.querySelector('.question-number').textContent);
+                        return posA - posB;
+                        
+                    case 'type':
+                        const typeA = a.querySelector('.question-type-badge').textContent.trim();
+                        const typeB = b.querySelector('.question-type-badge').textContent.trim();
+                        return typeA.localeCompare(typeB);
+                        
+                    case 'points-high':
+                        const pointsA = parseFloat(a.querySelector('.question-points').textContent.replace(' pts', ''));
+                        const pointsB = parseFloat(b.querySelector('.question-points').textContent.replace(' pts', ''));
+                        return pointsB - pointsA;
+                        
+                    case 'points-low':
+                        const pointsA2 = parseFloat(a.querySelector('.question-points').textContent.replace(' pts', ''));
+                        const pointsB2 = parseFloat(b.querySelector('.question-points').textContent.replace(' pts', ''));
+                        return pointsA2 - pointsB2;
+                        
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Re-append sorted items
+            questionItems.forEach(item => questionsList.appendChild(item));
+        }
+        
+        function updateVisibleQuestionCount() {
+            const visibleQuestions = document.querySelectorAll('.question-item[style*="flex"], .question-item:not([style*="none"])');
+            const totalQuestions = document.querySelectorAll('.question-item');
+            
+            // Update counts in filter buttons if needed
+            console.log(`Showing ${visibleQuestions.length} of ${totalQuestions.length} questions`);
+        }
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {

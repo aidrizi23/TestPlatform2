@@ -38,4 +38,21 @@
 
 
 // Add the details of the attempts that are completed to the attempts page of the test. make it so that the teacher can see the questions that the student had and also the 
-// amswers to the questions. Also make it so that the teacher can see the score of the student on the test. 
+// amswers to the questions. Also make it so that the teacher can see the score of the student on the test.
+
+// FUTURE IMPROVEMENTS:
+// 1. Add email verification for new user registrations
+// 2. Implement password reset functionality
+// 3. Add bulk test operations (delete multiple, archive, etc.)
+// 4. Create test templates for common question patterns
+// 5. Add export functionality for test results (PDF, Excel)
+// 6. Implement test categories/tags for better organization
+// 7. Add collaborative features (share tests with other teachers)
+// 8. Create mobile app for test taking
+// 9. Add plagiarism detection for written answers
+// 10. Implement advanced question types (drag & drop, image-based)
+// 11. Add test scheduling and automatic publishing
+// 12. Create dashboard with analytics and insights
+// 13. Add integration with LMS platforms (Canvas, Blackboard)
+// 14. Implement accessibility features (screen reader support, high contrast)
+// 15. Add multi-language support for international users 

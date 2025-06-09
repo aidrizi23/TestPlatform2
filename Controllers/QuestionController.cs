@@ -13,17 +13,20 @@ public class QuestionController : Controller
     private readonly UserManager<User> _userManager;
     private readonly ITestRepository _testRepository;
     private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly ITestAttemptRepository _testAttemptRepository;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
-        ISubscriptionRepository subscriptionRepository)
+        ISubscriptionRepository subscriptionRepository,
+        ITestAttemptRepository testAttemptRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
         _subscriptionRepository = subscriptionRepository;
+        _testAttemptRepository = testAttemptRepository;
     }
     
     private async Task<IActionResult> CheckQuestionLimitAsync(string userId)
@@ -34,6 +37,12 @@ public class QuestionController : Controller
             return RedirectToAction("Index", "Subscription");
         }
         return null;
+    }
+    
+    private async Task<bool> TestHasAttemptsAsync(string testId)
+    {
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        return attempts.Any(a => a.IsCompleted);
     }
 
     // ========== TRADITIONAL MVC METHODS ==========
@@ -280,6 +289,13 @@ public class QuestionController : Controller
         var user = await _userManager.GetUserAsync(User);
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
+
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            TempData["ErrorMessage"] = "Cannot delete questions from a test that has completed attempts. This preserves the integrity of student submissions.";
+            return RedirectToAction("Details", "Test", new { id = question.TestId });
+        }
 
         try
         {
@@ -593,6 +609,12 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
 
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            return Json(new { success = false, message = "Cannot delete questions from a test that has completed attempts. This preserves the integrity of student submissions." });
+        }
+
         try
         {
             await _questionRepository.Delete(question);
@@ -693,6 +715,13 @@ public class QuestionController : Controller
                     var test = await _testRepository.GetTestByIdAsync(question.TestId);
                     if (test != null && test.UserId == user.Id)
                     {
+                        // Check if test has completed attempts
+                        if (await TestHasAttemptsAsync(question.TestId))
+                        {
+                            errors.Add($"Cannot delete question from test with completed attempts");
+                            continue;
+                        }
+
                         await _questionRepository.Delete(question);
                         deletedCount++;
                     }

@@ -316,6 +316,109 @@
         font-style: italic;
     }
 
+    /* Points Editing Styles */
+    .points-edit-container {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .points-input {
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        text-align: center;
+        transition: border-color 0.2s ease;
+    }
+
+    .points-input:focus {
+        border-color: #2563eb;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .points-input.modified {
+        border-color: #f59e0b;
+        background-color: #fef3c7;
+    }
+
+    .points-actions {
+        display: flex;
+        gap: 0.25rem;
+        margin-left: 0.5rem;
+    }
+
+    .points-actions .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border: none;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .save-points-btn {
+        background: #10b981;
+        color: white;
+    }
+
+    .save-points-btn:hover {
+        background: #059669;
+    }
+
+    .reset-points-btn {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .reset-points-btn:hover {
+        background: #d97706;
+    }
+
+    .bulk-actions {
+        background: #f8f9fa;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .bulk-actions h5 {
+        color: #374151;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .bulk-actions .btn {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+    }
+
+    .toast {
+        min-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .toast-success {
+        background: #10b981;
+        color: white;
+    }
+
+    .toast-error {
+        background: #ef4444;
+        color: white;
+    }
+
     @@media (max-width: 768px) {
         .container {
             padding: 0 1rem;
@@ -425,6 +528,23 @@
                 <div class="stat-label">Score Percentage</div>
             </div>
         </div>
+
+        <!-- Bulk Grading Actions -->
+        <div class="bulk-actions">
+            <h5><i class="fas fa-tools me-2"></i>Bulk Grading Actions</h5>
+            <button class="btn btn-primary bulk-save-btn" onclick="bulkSaveChanges()">
+                <i class="fas fa-save me-1"></i>Save All Changes
+            </button>
+            <button class="btn btn-warning bulk-reset-btn" onclick="bulkResetToAutoGrade()">
+                <i class="fas fa-refresh me-1"></i>Reset All to Auto-Grade
+            </button>
+            <button class="btn btn-secondary bulk-zero-btn" onclick="bulkSetZero()">
+                <i class="fas fa-times me-1"></i>Set All to Zero
+            </button>
+            <button class="btn btn-info bulk-full-btn" onclick="bulkSetFullPoints()">
+                <i class="fas fa-star me-1"></i>Give Full Points to All
+            </button>
+        </div>
     }
 
     <!-- Detailed Answers Section -->
@@ -478,8 +598,24 @@
                             </div>
                             
                             <div class="points-display">
-                                <span class="points-earned">@answer.PointsAwarded.ToString("0.0")</span>
-                                <span class="points-total">/ @question.Points.ToString("0.0") pts</span>
+                                <div class="points-edit-container" data-answer-id="@answer.Id" data-max-points="@question.Points">
+                                    <input type="number" 
+                                           class="points-input form-control" 
+                                           value="@answer.PointsAwarded.ToString("0.0")" 
+                                           min="0" 
+                                           max="@question.Points" 
+                                           step="0.1"
+                                           style="width: 80px; display: inline-block;">
+                                    <span class="points-total">/ @question.Points.ToString("0.0") pts</span>
+                                    <div class="points-actions">
+                                        <button class="btn btn-sm btn-success save-points-btn" title="Save Points">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning reset-points-btn" title="Reset to Auto-Grade">
+                                            <i class="fas fa-refresh"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -633,4 +769,270 @@
             </div>
         </div>
     }
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 </div>
+
+@section Scripts {
+<script>
+// Global variables
+const attemptId = '@(attempt?.Id ?? "")';
+
+// Initialize when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializePointsEditing();
+});
+
+function initializePointsEditing() {
+    // Track original values for change detection
+    document.querySelectorAll('.points-input').forEach(input => {
+        input.setAttribute('data-original', input.value);
+        
+        // Add event listeners
+        input.addEventListener('input', function() {
+            const original = parseFloat(this.getAttribute('data-original'));
+            const current = parseFloat(this.value);
+            
+            if (Math.abs(original - current) > 0.01) {
+                this.classList.add('modified');
+            } else {
+                this.classList.remove('modified');
+            }
+        });
+    });
+
+    // Individual save buttons
+    document.querySelectorAll('.save-points-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const container = this.closest('.points-edit-container');
+            const answerId = container.getAttribute('data-answer-id');
+            const input = container.querySelector('.points-input');
+            const points = parseFloat(input.value) || 0;
+            
+            saveAnswerPoints(answerId, points, input);
+        });
+    });
+
+    // Individual reset buttons
+    document.querySelectorAll('.reset-points-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const container = this.closest('.points-edit-container');
+            const answerId = container.getAttribute('data-answer-id');
+            const input = container.querySelector('.points-input');
+            
+            resetAnswerToAutoGrade(answerId, input);
+        });
+    });
+}
+
+async function saveAnswerPoints(answerId, points, inputElement) {
+    try {
+        const response = await fetch('/TestAttempt/UpdateAnswerPoints', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                answerId: answerId,
+                points: points
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Points updated successfully!', 'success');
+            inputElement.setAttribute('data-original', points.toString());
+            inputElement.classList.remove('modified');
+            updateStatistics();
+        } else {
+            showToast(result.message || 'Failed to update points', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while updating points', 'error');
+        console.error('Error updating points:', error);
+    }
+}
+
+async function resetAnswerToAutoGrade(answerId, inputElement) {
+    try {
+        const response = await fetch('/TestAttempt/ResetAnswerToAutoGrade', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                answerId: answerId
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Answer reset to auto-grade!', 'success');
+            inputElement.value = result.newPoints.toFixed(1);
+            inputElement.setAttribute('data-original', result.newPoints.toString());
+            inputElement.classList.remove('modified');
+            updateStatistics();
+        } else {
+            showToast(result.message || 'Failed to reset answer', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while resetting answer', 'error');
+        console.error('Error resetting answer:', error);
+    }
+}
+
+function bulkSaveChanges() {
+    const updates = [];
+    document.querySelectorAll('.points-input.modified').forEach(input => {
+        const container = input.closest('.points-edit-container');
+        const answerId = container.getAttribute('data-answer-id');
+        const points = parseFloat(input.value) || 0;
+        
+        updates.push({
+            answerId: answerId,
+            points: points
+        });
+    });
+
+    if (updates.length === 0) {
+        showToast('No changes to save', 'info');
+        return;
+    }
+
+    bulkUpdateAnswerPoints(updates);
+}
+
+async function bulkUpdateAnswerPoints(updates) {
+    try {
+        const response = await fetch('/TestAttempt/BulkUpdateAnswerPoints', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                attemptId: attemptId,
+                updates: updates
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(result.message, 'success');
+            
+            // Update original values and remove modified class
+            document.querySelectorAll('.points-input').forEach(input => {
+                input.setAttribute('data-original', input.value);
+                input.classList.remove('modified');
+            });
+            
+            updateStatistics();
+        } else {
+            showToast(result.message || 'Failed to update points', 'error');
+        }
+    } catch (error) {
+        showToast('An error occurred while updating points', 'error');
+        console.error('Error bulk updating points:', error);
+    }
+}
+
+function bulkResetToAutoGrade() {
+    if (!confirm('Are you sure you want to reset all answers to auto-grade? This will overwrite all manual adjustments.')) {
+        return;
+    }
+    
+    document.querySelectorAll('.reset-points-btn').forEach(btn => {
+        btn.click();
+    });
+}
+
+function bulkSetZero() {
+    if (!confirm('Are you sure you want to set all answers to 0 points?')) {
+        return;
+    }
+    
+    document.querySelectorAll('.points-input').forEach(input => {
+        input.value = '0.0';
+        input.classList.add('modified');
+    });
+}
+
+function bulkSetFullPoints() {
+    if (!confirm('Are you sure you want to give full points to all answers?')) {
+        return;
+    }
+    
+    document.querySelectorAll('.points-input').forEach(input => {
+        const container = input.closest('.points-edit-container');
+        const maxPoints = parseFloat(container.getAttribute('data-max-points')) || 0;
+        input.value = maxPoints.toFixed(1);
+        input.classList.add('modified');
+    });
+}
+
+function updateStatistics() {
+    // Recalculate totals from current input values
+    let totalPoints = 0;
+    let correctAnswers = 0;
+    let totalQuestions = 0;
+    let maxPoints = 0;
+
+    document.querySelectorAll('.points-input').forEach(input => {
+        const points = parseFloat(input.value) || 0;
+        const container = input.closest('.points-edit-container');
+        const questionMaxPoints = parseFloat(container.getAttribute('data-max-points')) || 0;
+        
+        totalPoints += points;
+        maxPoints += questionMaxPoints;
+        totalQuestions++;
+        
+        if (points > 0) {
+            correctAnswers++;
+        }
+    });
+
+    const percentage = maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
+
+    // Update statistics display
+    const statNumbers = document.querySelectorAll('.stat-number');
+    if (statNumbers.length >= 4) {
+        statNumbers[0].textContent = totalPoints.toFixed(1);
+        statNumbers[1].textContent = totalQuestions.toString();
+        statNumbers[2].textContent = correctAnswers.toString();
+        statNumbers[3].textContent = percentage.toFixed(1) + '%';
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <div class="toast-body p-3">
+            <div class="d-flex align-items-center">
+                <div class="me-2">
+                    ${type === 'success' ? '<i class="fas fa-check-circle"></i>' : 
+                      type === 'error' ? '<i class="fas fa-exclamation-circle"></i>' : 
+                      '<i class="fas fa-info-circle"></i>'}
+                </div>
+                <div class="flex-grow-1">${message}</div>
+                <button type="button" class="btn-close btn-close-white" onclick="this.closest('.toast').remove()"></button>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 5000);
+}
+</script>
+}

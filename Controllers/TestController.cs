@@ -935,6 +935,44 @@ public class TestController : Controller
         }
     }
 
+    // POST: /Test/ToggleLockAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ToggleLockAjax([FromBody] LockTestRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(request.Id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            // Toggle the lock status
+            test.IsLocked = !test.IsLocked;
+            await _testRepository.Update(test);
+            
+            var status = test.IsLocked ? "locked" : "unlocked";
+            var message = $"Test has been {status} successfully!";
+            
+            return Json(new { 
+                success = true, 
+                message = message,
+                isLocked = test.IsLocked,
+                status = status
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating the test lock status." });
+        }
+    }
+
     // ========== REQUEST DTOs FOR AJAX METHODS ==========
     
     public class DeleteTestRequest

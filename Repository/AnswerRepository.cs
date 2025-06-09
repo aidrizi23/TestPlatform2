@@ -8,6 +8,7 @@ public interface IAnswerRepository
 {
     Task<IEnumerable<Answer>> GetAnswersByAttemptIdAsync(string attemptId);
     Task<Answer?> GetByIdAsync(string answerId);
+    Task<Answer?> GetAnswerByIdAsync(string answerId);
     Task Create(Answer answer);
     Task Update(Answer answer);
     Task Delete(Answer answer);
@@ -38,6 +39,14 @@ public class AnswerRepository : IAnswerRepository
     {
         return await _context.Answers
             .Include(a => a.Question)
+            .FirstOrDefaultAsync(a => a.Id == answerId);
+    }
+
+    public async Task<Answer?> GetAnswerByIdAsync(string answerId)
+    {
+        return await _context.Answers
+            .Include(a => a.Question)
+            .Include(a => a.Attempt)
             .FirstOrDefaultAsync(a => a.Id == answerId);
     }
 
