@@ -23,6 +23,8 @@ namespace TestPlatform2.Data
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<SubscriptionHistory> SubscriptionHistories { get; set; }
         
+        public DbSet<TestCategory> TestCategories { get; set; }
+        public DbSet<TestTag> TestTags { get; set; }
       
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -41,7 +43,9 @@ namespace TestPlatform2.Data
                 .HasDiscriminator<ApplicationDbContext.QuestionType>("QuestionType")
                 .HasValue<MultipleChoiceQuestion>(ApplicationDbContext.QuestionType.MultipleChoice)
                 .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
-                .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer);
+                .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer)
+                .HasValue<DragDropQuestion>(ApplicationDbContext.QuestionType.DragDrop)
+                .HasValue<ImageBasedQuestion>(ApplicationDbContext.QuestionType.ImageBased);
 
             // TestInvite relationships
             modelBuilder.Entity<TestInvite>()
@@ -67,15 +71,50 @@ namespace TestPlatform2.Data
                 .WithMany(a => a.Answers)
                 .HasForeignKey(a => a.AttemptId)
                 .OnDelete(DeleteBehavior.Restrict); // Restrict cascading delete for attempts
-                
-            
+
+            // TestCategory relationships
+            modelBuilder.Entity<TestCategory>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Test>()
+                .HasOne(t => t.Category)
+                .WithMany(c => c.Tests)
+                .HasForeignKey(t => t.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // TestTag relationships
+            modelBuilder.Entity<TestTag>()
+                .HasOne(tag => tag.User)
+                .WithMany()
+                .HasForeignKey(tag => tag.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Many-to-many relationship between Test and TestTag
+            modelBuilder.Entity<Test>()
+                .HasMany(t => t.Tags)
+                .WithMany(tag => tag.Tests)
+                .UsingEntity<Dictionary<string, object>>(
+                    "TestTagRelation",
+                    j => j.HasOne<TestTag>().WithMany().HasForeignKey("TagId"),
+                    j => j.HasOne<Test>().WithMany().HasForeignKey("TestId"),
+                    j =>
+                    {
+                        j.HasKey("TestId", "TagId");
+                        j.ToTable("TestTagRelations");
+                    });
+
         }
 
         public enum QuestionType
         {
             MultipleChoice,
             TrueFalse,
-            ShortAnswer
+            ShortAnswer,
+            DragDrop,
+            ImageBased
         }
     }
 }

@@ -23,5 +23,16 @@ public class TestForEditDto
     public int MaxAttempts { get; set; }
     
     public bool IsLocked { get; set; }
+    
+    public string? CategoryId { get; set; }
+    
+    public List<string> TagNames { get; set; } = new();
+    
+    // Scheduling properties
+    public bool IsScheduled { get; set; } = false;
+    public DateTime? ScheduledStartDate { get; set; }
+    public DateTime? ScheduledEndDate { get; set; }
+    public bool AutoPublish { get; set; } = false;
+    public bool AutoClose { get; set; } = false;
 
 }

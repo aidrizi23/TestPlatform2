@@ -45,6 +45,9 @@ ViewData["Title"] = "Test Details";
                     <button class="btn btn-outline-info" onclick="openTestStatsModal('@Model.Id')">
                         <i class="fas fa-chart-bar me-2"></i>Statistics
                     </button>
+                    <button class="btn btn-outline-success" onclick="openShareTestModal('@Model.Id')">
+                        <i class="fas fa-share-alt me-2"></i>Share Test
+                    </button>
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-download me-2"></i>Export
@@ -144,6 +147,52 @@ ViewData["Title"] = "Test Details";
                     <div class="config-value" id="timeLimitDisplay">@Model.TimeLimit minutes</div>
                 </div>
             </div>
+
+            @if (Model.IsScheduled)
+            {
+            <div class="config-item">
+                <div class="config-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="config-content">
+                    <div class="config-title">Scheduling Status</div>
+                    <div class="config-value">
+                        @switch (Model.Status)
+                        {
+                            case TestPlatform2.Data.TestStatus.Scheduled:
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock me-1"></i>Scheduled
+                                </span>
+                                @if (Model.ScheduledStartDate.HasValue)
+                                {
+                                    <small class="d-block text-muted mt-1">
+                                        <i class="fas fa-play me-1"></i>
+                                        Opens: @Model.ScheduledStartDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")
+                                    </small>
+                                }
+                                break;
+                            case TestPlatform2.Data.TestStatus.Active:
+                                <span class="badge bg-success">
+                                    <i class="fas fa-play me-1"></i>Active
+                                </span>
+                                @if (Model.ScheduledEndDate.HasValue)
+                                {
+                                    <small class="d-block text-muted mt-1">
+                                        <i class="fas fa-stop me-1"></i>
+                                        Closes: @Model.ScheduledEndDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")
+                                    </small>
+                                }
+                                break;
+                            case TestPlatform2.Data.TestStatus.Closed:
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-stop me-1"></i>Closed
+                                </span>
+                                break;
+                        }
+                    </div>
+                </div>
+            </div>
+            }
         </div>
     </div>
 
@@ -254,6 +303,26 @@ ViewData["Title"] = "Test Details";
                             <div class="question-type-desc">Text-based responses</div>
                         </div>
                     </button>
+
+                    <button class="question-type-card" onclick="openCreateQuestionModal('DragDrop', '@Model.Id')">
+                        <div class="question-type-icon drag-drop">
+                            <i class="fas fa-hand-rock"></i>
+                        </div>
+                        <div class="question-type-content">
+                            <div class="question-type-title">Drag & Drop</div>
+                            <div class="question-type-desc">Interactive sorting questions</div>
+                        </div>
+                    </button>
+
+                    <button class="question-type-card" onclick="openCreateQuestionModal('ImageBased', '@Model.Id')">
+                        <div class="question-type-icon image-based">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="question-type-content">
+                            <div class="question-type-title">Image-Based</div>
+                            <div class="question-type-desc">Visual hotspot questions</div>
+                        </div>
+                    </button>
                 </div>
             </div>
 
@@ -285,6 +354,12 @@ ViewData["Title"] = "Test Details";
                             <button class="filter-btn" data-filter="short-answer" onclick="filterQuestions('short-answer')">
                                 <i class="fas fa-pen me-1"></i>Short Answer (@(Model.Questions.OfType<ShortAnswerQuestion>().Count()))
                             </button>
+                            <button class="filter-btn" data-filter="drag-drop" onclick="filterQuestions('drag-drop')">
+                                <i class="fas fa-hand-rock me-1"></i>Drag & Drop (@(Model.Questions.OfType<DragDropQuestion>().Count()))
+                            </button>
+                            <button class="filter-btn" data-filter="image-based" onclick="filterQuestions('image-based')">
+                                <i class="fas fa-image me-1"></i>Image-Based (@(Model.Questions.OfType<ImageBasedQuestion>().Count()))
+                            </button>
                         </div>
                     </div>
                     
@@ -307,6 +382,8 @@ ViewData["Title"] = "Test Details";
                     TrueFalseQuestion => "True/False",
                     MultipleChoiceQuestion => "Multiple Choice",
                     ShortAnswerQuestion => "Short Answer",
+                    DragDropQuestion => "Drag & Drop",
+                    ImageBasedQuestion => "Image-Based",
                     _ => "Unknown"
                     };
 
@@ -331,6 +408,12 @@ ViewData["Title"] = "Test Details";
                                                 break;
                                                 case ShortAnswerQuestion:
                                                 <i class="fas fa-pen me-1"></i>
+                                                break;
+                                                case DragDropQuestion:
+                                                <i class="fas fa-hand-rock me-1"></i>
+                                                break;
+                                                case ImageBasedQuestion:
+                                                <i class="fas fa-image me-1"></i>
                                                 break;
                                                 }
                                                 @questionType
@@ -398,6 +481,36 @@ ViewData["Title"] = "Test Details";
                                     {
                                     <span class="case-sensitive">(Case Sensitive)</span>
                                     }
+                                </div>
+                            </div>
+                            break;
+                            case DragDropQuestion ddq:
+                            <div class="question-preview">
+                                <div class="dragdrop-preview">
+                                    <div class="preview-info">
+                                        <i class="fas fa-hand-rock me-2"></i>
+                                        @ddq.DraggableItems.Count draggable items, @ddq.DropZones.Count drop zones
+                                        @if (ddq.OrderMatters)
+                                        {
+                                            <span class="badge badge-info ms-2">Order Matters</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            break;
+                            case ImageBasedQuestion ibq:
+                            <div class="question-preview">
+                                <div class="image-preview">
+                                    <div class="preview-info">
+                                        <i class="fas fa-image me-2"></i>
+                                        @ibq.QuestionType.ToString() question with @ibq.Hotspots.Count hotspots
+                                        @if (!string.IsNullOrEmpty(ibq.ImageUrl))
+                                        {
+                                            <div class="image-thumbnail mt-2">
+                                                <img src="@ibq.ImageUrl" alt="Question Image" style="max-width: 150px; max-height: 100px; border-radius: 4px;">
+                                            </div>
+                                        }
+                                    </div>
                                 </div>
                             </div>
                             break;
@@ -603,6 +716,65 @@ ViewData["Title"] = "Test Details";
                             </label>
                         </div>
                     </div>
+
+                    <!-- Test Scheduling Section -->
+                    <div class="settings-card mb-3">
+                        <h6 class="card-subtitle mb-3">
+                            <i class="fas fa-calendar-alt me-2"></i>Test Scheduling
+                        </h6>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="editIsScheduled" onchange="toggleSchedulingFields()">
+                            <label class="form-check-label" for="editIsScheduled">
+                                <i class="fas fa-clock me-2"></i>
+                                Enable Test Scheduling
+                            </label>
+                        </div>
+
+                        <div id="schedulingFields" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="datetime-local" class="form-control" id="editScheduledStartDate">
+                                        <label for="editScheduledStartDate">Start Date & Time</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="datetime-local" class="form-control" id="editScheduledEndDate">
+                                        <label for="editScheduledEndDate">End Date & Time</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="editAutoPublish">
+                                        <label class="form-check-label" for="editAutoPublish">
+                                            <i class="fas fa-play me-2"></i>
+                                            Auto-publish at start time
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="editAutoClose">
+                                        <label class="form-check-label" for="editAutoClose">
+                                            <i class="fas fa-stop me-2"></i>
+                                            Auto-close at end time
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Scheduling Info:</strong> When enabled, the test will automatically publish/close at the specified times. 
+                                Students can only access the test during the scheduled time window.
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -718,6 +890,73 @@ ViewData["Title"] = "Test Details";
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Test Modal -->
+<div class="modal fade" id="shareTestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header gradient-header-success">
+                <h5 class="modal-title">
+                    <i class="fas fa-share-alt me-2"></i>Share Test
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareTestForm" onsubmit="return false;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="shareTestId" name="TestId" value="@Model.Id">
+                    <div class="mb-3">
+                        <label for="shareEmail" class="form-label">
+                            <i class="fas fa-envelope me-2"></i>Email Address
+                        </label>
+                        <input type="email" class="form-control" id="shareEmail" name="Email" required 
+                               placeholder="Enter the recipient's email address">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sharePermission" class="form-label">
+                            <i class="fas fa-user-shield me-2"></i>Permission Level
+                        </label>
+                        <select class="form-select" id="sharePermission" name="Permission" required>
+                            <option value="">Select permission level</option>
+                            <option value="0">View Only - Can view test content</option>
+                            <option value="1">Edit - Can modify test content</option>
+                            <option value="2">Copy - Can duplicate the test</option>
+                        </select>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shareMessage" class="form-label">
+                            <i class="fas fa-comment me-2"></i>Message (Optional)
+                        </label>
+                        <textarea class="form-control" id="shareMessage" name="Message" rows="3" 
+                                  placeholder="Add a personal message for the recipient"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="shareExpiresAt" class="form-label">
+                            <i class="fas fa-calendar-alt me-2"></i>Expiration Date (Optional)
+                        </label>
+                        <input type="datetime-local" class="form-control" id="shareExpiresAt" name="ExpiresAt">
+                        <div class="form-text">Leave empty for permanent access</div>
+                    </div>
+                    
+                    <input type="hidden" id="shareTestId" name="TestId" value="@Model.Id">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" onclick="submitShareTest()">
+                    <i class="fas fa-share-alt me-2"></i>Share Test
+                </button>
             </div>
         </div>
     </div>
@@ -1855,6 +2094,12 @@ ViewData["Title"] = "Test Details";
         border-bottom: none;
     }
 
+    .gradient-header-success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-bottom: none;
+    }
+
     .modal-title {
         font-weight: 700;
         font-size: 1.25rem;
@@ -2658,6 +2903,18 @@ ViewData["Title"] = "Test Details";
                     document.getElementById('editMaxAttempts').value = data.maxAttempts;
                     document.getElementById('editRandomizeQuestions').checked = data.randomizeQuestions;
                     document.getElementById('editIsLocked').checked = data.isLocked;
+                    
+                    // Populate scheduling fields
+                    document.getElementById('editIsScheduled').checked = data.isScheduled || false;
+                    document.getElementById('editScheduledStartDate').value = data.scheduledStartDate ? 
+                        new Date(data.scheduledStartDate).toISOString().slice(0, 16) : '';
+                    document.getElementById('editScheduledEndDate').value = data.scheduledEndDate ? 
+                        new Date(data.scheduledEndDate).toISOString().slice(0, 16) : '';
+                    document.getElementById('editAutoPublish').checked = data.autoPublish || false;
+                    document.getElementById('editAutoClose').checked = data.autoClose || false;
+                    
+                    // Show/hide scheduling fields based on checkbox state
+                    toggleSchedulingFields();
 
                     // Show modal
                     const modal = new bootstrap.Modal(document.getElementById('editTestModal'));
@@ -2695,7 +2952,13 @@ ViewData["Title"] = "Test Details";
                 TimeLimit: parseInt(document.getElementById('editTimeLimit').value),
                 MaxAttempts: parseInt(document.getElementById('editMaxAttempts').value),
                 RandomizeQuestions: document.getElementById('editRandomizeQuestions').checked,
-                IsLocked: document.getElementById('editIsLocked').checked
+                IsLocked: document.getElementById('editIsLocked').checked,
+                // Scheduling fields
+                IsScheduled: document.getElementById('editIsScheduled').checked,
+                ScheduledStartDate: document.getElementById('editScheduledStartDate').value || null,
+                ScheduledEndDate: document.getElementById('editScheduledEndDate').value || null,
+                AutoPublish: document.getElementById('editAutoPublish').checked,
+                AutoClose: document.getElementById('editAutoClose').checked
             };
 
             try {
@@ -2949,8 +3212,136 @@ ViewData["Title"] = "Test Details";
 `;
         }
 
+        // Share functionality
+        function openShareTestModal(testId) {
+            // Set the test ID in the hidden field
+            document.getElementById('shareTestId').value = testId;
+            
+            // Clear the form
+            document.getElementById('shareTestForm').reset();
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('shareTestModal'));
+            modal.show();
+        }
+
+        async function submitShareTest() {
+            const form = document.getElementById('shareTestForm');
+            const formData = new FormData(form);
+            
+            // Clear previous validation errors
+            document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+            
+            // Create the data object
+            const shareData = {
+                TestId: formData.get('TestId'),
+                Email: formData.get('Email'),
+                Permission: parseInt(formData.get('Permission')),
+                Message: formData.get('Message'),
+                ExpiresAt: formData.get('ExpiresAt') || null
+            };
+            
+            try {
+                const response = await fetch('/Test/ShareTest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify(shareData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('shareTestModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    showToast('success', result.message, 'Test shared successfully!');
+                    
+                    // Optionally refresh the page or update the UI
+                    // You could add a counter or list of shared users here
+                    
+                } else {
+                    // Handle validation errors
+                    if (result.errors) {
+                        result.errors.forEach(error => {
+                            const field = document.querySelector(`[name="${error.Field}"]`);
+                            if (field) {
+                                field.classList.add('is-invalid');
+                                const feedback = field.parentElement.querySelector('.invalid-feedback');
+                                if (feedback) {
+                                    feedback.textContent = error.Message;
+                                }
+                            }
+                        });
+                    } else {
+                        showToast('error', result.message || 'Failed to share test', 'Error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error sharing test:', error);
+                showToast('error', 'An unexpected error occurred while sharing the test', 'Error');
+            }
+        }
+
+        // Test scheduling functionality
+        function toggleSchedulingFields() {
+            const checkbox = document.getElementById('editIsScheduled');
+            const fieldsContainer = document.getElementById('schedulingFields');
+            
+            if (checkbox.checked) {
+                fieldsContainer.style.display = 'block';
+                // Set smart defaults if fields are empty
+                const startInput = document.getElementById('editScheduledStartDate');
+                const endInput = document.getElementById('editScheduledEndDate');
+                
+                if (!startInput.value) {
+                    const now = new Date();
+                    now.setHours(now.getHours() + 1);
+                    startInput.value = now.toISOString().slice(0, 16);
+                    
+                    // Auto-enable auto-publish when scheduling
+                    document.getElementById('editAutoPublish').checked = true;
+                }
+                
+                if (!endInput.value && startInput.value) {
+                    const endTime = new Date(startInput.value);
+                    endTime.setHours(endTime.getHours() + 2);
+                    endInput.value = endTime.toISOString().slice(0, 16);
+                    
+                    // Auto-enable auto-close when scheduling
+                    document.getElementById('editAutoClose').checked = true;
+                }
+            } else {
+                fieldsContainer.style.display = 'none';
+                // Clear the fields when hiding
+                document.getElementById('editScheduledStartDate').value = '';
+                document.getElementById('editScheduledEndDate').value = '';
+                document.getElementById('editAutoPublish').checked = false;
+                document.getElementById('editAutoClose').checked = false;
+            }
+        }
+
         // Question management functions
         async function openCreateQuestionModal(questionType, testId) {
+            // For complex question types, redirect to dedicated pages
+            if (questionType === 'DragDrop') {
+                window.location.href = `/Question/CreateDragDrop?testId=${testId}`;
+                return;
+            }
+            
+            if (questionType === 'ImageBased') {
+                window.location.href = `/Question/CreateImageBased?testId=${testId}`;
+                return;
+            }
+            
+            // For simple question types, show modal
             currentQuestionType = questionType;
             currentTestId = testId;
 
@@ -2974,6 +3365,11 @@ ViewData["Title"] = "Test Details";
             };
 
             const config = typeConfig[questionType];
+            if (!config) {
+                console.error('Unknown question type:', questionType);
+                return;
+            }
+            
             title.textContent = config.title;
 
             // Show loading state

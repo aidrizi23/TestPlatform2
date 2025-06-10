@@ -21,6 +21,8 @@ public class TestController : Controller
     private readonly ITestInviteRepository _testInviteRepository;
     private readonly IQuestionRepository _questionRepository;
     private readonly IExportService _exportService;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly ITagRepository _tagRepository;
     
     public TestController(
         ITestRepository testRepository, 
@@ -29,7 +31,9 @@ public class TestController : Controller
         ITestAnalyticsRepository testAnalyticsRepository,
         ITestInviteRepository testInviteRepository,
         IQuestionRepository questionRepository,
-        IExportService exportService)
+        IExportService exportService,
+        ICategoryRepository categoryRepository,
+        ITagRepository tagRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
@@ -38,6 +42,8 @@ public class TestController : Controller
         _testInviteRepository = testInviteRepository;
         _questionRepository = questionRepository;
         _exportService = exportService;
+        _categoryRepository = categoryRepository;
+        _tagRepository = tagRepository;
     }
     
     // ========== TRADITIONAL MVC METHODS ==========
@@ -92,12 +98,52 @@ public class TestController : Controller
             RandomizeQuestions = dto.RandomizeQuestions,
             TimeLimit = dto.TimeLimit,
             MaxAttempts = dto.MaxAttempts,
-            UserId = user.Id
+            UserId = user.Id,
+            CategoryId = dto.CategoryId,
+            // Scheduling properties
+            IsScheduled = dto.IsScheduled,
+            ScheduledStartDate = dto.ScheduledStartDate,
+            ScheduledEndDate = dto.ScheduledEndDate,
+            AutoPublish = dto.AutoPublish,
+            AutoClose = dto.AutoClose
         };
+
+        // Set the test status based on scheduling
+        if (dto.IsScheduled)
+        {
+            var now = DateTime.UtcNow;
+            if (dto.ScheduledStartDate.HasValue && dto.ScheduledStartDate > now)
+            {
+                test.Status = TestStatus.Scheduled;
+                test.IsLocked = true; // Lock scheduled tests until they start
+            }
+            else if (dto.ScheduledEndDate.HasValue && dto.ScheduledEndDate < now)
+            {
+                test.Status = TestStatus.Closed;
+                test.IsLocked = true; // Lock expired tests
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
+        }
+        else
+        {
+            test.Status = TestStatus.Active;
+        }
 
         try
         {
             await _testRepository.Create(test);
+
+            // Handle tags if provided
+            if (dto.TagNames.Any())
+            {
+                var tags = await _tagRepository.CreateTagsIfNotExistAsync(dto.TagNames, user.Id);
+                test.Tags = tags.ToList();
+                await _testRepository.Update(test);
+            }
+
             TempData["SuccessMessage"] = "Test created successfully!";
             return RedirectToAction("Index");
         }
@@ -401,12 +447,51 @@ public class TestController : Controller
             RandomizeQuestions = dto.RandomizeQuestions,
             TimeLimit = dto.TimeLimit,
             MaxAttempts = dto.MaxAttempts,
-            UserId = user.Id
+            UserId = user.Id,
+            CategoryId = dto.CategoryId,
+            // Scheduling properties - ensure UTC conversion
+            IsScheduled = dto.IsScheduled,
+            ScheduledStartDate = dto.ScheduledStartDate?.ToUniversalTime(),
+            ScheduledEndDate = dto.ScheduledEndDate?.ToUniversalTime(),
+            AutoPublish = dto.AutoPublish,
+            AutoClose = dto.AutoClose
         };
+
+        // Set the test status based on scheduling
+        if (dto.IsScheduled)
+        {
+            var now = DateTime.UtcNow;
+            if (dto.ScheduledStartDate.HasValue && dto.ScheduledStartDate > now)
+            {
+                test.Status = TestStatus.Scheduled;
+                test.IsLocked = true; // Lock scheduled tests until they start
+            }
+            else if (dto.ScheduledEndDate.HasValue && dto.ScheduledEndDate < now)
+            {
+                test.Status = TestStatus.Closed;
+                test.IsLocked = true; // Lock expired tests
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
+        }
+        else
+        {
+            test.Status = TestStatus.Active;
+        }
 
         try
         {
             await _testRepository.Create(test);
+
+            // Handle tags if provided
+            if (dto.TagNames.Any())
+            {
+                var tags = await _tagRepository.CreateTagsIfNotExistAsync(dto.TagNames, user.Id);
+                test.Tags = tags.ToList();
+                await _testRepository.Update(test);
+            }
 
             return Json(new { 
                 success = true, 
@@ -446,6 +531,12 @@ public class TestController : Controller
             TimeLimit = test.TimeLimit,
             MaxAttempts = test.MaxAttempts,
             IsLocked = test.IsLocked,
+            // Scheduling properties - convert UTC to local for display
+            IsScheduled = test.IsScheduled,
+            ScheduledStartDate = test.ScheduledStartDate?.ToLocalTime(),
+            ScheduledEndDate = test.ScheduledEndDate?.ToLocalTime(),
+            AutoPublish = test.AutoPublish,
+            AutoClose = test.AutoClose
         };
 
         return Json(new { success = true, data = testForEditDto });
@@ -492,6 +583,40 @@ public class TestController : Controller
             test.TimeLimit = dto.TimeLimit;
             test.MaxAttempts = dto.MaxAttempts;
             test.IsLocked = dto.IsLocked;
+            
+            // Update scheduling properties - ensure UTC conversion
+            test.IsScheduled = dto.IsScheduled;
+            test.ScheduledStartDate = dto.ScheduledStartDate?.ToUniversalTime();
+            test.ScheduledEndDate = dto.ScheduledEndDate?.ToUniversalTime();
+            test.AutoPublish = dto.AutoPublish;
+            test.AutoClose = dto.AutoClose;
+            
+            // Set the test status based on scheduling
+            if (dto.IsScheduled)
+            {
+                var now = DateTime.UtcNow;
+                var startDateUtc = dto.ScheduledStartDate?.ToUniversalTime();
+                var endDateUtc = dto.ScheduledEndDate?.ToUniversalTime();
+                
+                if (startDateUtc.HasValue && startDateUtc > now)
+                {
+                    test.Status = TestStatus.Scheduled;
+                    test.IsLocked = true; // Lock scheduled tests until they start
+                }
+                else if (endDateUtc.HasValue && endDateUtc < now)
+                {
+                    test.Status = TestStatus.Closed;
+                    test.IsLocked = true; // Lock expired tests
+                }
+                else
+                {
+                    test.Status = TestStatus.Active;
+                }
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
             
             await _testRepository.Update(test);
 
@@ -1206,6 +1331,7 @@ public class TestController : Controller
         }
     }
 
+
     // ========== REQUEST DTOs FOR AJAX METHODS ==========
     
     public class DeleteTestRequest
@@ -1245,4 +1371,5 @@ public class TestController : Controller
         public string TestId { get; set; }
         public string Format { get; set; } // "pdf" or "excel"
     }
+
 }

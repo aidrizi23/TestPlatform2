@@ -58,12 +58,24 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQWNjb3VudC9SZXNldFBhc3N3b3JkLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/albi/RiderProjects/TestPlatform3/Views/Category/Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvQ2F0ZWdvcnkvSW5kZXguY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/albi/RiderProjects/TestPlatform3/Views/Home/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/albi/RiderProjects/TestPlatform3/Views/Home/Privacy.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvSG9tZS9Qcml2YWN5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/albi/RiderProjects/TestPlatform3/Views/Question/CreateDragDrop.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlRHJhZ0Ryb3AuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/albi/RiderProjects/TestPlatform3/Views/Question/CreateImageBased.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlSW1hZ2VCYXNlZC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/albi/RiderProjects/TestPlatform3/Views/Question/CreateMultipleChoice.cshtml]

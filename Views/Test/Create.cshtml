@@ -84,6 +84,53 @@ ViewData["Title"] = "Create Test";
                     </div>
                 </div>
 
+                <!-- Scheduling Section -->
+                <div class="card mt-4 bg-light border-0">
+                    <div class="card-header bg-transparent border-0 pb-0">
+                        <div class="form-check form-switch">
+                            <input asp-for="IsScheduled" class="form-check-input" type="checkbox" role="switch" id="isScheduled" onchange="toggleSchedulingFields()" />
+                            <label asp-for="IsScheduled" class="form-check-label fw-bold">
+                                <i class="fas fa-calendar-alt me-2"></i>Schedule this test
+                            </label>
+                        </div>
+                        <small class="text-muted">Automatically publish and close the test at specific times</small>
+                    </div>
+                    <div class="card-body pt-3" id="schedulingFields" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ScheduledStartDate" class="form-label">Start Date & Time</label>
+                                <input asp-for="ScheduledStartDate" class="form-control" type="datetime-local" />
+                                <div class="form-text">When the test becomes available to students</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ScheduledEndDate" class="form-label">End Date & Time</label>
+                                <input asp-for="ScheduledEndDate" class="form-control" type="datetime-local" />
+                                <div class="form-text">When the test automatically closes</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoPublish" class="form-check-input" type="checkbox" role="switch" id="autoPublish" />
+                                    <label asp-for="AutoPublish" class="form-check-label">
+                                        <i class="fas fa-play me-2"></i>Auto-publish at start time
+                                    </label>
+                                    <div class="form-text">Automatically make the test available when start time is reached</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoClose" class="form-check-input" type="checkbox" role="switch" id="autoClose" />
+                                    <label asp-for="AutoClose" class="form-check-label">
+                                        <i class="fas fa-stop me-2"></i>Auto-close at end time
+                                    </label>
+                                    <div class="form-text">Automatically close the test when end time is reached</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Test Preview -->
                 <div class="card mt-4 mb-4 bg-light border-0">
                     <div class="card-body">
@@ -184,5 +231,31 @@ ViewData["Title"] = "Create Test";
             });
         }
     });
+
+    // Toggle scheduling fields visibility
+    function toggleSchedulingFields() {
+        const isScheduled = document.getElementById('isScheduled').checked;
+        const schedulingFields = document.getElementById('schedulingFields');
+        
+        if (isScheduled) {
+            schedulingFields.style.display = 'block';
+            // Set default start time to current time + 1 hour
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            const startInput = document.getElementById('ScheduledStartDate');
+            if (startInput && !startInput.value) {
+                startInput.value = now.toISOString().slice(0, 16);
+            }
+            // Set default end time to start time + 2 hours
+            const endTime = new Date(now);
+            endTime.setHours(endTime.getHours() + 2);
+            const endInput = document.getElementById('ScheduledEndDate');
+            if (endInput && !endInput.value) {
+                endInput.value = endTime.toISOString().slice(0, 16);
+            }
+        } else {
+            schedulingFields.style.display = 'none';
+        }
+    }
 </script>
 }

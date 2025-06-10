@@ -10,6 +10,7 @@ public class User : IdentityUser
 
     public virtual ICollection<Test> Tests { get; set; } = new List<Test>();
     
+    
     // Usage tracking
     public int TotalQuestionsCreated { get; set; } = 0;
     public DateTime? LastQuestionCreatedAt { get; set; }

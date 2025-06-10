@@ -119,6 +119,87 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                         </div>
                         break;
 
+                        case DragDropQuestion ddq:
+                        <div class="drag-drop-container" data-question-index="@i">
+                            <div class="mb-3">
+                                <h6>Items to drag:</h6>
+                                <div class="draggable-items d-flex flex-wrap gap-2 mb-3" id="draggableItems-@i">
+                                    @foreach (var item in ddq.DraggableItems)
+                                    {
+                                        <div class="draggable-item badge bg-primary p-2" draggable="true" 
+                                             data-item-id="@item.Id" data-question-index="@i">
+                                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                            {
+                                                <img src="@item.ImageUrl" style="max-width: 20px; max-height: 20px;" class="me-1" />
+                                            }
+                                            @item.Text
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h6>Drop zones:</h6>
+                                <div class="drop-zones row">
+                                    @foreach (var zone in ddq.DropZones)
+                                    {
+                                        <div class="col-md-6 mb-2">
+                                            <div class="drop-zone border border-dashed p-3 text-center bg-light"
+                                                 data-zone-id="@zone.Id" data-question-index="@i" 
+                                                 data-max-items="@zone.MaxItems">
+                                                <strong>@zone.Label</strong>
+                                                @if (!string.IsNullOrEmpty(zone.Description))
+                                                {
+                                                    <br><small class="text-muted">@zone.Description</small>
+                                                }
+                                                <div class="dropped-items mt-2" style="min-height: 30px;"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <input type="hidden" name="answers[@i].Response" id="dragDropAnswer-@i" data-question-index="@i" />
+                        </div>
+                        break;
+
+                        case ImageBasedQuestion ibq:
+                        <div class="image-based-container" data-question-index="@i" data-question-type="@ibq.QuestionType.ToString()">
+                            <div class="mb-3">
+                                <div class="image-container position-relative d-inline-block">
+                                    <img src="@ibq.ImageUrl" alt="@ibq.AltText" class="img-fluid border" 
+                                         style="max-width: @ibq.ImageWidth px; max-height: @ibq.ImageHeight px; cursor: crosshair;"
+                                         id="questionImage-@i" data-question-index="@i" />
+                                    <canvas id="overlayCanvas-@i" class="position-absolute" 
+                                            style="top: 0; left: 0; pointer-events: none;"></canvas>
+                                </div>
+                            </div>
+                            
+                            @switch (ibq.QuestionType)
+                            {
+                                case ImageQuestionType.Hotspot:
+                                    <div class="form-text text-muted mb-3">
+                                        <i class="fas fa-mouse-pointer me-1"></i>
+                                        Click on the correct areas in the image above.
+                                    </div>
+                                    break;
+                                case ImageQuestionType.Labeling:
+                                    <div class="form-text text-muted mb-3">
+                                        <i class="fas fa-tag me-1"></i>
+                                        Click on the points and enter the correct labels.
+                                    </div>
+                                    <div id="labelInputs-@i" class="label-inputs"></div>
+                                    break;
+                                case ImageQuestionType.ClickSequence:
+                                    <div class="form-text text-muted mb-3">
+                                        <i class="fas fa-list-ol me-1"></i>
+                                        Click on the areas in the correct order.
+                                    </div>
+                                    break;
+                            }
+                            
+                            <input type="hidden" name="answers[@i].Response" id="imageBasedAnswer-@i" data-question-index="@i" />
+                        </div>
+                        break;
+
                         default:
                         <p class="text-danger">Unsupported question type</p>
                         break;
@@ -767,6 +848,14 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                 badgeClass = 'bg-info';
                 icon = 'pen';
                 break;
+            case 'DragDrop':
+                badgeClass = 'bg-warning';
+                icon = 'hand-rock';
+                break;
+            case 'ImageBased':
+                badgeClass = 'bg-danger';
+                icon = 'image';
+                break;
         }
 
         questionTypeBadge.className = `badge ${badgeClass}`;
@@ -826,6 +915,14 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                 case 'ShortAnswer':
                     const saInput = container.querySelector('input[type="text"]');
                     isAnswered = saInput && saInput.value.trim() !== '';
+                    break;
+                case 'DragDrop':
+                    const ddAnswer = container.querySelector('input[type="hidden"]');
+                    isAnswered = ddAnswer && ddAnswer.value.trim() !== '';
+                    break;
+                case 'ImageBased':
+                    const ibAnswer = container.querySelector('input[type="hidden"]');
+                    isAnswered = ibAnswer && ibAnswer.value.trim() !== '';
                     break;
             }
 
@@ -1109,5 +1206,316 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         history.go(1);
         antiCheat.recordViolation('back_button', 'Back button usage detected');
     });
+
+    // Advanced Question Types Functionality
+    
+    // Drag & Drop Implementation
+    function initializeDragDrop() {
+        // Handle drag start
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('draggable-item')) {
+                e.dataTransfer.setData('text/plain', e.target.dataset.itemId);
+                e.dataTransfer.setData('text/question-index', e.target.dataset.questionIndex);
+                e.target.style.opacity = '0.5';
+            }
+        });
+
+        // Handle drag end
+        document.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('draggable-item')) {
+                e.target.style.opacity = '1';
+            }
+        });
+
+        // Handle drag over
+        document.addEventListener('dragover', (e) => {
+            if (e.target.closest('.drop-zone')) {
+                e.preventDefault();
+                e.target.closest('.drop-zone').classList.add('border-primary');
+            }
+        });
+
+        // Handle drag leave
+        document.addEventListener('dragleave', (e) => {
+            if (e.target.closest('.drop-zone')) {
+                e.target.closest('.drop-zone').classList.remove('border-primary');
+            }
+        });
+
+        // Handle drop
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const dropZone = e.target.closest('.drop-zone');
+            if (!dropZone) return;
+
+            dropZone.classList.remove('border-primary');
+            
+            const itemId = e.dataTransfer.getData('text/plain');
+            const questionIndex = e.dataTransfer.getData('text/question-index');
+            const maxItems = parseInt(dropZone.dataset.maxItems);
+            const droppedItems = dropZone.querySelector('.dropped-items');
+            
+            // Check if max items reached
+            if (droppedItems.children.length >= maxItems) {
+                return;
+            }
+
+            // Find the original item
+            const originalItem = document.querySelector(`[data-item-id="${itemId}"][data-question-index="${questionIndex}"]`);
+            if (!originalItem) return;
+
+            // Check if item is already in this zone
+            const existingItem = droppedItems.querySelector(`[data-item-id="${itemId}"]`);
+            if (existingItem) return;
+
+            // Create dropped item
+            const droppedItem = originalItem.cloneNode(true);
+            droppedItem.draggable = false;
+            droppedItem.classList.remove('draggable-item');
+            droppedItem.classList.add('dropped-item');
+            droppedItem.innerHTML += ' <button type="button" class="btn-close btn-close-white ms-1" onclick="removeDroppedItem(this)"></button>';
+            
+            droppedItems.appendChild(droppedItem);
+            
+            // Hide original item
+            originalItem.style.display = 'none';
+            
+            updateDragDropAnswer(questionIndex);
+        });
+    }
+
+    function removeDroppedItem(button) {
+        const droppedItem = button.closest('.dropped-item');
+        const itemId = droppedItem.dataset.itemId;
+        const questionIndex = droppedItem.dataset.questionIndex;
+        
+        // Show original item again
+        const originalItem = document.querySelector(`[data-item-id="${itemId}"][data-question-index="${questionIndex}"].draggable-item`);
+        if (originalItem) {
+            originalItem.style.display = 'block';
+        }
+        
+        // Remove dropped item
+        droppedItem.remove();
+        
+        updateDragDropAnswer(questionIndex);
+    }
+
+    function updateDragDropAnswer(questionIndex) {
+        const container = document.querySelector(`[data-question-index="${questionIndex}"] .drag-drop-container`);
+        const dropZones = container.querySelectorAll('.drop-zone');
+        const answer = {};
+        
+        dropZones.forEach(zone => {
+            const zoneId = zone.dataset.zoneId;
+            const droppedItems = zone.querySelectorAll('.dropped-item');
+            answer[zoneId] = Array.from(droppedItems).map(item => item.dataset.itemId);
+        });
+        
+        const answerInput = document.getElementById(`dragDropAnswer-${questionIndex}`);
+        answerInput.value = JSON.stringify(answer);
+        
+        // Trigger change event for tracking
+        answerInput.dispatchEvent(new Event('change'));
+    }
+
+    // Image-Based Questions Implementation
+    function initializeImageBased() {
+        const imageContainers = document.querySelectorAll('.image-based-container');
+        
+        imageContainers.forEach(container => {
+            const questionIndex = container.dataset.questionIndex;
+            const questionType = container.dataset.questionType;
+            const image = container.querySelector(`#questionImage-${questionIndex}`);
+            const canvas = container.querySelector(`#overlayCanvas-${questionIndex}`);
+            
+            if (!image || !canvas) return;
+            
+            // Initialize canvas when image loads
+            image.onload = () => {
+                setupImageCanvas(questionIndex);
+            };
+            
+            // If image is already loaded
+            if (image.complete) {
+                setupImageCanvas(questionIndex);
+            }
+            
+            // Add click handler
+            image.addEventListener('click', (e) => {
+                handleImageClick(e, questionIndex, questionType);
+            });
+        });
+    }
+
+    function setupImageCanvas(questionIndex) {
+        const image = document.getElementById(`questionImage-${questionIndex}`);
+        const canvas = document.getElementById(`overlayCanvas-${questionIndex}`);
+        
+        if (!image || !canvas) return;
+        
+        canvas.width = image.clientWidth;
+        canvas.height = image.clientHeight;
+        
+        // Update canvas when window resizes
+        window.addEventListener('resize', () => {
+            canvas.width = image.clientWidth;
+            canvas.height = image.clientHeight;
+            redrawImageOverlay(questionIndex);
+        });
+    }
+
+    function handleImageClick(event, questionIndex, questionType) {
+        const image = event.target;
+        const rect = image.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * image.naturalWidth;
+        const y = ((event.clientY - rect.top) / rect.height) * image.naturalHeight;
+        
+        const clickPoint = { x: x, y: y, timestamp: new Date().toISOString() };
+        
+        switch (questionType) {
+            case 'Hotspot':
+                addHotspotClick(questionIndex, clickPoint);
+                break;
+            case 'Labeling':
+                addLabelPoint(questionIndex, clickPoint);
+                break;
+            case 'ClickSequence':
+                addSequenceClick(questionIndex, clickPoint);
+                break;
+        }
+    }
+
+    const imageAnswers = {};
+
+    function addHotspotClick(questionIndex, clickPoint) {
+        if (!imageAnswers[questionIndex]) {
+            imageAnswers[questionIndex] = [];
+        }
+        
+        imageAnswers[questionIndex].push(clickPoint);
+        updateImageAnswer(questionIndex);
+        redrawImageOverlay(questionIndex);
+    }
+
+    function addLabelPoint(questionIndex, clickPoint) {
+        if (!imageAnswers[questionIndex]) {
+            imageAnswers[questionIndex] = {};
+        }
+        
+        const labelId = 'label_' + Date.now();
+        
+        // Create label input
+        const labelInputs = document.getElementById(`labelInputs-${questionIndex}`);
+        const inputGroup = document.createElement('div');
+        inputGroup.className = 'input-group mb-2';
+        inputGroup.innerHTML = `
+            <span class="input-group-text">Label ${Object.keys(imageAnswers[questionIndex]).length + 1}</span>
+            <input type="text" class="form-control" placeholder="Enter label..." 
+                   onchange="updateLabelAnswer(${questionIndex}, '${labelId}', this.value)">
+            <button type="button" class="btn btn-outline-danger" onclick="removeLabelPoint('${labelId}', ${questionIndex})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        labelInputs.appendChild(inputGroup);
+        
+        imageAnswers[questionIndex][labelId] = '';
+        redrawImageOverlay(questionIndex);
+    }
+
+    function updateLabelAnswer(questionIndex, labelId, value) {
+        if (imageAnswers[questionIndex]) {
+            imageAnswers[questionIndex][labelId] = value;
+            updateImageAnswer(questionIndex);
+        }
+    }
+
+    function removeLabelPoint(labelId, questionIndex) {
+        if (imageAnswers[questionIndex]) {
+            delete imageAnswers[questionIndex][labelId];
+            updateImageAnswer(questionIndex);
+            redrawImageOverlay(questionIndex);
+            
+            // Remove the input
+            const labelInputs = document.getElementById(`labelInputs-${questionIndex}`);
+            const inputToRemove = labelInputs.querySelector(`button[onclick*="${labelId}"]`).closest('.input-group');
+            inputToRemove.remove();
+        }
+    }
+
+    function addSequenceClick(questionIndex, clickPoint) {
+        if (!imageAnswers[questionIndex]) {
+            imageAnswers[questionIndex] = [];
+        }
+        
+        imageAnswers[questionIndex].push(clickPoint);
+        updateImageAnswer(questionIndex);
+        redrawImageOverlay(questionIndex);
+    }
+
+    function updateImageAnswer(questionIndex) {
+        const answerInput = document.getElementById(`imageBasedAnswer-${questionIndex}`);
+        answerInput.value = JSON.stringify(imageAnswers[questionIndex]);
+        
+        // Trigger change event for tracking
+        answerInput.dispatchEvent(new Event('change'));
+    }
+
+    function redrawImageOverlay(questionIndex) {
+        const canvas = document.getElementById(`overlayCanvas-${questionIndex}`);
+        const container = document.querySelector(`[data-question-index="${questionIndex}"].image-based-container`);
+        
+        if (!canvas || !container) return;
+        
+        const ctx = canvas.getContext('2d');
+        const questionType = container.dataset.questionType;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const image = document.getElementById(`questionImage-${questionIndex}`);
+        const answers = imageAnswers[questionIndex];
+        
+        if (!answers || !image) return;
+        
+        if (questionType === 'Hotspot' || questionType === 'ClickSequence') {
+            answers.forEach((click, index) => {
+                const x = (click.x / image.naturalWidth) * canvas.width;
+                const y = (click.y / image.naturalHeight) * canvas.height;
+                
+                ctx.fillStyle = questionType === 'ClickSequence' ? '#007bff' : '#28a745';
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                if (questionType === 'ClickSequence') {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(index + 1, x, y + 3);
+                }
+            });
+        } else if (questionType === 'Labeling') {
+            Object.keys(answers).forEach((labelId, index) => {
+                // For labeling, we'd need to store the click points too
+                // This is simplified for now
+                const x = (index * 50 + 50) % canvas.width;
+                const y = 50;
+                
+                ctx.fillStyle = '#dc3545';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 8px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(index + 1, x, y + 2);
+            });
+        }
+    }
+
+    // Initialize advanced question types
+    initializeDragDrop();
+    initializeImageBased();
 </script>
 }
