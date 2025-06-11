@@ -560,12 +560,12 @@ ViewData["Title"] = "Home";
 </div>
 
 <!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-        <div class="spinner-border text-primary" role="status">
+<div class="loading-overlay" id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease;">
+    <div class="loading-content" style="text-align: center; color: white;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
             <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-3 mb-0">Creating your test...</p>
+        <p class="mt-3 mb-0" style="font-size: 1.1rem;">Creating your test...</p>
     </div>
 </div>
 }
@@ -575,5 +575,303 @@ ViewData["Title"] = "Home";
 }
 
 @section Scripts {
-    <script src="~/js/home.js" asp-append-version="true"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Focus on token input when page loads
+    const tokenInput = document.getElementById('token');
+    if (tokenInput) {
+        tokenInput.focus();
+    }
+
+    // Add subtle parallax effect to hero visual (performance optimized)
+    const heroVisual = document.querySelector('.hero-visual');
+    let ticking = false;
+    
+    if (heroVisual) {
+        function updateParallax() {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.05; // Reduced for smoother performance
+            heroVisual.style.transform = `translate3d(0, ${rate}px, 0)`;
+            ticking = false;
+        }
+        
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(updateParallax);
+                ticking = true;
+            }
+        });
+    }
+
+    // Animate stats on scroll with performance optimization
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+                observer.unobserve(entry.target); // Stop observing once animated
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements for animation
+    document.querySelectorAll('.stat-number, .feature-card, .step-item').forEach(el => {
+        observer.observe(el);
+    });
+
+    // Smooth hover effects for feature cards
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'transform 0.3s ease';
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+
+    // Form validation and submission for token access
+    const tokenForm = document.querySelector('.token-form');
+    if (tokenForm) {
+        tokenForm.addEventListener('submit', function(e) {
+            const tokenInput = this.querySelector('input[name="token"]');
+            const submitBtn = this.querySelector('button[type="submit"]');
+            
+            if (!tokenInput.value.trim()) {
+                e.preventDefault();
+                tokenInput.classList.add('is-invalid');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Validating...';
+        });
+        
+        // Remove validation error on input
+        tokenForm.querySelector('input[name="token"]').addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    }
+
+    // Create Test Modal Functionality - Only if user is authenticated
+    const createTestForm = document.getElementById('createTestForm');
+    if (createTestForm) {
+        const createTestModal = new bootstrap.Modal(document.getElementById('createTestModal'));
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Form inputs for live preview
+        const titleInput = document.getElementById('testTitle');
+        const descriptionInput = document.getElementById('testDescription');
+        const timeLimitInput = document.getElementById('timeLimit');
+        const maxAttemptsInput = document.getElementById('maxAttempts');
+        const randomizeInput = document.getElementById('randomizeQuestions');
+
+        // Preview elements
+        const previewTitle = document.getElementById('preview-title');
+        const previewTime = document.getElementById('preview-time');
+        const previewAttempts = document.getElementById('preview-attempts');
+        const previewRandomize = document.getElementById('preview-randomize');
+        const previewFeatures = document.getElementById('preview-features');
+
+        // Utility functions
+        function showLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.opacity = '1';
+            }
+        }
+
+        function hideLoading() {
+            if (loadingOverlay) {
+                loadingOverlay.style.opacity = '0';
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        // Ensure loading is hidden on page load
+        function ensureLoadingHidden() {
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+                loadingOverlay.style.opacity = '0';
+            }
+        }
+
+        function clearFormErrors() {
+            const inputs = createTestForm.querySelectorAll('.form-control');
+            const feedbacks = createTestForm.querySelectorAll('.invalid-feedback');
+
+            inputs.forEach(input => input.classList.remove('is-invalid'));
+            feedbacks.forEach(feedback => feedback.textContent = '');
+        }
+
+        function showFormErrors(errors) {
+            clearFormErrors();
+            errors.forEach(error => {
+                const input = createTestForm.querySelector(`[name="${error.Field}"]`);
+                const feedback = input?.parentElement.querySelector('.invalid-feedback');
+                if (input && feedback) {
+                    input.classList.add('is-invalid');
+                    feedback.textContent = error.Message;
+                }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toastId = `toast-${Date.now()}`;
+            const toastHTML = `
+                <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-body d-flex align-items-center">
+                        <i class="fas fa-${type === 'success' ? 'check-circle text-success' : 'exclamation-circle text-danger'} me-2"></i>
+                        <span class="flex-grow-1">${message}</span>
+                        <button type="button" class="btn-close btn-close-sm ms-2" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+            
+            const toast = new bootstrap.Toast(document.getElementById(toastId));
+            toast.show();
+        }
+
+        // Live preview updates
+        function updatePreview() {
+            if (!previewTitle) return; // Safety check
+            
+            const title = titleInput.value.trim() || 'Your test title';
+            const timeLimit = timeLimitInput.value || '60';
+            const maxAttempts = maxAttemptsInput.value || '1';
+            const isRandomized = randomizeInput.checked;
+
+            previewTitle.textContent = title;
+            previewTime.textContent = `${timeLimit} minutes`;
+            previewAttempts.textContent = maxAttempts;
+            previewRandomize.textContent = isRandomized ? 'Randomized' : 'Sequential';
+
+            // Update feature tags
+            let featuresHTML = '';
+            if (isRandomized) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-random"></i> Randomized Questions</span>';
+            }
+            if (parseInt(maxAttempts) > 1) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-redo"></i> Multiple Attempts</span>';
+            }
+            if (parseInt(timeLimit) >= 120) {
+                featuresHTML += '<span class="feature-tag"><i class="fas fa-clock"></i> Extended Time</span>';
+            }
+            if (previewFeatures) {
+                previewFeatures.innerHTML = featuresHTML;
+            }
+        }
+
+        // Add event listeners for live preview - with safety checks
+        if (titleInput) titleInput.addEventListener('input', updatePreview);
+        if (timeLimitInput) timeLimitInput.addEventListener('input', updatePreview);
+        if (maxAttemptsInput) maxAttemptsInput.addEventListener('input', updatePreview);
+        if (randomizeInput) randomizeInput.addEventListener('change', updatePreview);
+
+        // Form submission
+        createTestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitButton = this.querySelector('.btn-create-test');
+            const originalText = submitButton.innerHTML;
+
+            showLoading();
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+            clearFormErrors();
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const data = {
+                    Title: titleInput.value.trim(),
+                    Description: descriptionInput.value.trim(),
+                    TimeLimit: parseInt(timeLimitInput.value) || 60,
+                    MaxAttempts: parseInt(maxAttemptsInput.value) || 1,
+                    RandomizeQuestions: randomizeInput.checked
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+
+                if (token) {
+                    headers['RequestVerificationToken'] = token;
+                }
+
+                const response = await fetch('/Test/CreateAjax', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    createTestModal.hide();
+                    document.getElementById('successMessage').textContent = result.message;
+                    document.getElementById('viewTestLink').href = `/Test/Details/${result.testId}`;
+                    successModal.show();
+                    showToast('Test created successfully!', 'success');
+                } else {
+                    if (result.errors) {
+                        showFormErrors(result.errors);
+                    } else {
+                        showToast(result.message || 'An error occurred', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating test:', error);
+                showToast('An error occurred while creating the test', 'error');
+            } finally {
+                hideLoading();
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalText;
+            }
+        });
+
+        // Reset form when modal is hidden
+        const createTestModalEl = document.getElementById('createTestModal');
+        if (createTestModalEl) {
+            createTestModalEl.addEventListener('hidden.bs.modal', function() {
+                createTestForm.reset();
+                clearFormErrors();
+                updatePreview();
+            });
+
+            createTestModalEl.addEventListener('shown.bs.modal', function() {
+                if (titleInput) titleInput.focus();
+            });
+        }
+
+        // Initialize preview with default values
+        updatePreview();
+    }
+
+    // Ensure loading overlay is hidden on page load
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+        loadingOverlay.style.opacity = '0';
+    }
+});
+</script>
 }
