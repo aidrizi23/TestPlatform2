@@ -16,6 +16,14 @@ public interface ISubscriptionRepository
     Task<int> GetRemainingWeeklyInvitesAsync(string userId);
     Task<List<User>> GetExpiredSubscriptionsAsync();
     Task RevokeExpiredSubscriptionsAsync();
+    
+    // New Subscription entity methods
+    Task<Subscription> CreateSubscriptionAsync(Subscription subscription);
+    Task<Subscription?> GetSubscriptionByStripeIdAsync(string stripeSubscriptionId);
+    Task<Subscription?> GetActiveSubscriptionByUserIdAsync(string userId);
+    Task<List<Subscription>> GetSubscriptionsByUserIdAsync(string userId);
+    Task UpdateSubscriptionAsync(Subscription subscription);
+    Task<Subscription?> GetSubscriptionByIdAsync(string subscriptionId);
 }
 
 public class SubscriptionRepository : ISubscriptionRepository
@@ -247,5 +255,52 @@ public class SubscriptionRepository : ISubscriptionRepository
             
             await _context.SaveChangesAsync();
         }
+    }
+
+    // New Subscription entity methods
+    public async Task<Subscription> CreateSubscriptionAsync(Subscription subscription)
+    {
+        _context.Subscriptions.Add(subscription);
+        await _context.SaveChangesAsync();
+        return subscription;
+    }
+
+    public async Task<Subscription?> GetSubscriptionByStripeIdAsync(string stripeSubscriptionId)
+    {
+        return await _context.Subscriptions
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.StripeSubscriptionId == stripeSubscriptionId);
+    }
+
+    public async Task<Subscription?> GetActiveSubscriptionByUserIdAsync(string userId)
+    {
+        return await _context.Subscriptions
+            .Include(s => s.User)
+            .Where(s => s.UserId == userId)
+            .Where(s => s.Status == SubscriptionStatus.Active || s.Status == SubscriptionStatus.Trialing)
+            .OrderByDescending(s => s.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<Subscription>> GetSubscriptionsByUserIdAsync(string userId)
+    {
+        return await _context.Subscriptions
+            .Include(s => s.User)
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task UpdateSubscriptionAsync(Subscription subscription)
+    {
+        _context.Subscriptions.Update(subscription);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<Subscription?> GetSubscriptionByIdAsync(string subscriptionId)
+    {
+        return await _context.Subscriptions
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId);
     }
 }

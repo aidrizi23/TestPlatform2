@@ -473,11 +473,175 @@ public class TestAttemptController : Controller
         return RedirectToAction("AllAttempts", "Test", new { testId = attempt.TestId });
     }
     
-    
-    
-    
-    
-    
+    [HttpPost]
+    public async Task<IActionResult> UpdateAnswerPoints([FromBody] UpdateAnswerPointsRequest request)
+    {
+        try
+        {
+            // Get the answer
+            var answer = await _answerRepository.GetAnswerByIdAsync(request.AnswerId);
+            if (answer == null)
+                return NotFound(new { success = false, message = "Answer not found" });
+
+            // Get the current user and verify they own the test
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { success = false, message = "User not authenticated" });
+
+            var attempt = await _attemptRepository.GetAttemptByIdAsync(answer.AttemptId);
+            if (attempt == null)
+                return NotFound(new { success = false, message = "Test attempt not found" });
+
+            var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+            if (test == null || test.UserId != user.Id)
+                return Forbid();
+
+            // Validate points
+            if (request.Points < 0)
+                return BadRequest(new { success = false, message = "Points cannot be negative" });
+
+            if (request.Points > answer.Question.Points)
+                return BadRequest(new { success = false, message = $"Points cannot exceed maximum ({answer.Question.Points})" });
+
+            // Update answer points
+            answer.PointsAwarded = request.Points;
+            await _answerRepository.Update(answer);
+
+            // Recalculate total score for the attempt
+            await RecalculateAttemptScore(attempt.Id);
+
+            return Ok(new { success = true, message = "Points updated successfully", newPoints = request.Points });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "An error occurred while updating points" });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> BulkUpdateAnswerPoints([FromBody] BulkUpdateAnswerPointsRequest request)
+    {
+        try
+        {
+            // Get current user and verify permissions
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { success = false, message = "User not authenticated" });
+
+            var attempt = await _attemptRepository.GetAttemptByIdAsync(request.AttemptId);
+            if (attempt == null)
+                return NotFound(new { success = false, message = "Test attempt not found" });
+
+            var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+            if (test == null || test.UserId != user.Id)
+                return Forbid();
+
+            // Update each answer
+            var updatedCount = 0;
+            foreach (var update in request.Updates)
+            {
+                var answer = await _answerRepository.GetAnswerByIdAsync(update.AnswerId);
+                if (answer == null || answer.AttemptId != request.AttemptId)
+                    continue;
+
+                // Validate points
+                if (update.Points < 0 || update.Points > answer.Question.Points)
+                    continue;
+
+                answer.PointsAwarded = update.Points;
+                await _answerRepository.Update(answer);
+                updatedCount++;
+            }
+
+            // Recalculate total score
+            await RecalculateAttemptScore(request.AttemptId);
+
+            return Ok(new { success = true, message = $"Updated {updatedCount} answers successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "An error occurred while updating points" });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ResetAnswerToAutoGrade([FromBody] ResetAnswerRequest request)
+    {
+        try
+        {
+            // Get the answer
+            var answer = await _answerRepository.GetAnswerByIdAsync(request.AnswerId);
+            if (answer == null)
+                return NotFound(new { success = false, message = "Answer not found" });
+
+            // Get current user and verify permissions
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized(new { success = false, message = "User not authenticated" });
+
+            var attempt = await _attemptRepository.GetAttemptByIdAsync(answer.AttemptId);
+            if (attempt == null)
+                return NotFound(new { success = false, message = "Test attempt not found" });
+
+            var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+            if (test == null || test.UserId != user.Id)
+                return Forbid();
+
+            // Re-grade the answer automatically
+            var question = answer.Question;
+            double autoGradedPoints = 0;
+
+            if (!string.IsNullOrEmpty(answer.Response))
+            {
+                object parsedAnswer = null;
+                switch (question)
+                {
+                    case TrueFalseQuestion tfq:
+                        if (bool.TryParse(answer.Response, out bool boolAnswer))
+                            parsedAnswer = boolAnswer;
+                        break;
+                    case ShortAnswerQuestion saq:
+                        parsedAnswer = answer.Response;
+                        break;
+                    case MultipleChoiceQuestion mcq:
+                        var selectedAnswers = answer.Response.Split(',').Where(a => !string.IsNullOrEmpty(a)).ToList();
+                        parsedAnswer = selectedAnswers;
+                        break;
+                }
+
+                if (parsedAnswer != null && question.ValidateAnswer(parsedAnswer))
+                {
+                    autoGradedPoints = question.Points;
+                }
+            }
+
+            // Update answer with auto-graded points
+            answer.PointsAwarded = autoGradedPoints;
+            await _answerRepository.Update(answer);
+
+            // Recalculate total score
+            await RecalculateAttemptScore(attempt.Id);
+
+            return Ok(new { success = true, message = "Answer reset to auto-grade", newPoints = autoGradedPoints });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { success = false, message = "An error occurred while resetting answer grade" });
+        }
+    }
+
+    private async Task RecalculateAttemptScore(string attemptId)
+    {
+        var attempt = await _attemptRepository.GetAttemptByIdAsync(attemptId);
+        if (attempt == null) return;
+
+        var answers = await _answerRepository.GetAnswersByAttemptIdAsync(attemptId);
+        var totalScore = answers.Sum(a => a.PointsAwarded);
+
+        attempt.Score = totalScore;
+        await _attemptRepository.Update(attempt);
+    }
+
     // method to get all the answers and equivalent questions from testattempt id
     [HttpGet()]
     public async Task<IActionResult> Details(string id)
@@ -489,5 +653,28 @@ public class TestAttemptController : Controller
         var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
         
         return View(answers);
+    }
+
+    public class UpdateAnswerPointsRequest
+    {
+        public string AnswerId { get; set; }
+        public double Points { get; set; }
+    }
+
+    public class BulkUpdateAnswerPointsRequest
+    {
+        public string AttemptId { get; set; }
+        public List<AnswerPointsUpdate> Updates { get; set; } = new();
+    }
+
+    public class AnswerPointsUpdate
+    {
+        public string AnswerId { get; set; }
+        public double Points { get; set; }
+    }
+
+    public class ResetAnswerRequest
+    {
+        public string AnswerId { get; set; }
     }
 }

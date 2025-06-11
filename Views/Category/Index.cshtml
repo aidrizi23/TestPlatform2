@@ -1,0 +1,1922 @@
+@model TestPlatform2.Models.CategoryManagementViewModel
+
+@{
+    ViewData["Title"] = "Categories & Tags";
+}
+
+<div class="category-management-container">
+    <!-- Enhanced Header Section -->
+    <div class="management-header">
+        <div class="header-background">
+            <div class="header-pattern"></div>
+            <div class="header-glow"></div>
+        </div>
+        <div class="header-content">
+            <div class="header-main">
+                <div class="breadcrumb-nav">
+                    <a asp-controller="Test" asp-action="Index" class="breadcrumb-link">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Tests</span>
+                    </a>
+                    <div class="breadcrumb-separator">
+                        <i class="fas fa-chevron-right"></i>
+                    </div>
+                    <span class="breadcrumb-current">Categories & Tags</span>
+                </div>
+
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <div class="title-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <span class="title-text">Categories & Tags</span>
+                        <div class="title-accent"></div>
+                    </h1>
+                    <p class="page-subtitle">Organize your tests with custom categories and tags for better management</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="action-group">
+                    <button type="button" class="action-btn primary" onclick="openCreateCategoryModal()">
+                        <i class="fas fa-folder-plus"></i>
+                        <span>New Category</span>
+                    </button>
+                    <button type="button" class="action-btn secondary" onclick="openCreateTagModal()">
+                        <i class="fas fa-tag"></i>
+                        <span>New Tag</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Section -->
+    <div class="management-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-folder"></i>
+                Categories
+            </h2>
+            <p class="section-subtitle">Group related tests into organized categories</p>
+        </div>
+
+        <div class="categories-grid" id="categoriesGrid">
+            @if (Model.Categories.Any())
+            {
+                @foreach (var category in Model.Categories)
+                {
+                    <div class="category-card" data-category-id="@category.Id">
+                        <div class="card-background" style="background: linear-gradient(135deg, @Html.Raw(Html.Encode(category.Color)) 0%, @Html.Raw(Html.Encode(category.Color))CC 100%);">
+                            <div class="card-pattern"></div>
+                        </div>
+                        
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="category-icon" style="background: @Html.Raw(Html.Encode(category.Color));">
+                                    @if (!string.IsNullOrEmpty(category.Icon))
+                                    {
+                                        <i class="@category.Icon"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-folder"></i>
+                                    }
+                                </div>
+                                <div class="category-info">
+                                    <h3 class="category-name">@category.Name</h3>
+                                    @if (!string.IsNullOrEmpty(category.Description))
+                                    {
+                                        <p class="category-description">@category.Description</p>
+                                    }
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" class="action-btn-small" onclick="editCategory('@category.Id')" title="Edit Category">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="action-btn-small danger" onclick="deleteCategory('@category.Id', '@category.Name')" title="Delete Category">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer">
+                                <div class="test-count">
+                                    <i class="fas fa-file-alt"></i>
+                                    <span>@category.TestCount test@(category.TestCount != 1 ? "s" : "")</span>
+                                </div>
+                                <div class="created-date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>@category.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>No Categories Yet</h3>
+                    <p>Create your first category to organize your tests better</p>
+                    <button type="button" class="empty-btn" onclick="openCreateCategoryModal()">
+                        <i class="fas fa-plus"></i>
+                        Create Category
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tags Section -->
+    <div class="management-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-tags"></i>
+                Tags
+            </h2>
+            <p class="section-subtitle">Add flexible tags to categorize tests across multiple dimensions</p>
+        </div>
+
+        <div class="tags-container" id="tagsContainer">
+            @if (Model.Tags.Any())
+            {
+                @foreach (var tag in Model.Tags)
+                {
+                    <div class="tag-item" data-tag-id="@tag.Id" style="background-color: @tag.Color;">
+                        <div class="tag-content">
+                            <span class="tag-name">@tag.Name</span>
+                            <span class="tag-count">@tag.TestCount</span>
+                        </div>
+                        <div class="tag-actions">
+                            <button type="button" class="tag-action-btn" onclick="editTag('@tag.Id')" title="Edit Tag">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="tag-action-btn" onclick="deleteTag('@tag.Id', '@tag.Name')" title="Delete Tag">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="empty-state-inline">
+                    <div class="empty-icon-small">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="empty-content-small">
+                        <h4>No Tags Created</h4>
+                        <p>Create tags to add flexible labeling to your tests</p>
+                    </div>
+                    <button type="button" class="empty-btn-small" onclick="openCreateTagModal()">
+                        <i class="fas fa-plus"></i>
+                        Create Tag
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Create Category Modal -->
+<div class="modal fade" id="createCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header">
+                <div class="header-icon">
+                    <i class="fas fa-folder-plus"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Create Category</h5>
+                    <p class="modal-subtitle">Organize your tests with a new category</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <form id="createCategoryForm">
+                    <div class="form-group">
+                        <label for="categoryName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="categoryName" name="Name" required maxlength="100">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="categoryDescription" name="Description" rows="3" maxlength="500"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="categoryColor" class="form-label">Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" class="form-control color-input" id="categoryColor" name="Color" value="#3B82F6">
+                                <input type="text" class="form-control color-text" id="categoryColorText" value="#3B82F6">
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="categoryIcon" class="form-label">Icon (FontAwesome)</label>
+                            <div class="icon-input-wrapper">
+                                <input type="text" class="form-control" id="categoryIcon" name="Icon" placeholder="e.g., fas fa-book">
+                                <div class="icon-preview" id="categoryIconPreview">
+                                    <i class="fas fa-folder"></i>
+                                </div>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern primary" onclick="createCategory()">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Category</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header">
+                <div class="header-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Edit Category</h5>
+                    <p class="modal-subtitle">Update category information</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId" name="Id">
+                    
+                    <div class="form-group">
+                        <label for="editCategoryName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editCategoryName" name="Name" required maxlength="100">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editCategoryDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="editCategoryDescription" name="Description" rows="3" maxlength="500"></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editCategoryColor" class="form-label">Color</label>
+                            <div class="color-input-wrapper">
+                                <input type="color" class="form-control color-input" id="editCategoryColor" name="Color">
+                                <input type="text" class="form-control color-text" id="editCategoryColorText">
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="editCategoryIcon" class="form-label">Icon (FontAwesome)</label>
+                            <div class="icon-input-wrapper">
+                                <input type="text" class="form-control" id="editCategoryIcon" name="Icon" placeholder="e.g., fas fa-book">
+                                <div class="icon-preview" id="editCategoryIconPreview">
+                                    <i class="fas fa-folder"></i>
+                                </div>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern primary" onclick="updateCategory()">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Tag Modal -->
+<div class="modal fade" id="createTagModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header">
+                <div class="header-icon">
+                    <i class="fas fa-tag"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Create Tag</h5>
+                    <p class="modal-subtitle">Add a new tag for flexible test organization</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <form id="createTagForm">
+                    <div class="form-group">
+                        <label for="tagName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="tagName" name="Name" required maxlength="50">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tagColor" class="form-label">Color</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" class="form-control color-input" id="tagColor" name="Color" value="#6B7280">
+                            <input type="text" class="form-control color-text" id="tagColorText" value="#6B7280">
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern primary" onclick="createTag()">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Tag</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Tag Modal -->
+<div class="modal fade" id="editTagModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header">
+                <div class="header-icon">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Edit Tag</h5>
+                    <p class="modal-subtitle">Update tag information</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <form id="editTagForm">
+                    <input type="hidden" id="editTagId" name="Id">
+                    
+                    <div class="form-group">
+                        <label for="editTagName" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="editTagName" name="Name" required maxlength="50">
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editTagColor" class="form-label">Color</label>
+                        <div class="color-input-wrapper">
+                            <input type="color" class="form-control color-input" id="editTagColor" name="Color">
+                            <input type="text" class="form-control color-text" id="editTagColorText">
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern primary" onclick="updateTag()">
+                    <i class="fas fa-save"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header modern-header danger">
+                <div class="header-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="header-content">
+                    <h5 class="modal-title">Delete <span id="deleteType"></span></h5>
+                    <p class="modal-subtitle">This action cannot be undone</p>
+                </div>
+                <button type="button" class="btn-close modern-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body modern-body">
+                <div class="confirmation-content">
+                    <div class="confirmation-icon">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    <div class="confirmation-text">
+                        <p>Are you sure you want to permanently delete "<strong id="deleteItemName"></strong>"?</p>
+                        <div class="warning-note">
+                            <i class="fas fa-info-circle"></i>
+                            <span id="deleteWarning"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer modern-footer">
+                <button type="button" class="btn-modern secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button type="button" class="btn-modern danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container-modern" id="toastContainer"></div>
+
+<style>
+    /* Category Management Styles */
+    .category-management-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1.5rem;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Enhanced Header Section */
+    .management-header {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 40px rgba(16, 52, 166, 0.15);
+    }
+
+    .header-background {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #1034a6 0%, #2563eb 35%, #3b82f6 100%);
+    }
+
+    .header-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 2px, transparent 2px),
+            radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+        background-size: 60px 60px;
+        animation: patternFloat 20s ease-in-out infinite;
+    }
+
+    @@keyframes patternFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(1deg); }
+    }
+
+    .header-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+        animation: glowPulse 4s ease-in-out infinite;
+    }
+
+    @@keyframes glowPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        padding: 2.5rem;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    .breadcrumb-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .breadcrumb-link:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .breadcrumb-separator {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .breadcrumb-current {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+    }
+
+    .page-title-section {
+        position: relative;
+    }
+
+    .page-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        position: relative;
+    }
+
+    .title-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .title-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    .title-accent {
+        position: absolute;
+        bottom: -8px;
+        left: 80px;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), transparent);
+        border-radius: 2px;
+    }
+
+    .page-subtitle {
+        font-size: 1.125rem;
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0;
+        font-weight: 400;
+        line-height: 1.5;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.25rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .action-btn.primary {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        border: none;
+    }
+
+    .action-btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Management Sections */
+    .management-section {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .section-header {
+        padding: 2rem 2.5rem 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-title i {
+        color: #3b82f6;
+    }
+
+    .section-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Categories Grid */
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        padding: 2rem 2.5rem;
+    }
+
+    .category-card {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        cursor: pointer;
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        box-shadow: 0 4px 12px rgba(16, 52, 166, 0.08);
+    }
+
+    .category-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 32px rgba(16, 52, 166, 0.15);
+    }
+
+    .card-background {
+        position: absolute;
+        inset: 0;
+    }
+
+    .card-pattern {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
+        background-size: 40px 40px;
+        opacity: 0.6;
+    }
+
+    .card-content {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        color: white;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+        flex-shrink: 0;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .category-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .category-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.375rem;
+        color: white;
+    }
+
+    .category-description {
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .category-card:hover .card-actions {
+        opacity: 1;
+    }
+
+    .action-btn-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .action-btn-small:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.1);
+    }
+
+    .action-btn-small.danger:hover {
+        background: rgba(239, 68, 68, 0.8);
+    }
+
+    .card-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .test-count, .created-date {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        font-size: 0.875rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* Tags Container */
+    .tags-container {
+        padding: 2rem 2.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .tag-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 20px;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .tag-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .tag-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tag-name {
+        font-size: 0.875rem;
+    }
+
+    .tag-count {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .tag-actions {
+        display: flex;
+        gap: 0.25rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .tag-item:hover .tag-actions {
+        opacity: 1;
+    }
+
+    .tag-action-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+
+    .tag-action-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.1);
+    }
+
+    /* Empty States */
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        max-width: 400px;
+    }
+
+    .empty-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .empty-btn:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .empty-state-inline {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        color: #64748b;
+        width: 100%;
+    }
+
+    .empty-icon-small {
+        width: 48px;
+        height: 48px;
+        background: #f1f5f9;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #64748b;
+    }
+
+    .empty-content-small {
+        flex: 1;
+    }
+
+    .empty-content-small h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .empty-content-small p {
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .empty-btn-small {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.75rem 1.25rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .empty-btn-small:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .color-input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .color-input {
+        width: 60px;
+        height: 44px;
+        padding: 0;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+    }
+
+    .color-text {
+        flex: 1;
+        font-family: monospace;
+        text-transform: uppercase;
+    }
+
+    .icon-input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .icon-preview {
+        width: 44px;
+        height: 44px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        color: #6b7280;
+        font-size: 1.125rem;
+    }
+
+    /* Modal Styles */
+    .modern-modal {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .modern-header {
+        padding: 2rem;
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+
+    .modern-header.danger {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-bottom-color: rgba(220, 38, 38, 0.1);
+    }
+
+    .header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .modern-header.danger .header-icon {
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+
+    .header-content {
+        flex: 1;
+    }
+
+    .modal-title {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0 0 0.25rem 0;
+    }
+
+    .modal-subtitle {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .modern-close {
+        background: rgba(15, 23, 42, 0.05);
+        border: none;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .modern-close:hover {
+        background: rgba(15, 23, 42, 0.1);
+    }
+
+    .modern-body {
+        padding: 2rem;
+    }
+
+    .modern-footer {
+        padding: 1.5rem 2rem;
+        background: #f8fafc;
+        border-top: 1px solid rgba(16, 52, 166, 0.08);
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn-modern {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .btn-modern.secondary {
+        background: white;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+
+    .btn-modern.secondary:hover {
+        background: #f8fafc;
+        color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .btn-modern.primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-modern.primary:hover {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-modern.danger {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-modern.danger:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Confirmation Modal */
+    .confirmation-content {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .confirmation-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .confirmation-text {
+        flex: 1;
+    }
+
+    .confirmation-text p {
+        margin-bottom: 1rem;
+        color: #374151;
+        line-height: 1.6;
+    }
+
+    .warning-note {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: rgba(245, 158, 11, 0.05);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 12px;
+        font-size: 0.875rem;
+        color: #92400e;
+    }
+
+    /* Toast Styles */
+    .toast-container-modern {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        max-width: 400px;
+    }
+
+    .toast-modern {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(16, 52, 166, 0.08);
+        min-width: 300px;
+        overflow: hidden;
+        animation: slideInToast 0.4s ease-out;
+    }
+
+    @@keyframes slideInToast {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast-header-modern {
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        border-bottom: 1px solid rgba(16, 52, 166, 0.08);
+    }
+
+    .toast-header-modern.success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+        color: #059669;
+    }
+
+    .toast-header-modern.error {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05));
+        color: #dc2626;
+    }
+
+    .toast-icon-modern {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .toast-content-modern {
+        flex: 1;
+    }
+
+    .toast-title-modern {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .toast-body-modern {
+        padding: 1rem 1.25rem;
+        color: #374151;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .toast-close-modern {
+        background: none;
+        border: none;
+        color: currentColor;
+        opacity: 0.6;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: opacity 0.2s ease;
+    }
+
+    .toast-close-modern:hover {
+        opacity: 1;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 1024px) {
+        .header-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1.5rem;
+        }
+
+        .action-group {
+            justify-content: center;
+        }
+
+        .categories-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .category-management-container {
+            padding: 1rem;
+        }
+
+        .header-content {
+            padding: 2rem 1.5rem;
+        }
+
+        .title-text {
+            font-size: 2rem;
+        }
+
+        .categories-grid {
+            grid-template-columns: 1fr;
+            padding: 1.5rem;
+        }
+
+        .tags-container {
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+        }
+
+        .modern-body {
+            padding: 1.5rem;
+        }
+
+        .modern-footer {
+            padding: 1rem 1.5rem;
+            flex-direction: column;
+        }
+
+        .toast-container-modern {
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+        }
+
+        .toast-modern {
+            min-width: auto;
+        }
+    }
+
+    /* Loading States */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+        position: relative;
+    }
+
+    .loading::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: inherit;
+    }
+
+    /* Animation Classes */
+    .fade-in {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .slide-up {
+        animation: slideUp 0.4s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+@section Scripts {
+<script>
+    let currentDeleteType = '';
+    let currentDeleteId = '';
+    let currentDeleteName = '';
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeColorInputs();
+        initializeIconPreview();
+    });
+
+    // Color input handlers
+    function initializeColorInputs() {
+        const colorInputPairs = [
+            ['categoryColor', 'categoryColorText'],
+            ['editCategoryColor', 'editCategoryColorText'],
+            ['tagColor', 'tagColorText'],
+            ['editTagColor', 'editTagColorText']
+        ];
+
+        colorInputPairs.forEach(([colorId, textId]) => {
+            const colorInput = document.getElementById(colorId);
+            const textInput = document.getElementById(textId);
+            
+            if (colorInput && textInput) {
+                colorInput.addEventListener('input', function() {
+                    textInput.value = this.value.toUpperCase();
+                });
+                
+                textInput.addEventListener('input', function() {
+                    if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                        colorInput.value = this.value;
+                    }
+                });
+            }
+        });
+    }
+
+    // Icon preview handlers
+    function initializeIconPreview() {
+        const iconInputPairs = [
+            ['categoryIcon', 'categoryIconPreview'],
+            ['editCategoryIcon', 'editCategoryIconPreview']
+        ];
+
+        iconInputPairs.forEach(([inputId, previewId]) => {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            
+            if (input && preview) {
+                input.addEventListener('input', function() {
+                    const iconClass = this.value.trim();
+                    if (iconClass) {
+                        preview.innerHTML = `<i class="${iconClass}"></i>`;
+                    } else {
+                        preview.innerHTML = '<i class="fas fa-folder"></i>';
+                    }
+                });
+            }
+        });
+    }
+
+    // Modal functions
+    function openCreateCategoryModal() {
+        document.getElementById('createCategoryForm').reset();
+        document.getElementById('categoryColor').value = '#3B82F6';
+        document.getElementById('categoryColorText').value = '#3B82F6';
+        document.getElementById('categoryIconPreview').innerHTML = '<i class="fas fa-folder"></i>';
+        clearFormErrors('createCategoryForm');
+        const modal = new bootstrap.Modal(document.getElementById('createCategoryModal'));
+        modal.show();
+    }
+
+    function openCreateTagModal() {
+        document.getElementById('createTagForm').reset();
+        document.getElementById('tagColor').value = '#6B7280';
+        document.getElementById('tagColorText').value = '#6B7280';
+        clearFormErrors('createTagForm');
+        const modal = new bootstrap.Modal(document.getElementById('createTagModal'));
+        modal.show();
+    }
+
+    // CRUD operations
+    async function createCategory() {
+        const form = document.getElementById('createCategoryForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        clearFormErrors('createCategoryForm');
+
+        try {
+            const response = await fetch('@Url.Action("CreateCategory", "Category")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createCategoryModal'));
+                modal.hide();
+                showToast(result.message, 'success');
+                addCategoryToGrid(result.category);
+            } else {
+                if (result.errors) {
+                    displayFormErrors('createCategoryForm', result.errors);
+                } else {
+                    showToast(result.message || 'Error creating category', 'error');
+                }
+            }
+        } catch (error) {
+            showToast('Error creating category', 'error');
+        }
+    }
+
+    async function createTag() {
+        const form = document.getElementById('createTagForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        clearFormErrors('createTagForm');
+
+        try {
+            const response = await fetch('@Url.Action("CreateTag", "Category")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createTagModal'));
+                modal.hide();
+                showToast(result.message, 'success');
+                addTagToContainer(result.tag);
+            } else {
+                if (result.errors) {
+                    displayFormErrors('createTagForm', result.errors);
+                } else {
+                    showToast(result.message || 'Error creating tag', 'error');
+                }
+            }
+        } catch (error) {
+            showToast('Error creating tag', 'error');
+        }
+    }
+
+    async function editCategory(categoryId) {
+        // Implementation for editing category
+        showToast('Edit category functionality coming soon', 'info');
+    }
+
+    async function editTag(tagId) {
+        // Implementation for editing tag
+        showToast('Edit tag functionality coming soon', 'info');
+    }
+
+    function deleteCategory(categoryId, categoryName) {
+        currentDeleteType = 'Category';
+        currentDeleteId = categoryId;
+        currentDeleteName = categoryName;
+        
+        document.getElementById('deleteType').textContent = 'Category';
+        document.getElementById('deleteItemName').textContent = categoryName;
+        document.getElementById('deleteWarning').textContent = 'All tests in this category will be moved to "Uncategorized".';
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+
+    function deleteTag(tagId, tagName) {
+        currentDeleteType = 'Tag';
+        currentDeleteId = tagId;
+        currentDeleteName = tagName;
+        
+        document.getElementById('deleteType').textContent = 'Tag';
+        document.getElementById('deleteItemName').textContent = tagName;
+        document.getElementById('deleteWarning').textContent = 'This tag will be removed from all tests that use it.';
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    }
+
+    async function confirmDelete() {
+        if (!currentDeleteId || !currentDeleteType) return;
+
+        const isCategory = currentDeleteType === 'Category';
+        const endpoint = isCategory ? '@Url.Action("DeleteCategory", "Category")' : '@Url.Action("DeleteTag", "Category")';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ Id: currentDeleteId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                modal.hide();
+                showToast(result.message, 'success');
+                
+                if (isCategory) {
+                    removeCategoryFromGrid(currentDeleteId);
+                } else {
+                    removeTagFromContainer(currentDeleteId);
+                }
+            } else {
+                showToast(result.message || `Error deleting ${currentDeleteType.toLowerCase()}`, 'error');
+            }
+        } catch (error) {
+            showToast(`Error deleting ${currentDeleteType.toLowerCase()}`, 'error');
+        } finally {
+            currentDeleteType = '';
+            currentDeleteId = '';
+            currentDeleteName = '';
+        }
+    }
+
+    // UI update functions
+    function addCategoryToGrid(category) {
+        const grid = document.getElementById('categoriesGrid');
+        const emptyState = grid.querySelector('.empty-state');
+        
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        const categoryHtml = `
+            <div class="category-card fade-in" data-category-id="${category.id}">
+                <div class="card-background" style="background: linear-gradient(135deg, ${category.color} 0%, ${category.color}CC 100%);">
+                    <div class="card-pattern"></div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="category-icon" style="background: ${category.color};">
+                            <i class="${category.icon || 'fas fa-folder'}"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3 class="category-name">${category.name}</h3>
+                            ${category.description ? `<p class="category-description">${category.description}</p>` : ''}
+                        </div>
+                        <div class="card-actions">
+                            <button type="button" class="action-btn-small" onclick="editCategory('${category.id}')" title="Edit Category">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="action-btn-small danger" onclick="deleteCategory('${category.id}', '${category.name}')" title="Delete Category">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="test-count">
+                            <i class="fas fa-file-alt"></i>
+                            <span>${category.testCount} test${category.testCount !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="created-date">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>${new Date(category.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        grid.insertAdjacentHTML('beforeend', categoryHtml);
+    }
+
+    function addTagToContainer(tag) {
+        const container = document.getElementById('tagsContainer');
+        const emptyState = container.querySelector('.empty-state-inline');
+        
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        const tagHtml = `
+            <div class="tag-item fade-in" data-tag-id="${tag.id}" style="background-color: ${tag.color};">
+                <div class="tag-content">
+                    <span class="tag-name">${tag.name}</span>
+                    <span class="tag-count">${tag.testCount}</span>
+                </div>
+                <div class="tag-actions">
+                    <button type="button" class="tag-action-btn" onclick="editTag('${tag.id}')" title="Edit Tag">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="tag-action-btn" onclick="deleteTag('${tag.id}', '${tag.name}')" title="Delete Tag">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', tagHtml);
+    }
+
+    function removeCategoryFromGrid(categoryId) {
+        const categoryCard = document.querySelector(`[data-category-id="${categoryId}"]`);
+        if (categoryCard) {
+            categoryCard.style.animation = 'slideUp 0.3s ease-out reverse';
+            setTimeout(() => {
+                categoryCard.remove();
+                checkEmptyGrid();
+            }, 300);
+        }
+    }
+
+    function removeTagFromContainer(tagId) {
+        const tagItem = document.querySelector(`[data-tag-id="${tagId}"]`);
+        if (tagItem) {
+            tagItem.style.animation = 'slideUp 0.3s ease-out reverse';
+            setTimeout(() => {
+                tagItem.remove();
+                checkEmptyTags();
+            }, 300);
+        }
+    }
+
+    function checkEmptyGrid() {
+        const grid = document.getElementById('categoriesGrid');
+        const categories = grid.querySelectorAll('.category-card');
+        
+        if (categories.length === 0) {
+            const emptyHtml = `
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3>No Categories Yet</h3>
+                    <p>Create your first category to organize your tests better</p>
+                    <button type="button" class="empty-btn" onclick="openCreateCategoryModal()">
+                        <i class="fas fa-plus"></i>
+                        Create Category
+                    </button>
+                </div>
+            `;
+            grid.innerHTML = emptyHtml;
+        }
+    }
+
+    function checkEmptyTags() {
+        const container = document.getElementById('tagsContainer');
+        const tags = container.querySelectorAll('.tag-item');
+        
+        if (tags.length === 0) {
+            const emptyHtml = `
+                <div class="empty-state-inline">
+                    <div class="empty-icon-small">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div class="empty-content-small">
+                        <h4>No Tags Created</h4>
+                        <p>Create tags to add flexible labeling to your tests</p>
+                    </div>
+                    <button type="button" class="empty-btn-small" onclick="openCreateTagModal()">
+                        <i class="fas fa-plus"></i>
+                        Create Tag
+                    </button>
+                </div>
+            `;
+            container.innerHTML = emptyHtml;
+        }
+    }
+
+    // Utility functions
+    function clearFormErrors(formId) {
+        const form = document.getElementById(formId);
+        const errorElements = form.querySelectorAll('.invalid-feedback');
+        const inputs = form.querySelectorAll('.form-control');
+        
+        errorElements.forEach(el => el.textContent = '');
+        inputs.forEach(input => input.classList.remove('is-invalid'));
+    }
+
+    function displayFormErrors(formId, errors) {
+        const form = document.getElementById(formId);
+        
+        errors.forEach(error => {
+            const input = form.querySelector(`[name="${error.field}"]`);
+            if (input) {
+                input.classList.add('is-invalid');
+                const feedback = input.parentNode.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = error.message;
+                }
+            }
+        });
+    }
+
+    function showToast(message, type = 'info', duration = 5000) {
+        const toastContainer = document.getElementById('toastContainer');
+        const toastId = 'toast-' + Date.now();
+
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = 'toast-modern';
+        toast.innerHTML = `
+            <div class="toast-header-modern ${type}">
+                <div class="toast-icon-modern">
+                    <i class="fas ${getToastIcon(type)}"></i>
+                </div>
+                <div class="toast-content-modern">
+                    <div class="toast-title-modern">${getToastTitle(type)}</div>
+                </div>
+                <button type="button" class="toast-close-modern" onclick="closeToast('${toastId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="toast-body-modern">
+                ${message}
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+            closeToast(toastId);
+        }, duration);
+    }
+
+    function closeToast(toastId) {
+        const toast = document.getElementById(toastId);
+        if (toast) {
+            toast.style.animation = 'slideInToast 0.3s ease-out reverse';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }
+
+    function getToastIcon(type) {
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            info: 'fa-info-circle'
+        };
+        return icons[type] || icons.info;
+    }
+
+    function getToastTitle(type) {
+        const titles = {
+            success: 'Success',
+            error: 'Error',
+            info: 'Information'
+        };
+        return titles[type] || titles.info;
+    }
+</script>
+}

@@ -7,6 +7,7 @@ using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Models;
 using TestPlatform2.Repository;
+using TestPlatform2.Services;
 using System.Text.Json;
 
 namespace TestPlatform2.Controllers;
@@ -19,6 +20,9 @@ public class TestController : Controller
     private readonly ITestAnalyticsRepository _testAnalyticsRepository;
     private readonly ITestInviteRepository _testInviteRepository;
     private readonly IQuestionRepository _questionRepository;
+    private readonly IExportService _exportService;
+    private readonly ICategoryRepository _categoryRepository;
+    private readonly ITagRepository _tagRepository;
     
     public TestController(
         ITestRepository testRepository, 
@@ -26,7 +30,10 @@ public class TestController : Controller
         ITestAttemptRepository testAttemptRepository,
         ITestAnalyticsRepository testAnalyticsRepository,
         ITestInviteRepository testInviteRepository,
-        IQuestionRepository questionRepository)
+        IQuestionRepository questionRepository,
+        IExportService exportService,
+        ICategoryRepository categoryRepository,
+        ITagRepository tagRepository)
     {
         _testRepository = testRepository;
         _userManager = userManager;
@@ -34,6 +41,9 @@ public class TestController : Controller
         _testAnalyticsRepository = testAnalyticsRepository;
         _testInviteRepository = testInviteRepository;
         _questionRepository = questionRepository;
+        _exportService = exportService;
+        _categoryRepository = categoryRepository;
+        _tagRepository = tagRepository;
     }
     
     // ========== TRADITIONAL MVC METHODS ==========
@@ -41,10 +51,18 @@ public class TestController : Controller
     // GET: /Test/Index
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(bool showArchived = false)
     {
         var user = await _userManager.GetUserAsync(User);
         var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
+        
+        // Filter archived tests based on the parameter
+        if (!showArchived)
+        {
+            tests = tests.Where(t => !t.IsArchived).ToList();
+        }
+        
+        ViewBag.ShowArchived = showArchived;
         return View(tests);
     }
     
@@ -80,12 +98,52 @@ public class TestController : Controller
             RandomizeQuestions = dto.RandomizeQuestions,
             TimeLimit = dto.TimeLimit,
             MaxAttempts = dto.MaxAttempts,
-            UserId = user.Id
+            UserId = user.Id,
+            CategoryId = dto.CategoryId,
+            // Scheduling properties
+            IsScheduled = dto.IsScheduled,
+            ScheduledStartDate = dto.ScheduledStartDate,
+            ScheduledEndDate = dto.ScheduledEndDate,
+            AutoPublish = dto.AutoPublish,
+            AutoClose = dto.AutoClose
         };
+
+        // Set the test status based on scheduling
+        if (dto.IsScheduled)
+        {
+            var now = DateTime.UtcNow;
+            if (dto.ScheduledStartDate.HasValue && dto.ScheduledStartDate > now)
+            {
+                test.Status = TestStatus.Scheduled;
+                test.IsLocked = true; // Lock scheduled tests until they start
+            }
+            else if (dto.ScheduledEndDate.HasValue && dto.ScheduledEndDate < now)
+            {
+                test.Status = TestStatus.Closed;
+                test.IsLocked = true; // Lock expired tests
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
+        }
+        else
+        {
+            test.Status = TestStatus.Active;
+        }
 
         try
         {
             await _testRepository.Create(test);
+
+            // Handle tags if provided
+            if (dto.TagNames.Any())
+            {
+                var tags = await _tagRepository.CreateTagsIfNotExistAsync(dto.TagNames, user.Id);
+                test.Tags = tags.ToList();
+                await _testRepository.Update(test);
+            }
+
             TempData["SuccessMessage"] = "Test created successfully!";
             return RedirectToAction("Index");
         }
@@ -389,12 +447,51 @@ public class TestController : Controller
             RandomizeQuestions = dto.RandomizeQuestions,
             TimeLimit = dto.TimeLimit,
             MaxAttempts = dto.MaxAttempts,
-            UserId = user.Id
+            UserId = user.Id,
+            CategoryId = dto.CategoryId,
+            // Scheduling properties - ensure UTC conversion
+            IsScheduled = dto.IsScheduled,
+            ScheduledStartDate = dto.ScheduledStartDate?.ToUniversalTime(),
+            ScheduledEndDate = dto.ScheduledEndDate?.ToUniversalTime(),
+            AutoPublish = dto.AutoPublish,
+            AutoClose = dto.AutoClose
         };
+
+        // Set the test status based on scheduling
+        if (dto.IsScheduled)
+        {
+            var now = DateTime.UtcNow;
+            if (dto.ScheduledStartDate.HasValue && dto.ScheduledStartDate > now)
+            {
+                test.Status = TestStatus.Scheduled;
+                test.IsLocked = true; // Lock scheduled tests until they start
+            }
+            else if (dto.ScheduledEndDate.HasValue && dto.ScheduledEndDate < now)
+            {
+                test.Status = TestStatus.Closed;
+                test.IsLocked = true; // Lock expired tests
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
+        }
+        else
+        {
+            test.Status = TestStatus.Active;
+        }
 
         try
         {
             await _testRepository.Create(test);
+
+            // Handle tags if provided
+            if (dto.TagNames.Any())
+            {
+                var tags = await _tagRepository.CreateTagsIfNotExistAsync(dto.TagNames, user.Id);
+                test.Tags = tags.ToList();
+                await _testRepository.Update(test);
+            }
 
             return Json(new { 
                 success = true, 
@@ -434,6 +531,12 @@ public class TestController : Controller
             TimeLimit = test.TimeLimit,
             MaxAttempts = test.MaxAttempts,
             IsLocked = test.IsLocked,
+            // Scheduling properties - convert UTC to local for display
+            IsScheduled = test.IsScheduled,
+            ScheduledStartDate = test.ScheduledStartDate?.ToLocalTime(),
+            ScheduledEndDate = test.ScheduledEndDate?.ToLocalTime(),
+            AutoPublish = test.AutoPublish,
+            AutoClose = test.AutoClose
         };
 
         return Json(new { success = true, data = testForEditDto });
@@ -480,6 +583,40 @@ public class TestController : Controller
             test.TimeLimit = dto.TimeLimit;
             test.MaxAttempts = dto.MaxAttempts;
             test.IsLocked = dto.IsLocked;
+            
+            // Update scheduling properties - ensure UTC conversion
+            test.IsScheduled = dto.IsScheduled;
+            test.ScheduledStartDate = dto.ScheduledStartDate?.ToUniversalTime();
+            test.ScheduledEndDate = dto.ScheduledEndDate?.ToUniversalTime();
+            test.AutoPublish = dto.AutoPublish;
+            test.AutoClose = dto.AutoClose;
+            
+            // Set the test status based on scheduling
+            if (dto.IsScheduled)
+            {
+                var now = DateTime.UtcNow;
+                var startDateUtc = dto.ScheduledStartDate?.ToUniversalTime();
+                var endDateUtc = dto.ScheduledEndDate?.ToUniversalTime();
+                
+                if (startDateUtc.HasValue && startDateUtc > now)
+                {
+                    test.Status = TestStatus.Scheduled;
+                    test.IsLocked = true; // Lock scheduled tests until they start
+                }
+                else if (endDateUtc.HasValue && endDateUtc < now)
+                {
+                    test.Status = TestStatus.Closed;
+                    test.IsLocked = true; // Lock expired tests
+                }
+                else
+                {
+                    test.Status = TestStatus.Active;
+                }
+            }
+            else
+            {
+                test.Status = TestStatus.Active;
+            }
             
             await _testRepository.Update(test);
 
@@ -644,37 +781,107 @@ public class TestController : Controller
         if (request.TestIds == null || !request.TestIds.Any())
             return Json(new { success = false, message = "No tests selected" });
 
-        var deletedCount = 0;
-        var errors = new List<string>();
-
-        foreach (var testId in request.TestIds)
+        try
         {
-            try
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to delete" });
+
+            await _testRepository.BulkDeleteAsync(tests);
+
+            return Json(new
             {
-                var test = await _testRepository.GetTestByIdAsync(testId);
-                if (test != null && test.User == user)
-                {
-                    await _testRepository.Delete(test);
-                    deletedCount++;
-                }
-                else
-                {
-                    errors.Add($"Could not delete test {testId}");
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"Error deleting test {testId}");
-            }
+                success = true,
+                message = $"Successfully deleted {tests.Count} test(s)",
+                deletedCount = tests.Count
+            });
         }
-
-        return Json(new
+        catch (Exception ex)
         {
-            success = deletedCount > 0,
-            message = $"Deleted {deletedCount} test(s)",
-            deletedCount,
-            errors
-        });
+            return Json(new { success = false, message = "An error occurred while deleting tests" });
+        }
+    }
+
+    // POST: /Test/BulkArchiveTestsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> BulkArchiveTestsAjax([FromBody] BulkArchiveRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (request.TestIds == null || !request.TestIds.Any())
+            return Json(new { success = false, message = "No tests selected" });
+
+        try
+        {
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to update" });
+
+            foreach (var test in tests)
+            {
+                test.IsArchived = request.Archive;
+                test.ArchivedAt = request.Archive ? DateTime.UtcNow : null;
+            }
+
+            await _testRepository.BulkUpdateAsync(tests);
+
+            var action = request.Archive ? "archived" : "unarchived";
+            return Json(new
+            {
+                success = true,
+                message = $"Successfully {action} {tests.Count} test(s)",
+                updatedCount = tests.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating tests" });
+        }
+    }
+
+    // POST: /Test/BulkLockTestsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> BulkLockTestsAjax([FromBody] BulkLockRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (request.TestIds == null || !request.TestIds.Any())
+            return Json(new { success = false, message = "No tests selected" });
+
+        try
+        {
+            var tests = await _testRepository.GetTestsByIdsAsync(request.TestIds, user.Id);
+            
+            if (!tests.Any())
+                return Json(new { success = false, message = "No valid tests found to update" });
+
+            foreach (var test in tests)
+            {
+                test.IsLocked = request.Lock;
+            }
+
+            await _testRepository.BulkUpdateAsync(tests);
+
+            var action = request.Lock ? "locked" : "unlocked";
+            return Json(new
+            {
+                success = true,
+                message = $"Successfully {action} {tests.Count} test(s)",
+                updatedCount = tests.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating test lock status" });
+        }
     }
 
     // POST: /Test/CloneTestAjax
@@ -935,6 +1142,196 @@ public class TestController : Controller
         }
     }
 
+    // POST: /Test/ToggleLockAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ToggleLockAjax([FromBody] LockTestRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(request.Id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            // Toggle the lock status
+            test.IsLocked = !test.IsLocked;
+            await _testRepository.Update(test);
+            
+            var status = test.IsLocked ? "locked" : "unlocked";
+            var message = $"Test has been {status} successfully!";
+            
+            return Json(new { 
+                success = true, 
+                message = message,
+                isLocked = test.IsLocked,
+                status = status
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating the test lock status." });
+        }
+    }
+
+    // ========== EXPORT METHODS ==========
+
+    // GET: /Test/ExportResultsPdf
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsPdf(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        
+        try
+        {
+            var pdfBytes = await _exportService.ExportTestResultsToPdfAsync(test, attempts);
+            var fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+            
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating PDF export";
+            return RedirectToAction("AllAttempts", new { testId = testId });
+        }
+    }
+
+    // GET: /Test/ExportResultsExcel
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsExcel(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        
+        try
+        {
+            var excelBytes = await _exportService.ExportTestResultsToExcelAsync(test, attempts);
+            var fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.xlsx";
+            
+            return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating Excel export";
+            return RedirectToAction("AllAttempts", new { testId = testId });
+        }
+    }
+
+    // GET: /Test/ExportTestSummaryPdf
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ExportTestSummaryPdf(string testId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return RedirectToAction("Login", "Account");
+
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Unauthorized("You do not have permission to export this test");
+
+        try
+        {
+            var pdfBytes = await _exportService.ExportTestSummaryToPdfAsync(test);
+            var fileName = $"TestSummary_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+            
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Error generating test summary PDF";
+            return RedirectToAction("Details", new { id = testId });
+        }
+    }
+
+    // POST: /Test/ExportResultsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ExportResultsAjax([FromBody] ExportRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(request.TestId);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(request.TestId);
+            byte[] fileBytes;
+            string fileName;
+            string contentType;
+
+            switch (request.Format.ToLower())
+            {
+                case "pdf":
+                    fileBytes = await _exportService.ExportTestResultsToPdfAsync(test, attempts);
+                    fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+                    contentType = "application/pdf";
+                    break;
+                case "excel":
+                    fileBytes = await _exportService.ExportTestResultsToExcelAsync(test, attempts);
+                    fileName = $"TestResults_{test.TestName}_{DateTime.Now:yyyyMMdd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    break;
+                default:
+                    return Json(new { success = false, message = "Unsupported export format" });
+            }
+
+            // Convert to base64 for AJAX response
+            var base64File = Convert.ToBase64String(fileBytes);
+            
+            return Json(new { 
+                success = true, 
+                fileName = fileName,
+                fileData = base64File,
+                contentType = contentType
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Error generating export file" });
+        }
+    }
+
+
     // ========== REQUEST DTOs FOR AJAX METHODS ==========
     
     public class DeleteTestRequest
@@ -956,4 +1353,23 @@ public class TestController : Controller
     {
         public string Id { get; set; }
     }
+
+    public class BulkArchiveRequest
+    {
+        public List<string> TestIds { get; set; }
+        public bool Archive { get; set; }
+    }
+
+    public class BulkLockRequest
+    {
+        public List<string> TestIds { get; set; }
+        public bool Lock { get; set; }
+    }
+
+    public class ExportRequest
+    {
+        public string TestId { get; set; }
+        public string Format { get; set; } // "pdf" or "excel"
+    }
+
 }

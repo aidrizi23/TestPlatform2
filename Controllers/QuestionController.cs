@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Repository;
+using TestPlatform2.Models.Questions;
 
 namespace TestPlatform2.Controllers;
 
@@ -13,17 +14,20 @@ public class QuestionController : Controller
     private readonly UserManager<User> _userManager;
     private readonly ITestRepository _testRepository;
     private readonly ISubscriptionRepository _subscriptionRepository;
+    private readonly ITestAttemptRepository _testAttemptRepository;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
-        ISubscriptionRepository subscriptionRepository)
+        ISubscriptionRepository subscriptionRepository,
+        ITestAttemptRepository testAttemptRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
         _subscriptionRepository = subscriptionRepository;
+        _testAttemptRepository = testAttemptRepository;
     }
     
     private async Task<IActionResult> CheckQuestionLimitAsync(string userId)
@@ -34,6 +38,12 @@ public class QuestionController : Controller
             return RedirectToAction("Index", "Subscription");
         }
         return null;
+    }
+    
+    private async Task<bool> TestHasAttemptsAsync(string testId)
+    {
+        var attempts = await _testAttemptRepository.GetAttemptsByTestIdAsync(testId);
+        return attempts.Any(a => a.IsCompleted);
     }
 
     // ========== TRADITIONAL MVC METHODS ==========
@@ -281,6 +291,13 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
 
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            TempData["ErrorMessage"] = "Cannot delete questions from a test that has completed attempts. This preserves the integrity of student submissions.";
+            return RedirectToAction("Details", "Test", new { id = question.TestId });
+        }
+
         try
         {
             await _questionRepository.Delete(question);
@@ -291,6 +308,167 @@ public class QuestionController : Controller
         {
             TempData["ErrorMessage"] = "An error occurred while deleting the question.";
             return RedirectToAction("Details", "Test", new { id = question.TestId });
+        }
+    }
+
+    // GET: /Question/CreateDragDrop
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> CreateDragDrop(string testId)
+    {
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+        
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null || test.UserId != user.Id)
+            return Unauthorized();
+        
+        // Check question limit
+        var limitCheck = await CheckQuestionLimitAsync(user.Id);
+        if (limitCheck != null) return limitCheck;
+
+        var model = new CreateDragDropQuestionViewModel()
+        {
+            TestId = testId,
+            Points = 1,
+            Text = "",
+            AllowMultiplePerZone = false,
+            OrderMatters = false,
+            DraggableItemsJson = "[]",
+            DropZonesJson = "[]"
+        };
+        
+        return View(model);
+    }
+
+    // POST: /Question/CreateDragDrop
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> CreateDragDrop(CreateDragDropQuestionViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var test = await _testRepository.GetTestByIdAsync(model.TestId);
+        var user = await _userManager.GetUserAsync(User);
+        if (test is null)
+            return NotFound("Test not found");
+        if (user is null || test.UserId != user.Id)
+            return Unauthorized();
+        
+        // Check question limit
+        var limitCheck = await CheckQuestionLimitAsync(user.Id);
+        if (limitCheck != null) return limitCheck;
+
+        try
+        {
+            var question = new DragDropQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                AllowMultiplePerZone = model.AllowMultiplePerZone,
+                OrderMatters = model.OrderMatters,
+                DraggableItemsJson = model.DraggableItemsJson,
+                DropZonesJson = model.DropZonesJson,
+                Test = test,
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            TempData["SuccessMessage"] = "Drag & drop question created successfully!";
+            return RedirectToAction("Details", "Test", new { id = test.Id });
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "An error occurred while creating the question.");
+            return View(model);
+        }
+    }
+
+    // GET: /Question/CreateImageBased
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> CreateImageBased(string testId)
+    {
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return NotFound("Test not found");
+        
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null || test.UserId != user.Id)
+            return Unauthorized();
+        
+        // Check question limit
+        var limitCheck = await CheckQuestionLimitAsync(user.Id);
+        if (limitCheck != null) return limitCheck;
+
+        var model = new CreateImageBasedQuestionViewModel()
+        {
+            TestId = testId,
+            Points = 1,
+            Text = "",
+            ImageUrl = "",
+            QuestionType = ImageQuestionType.Hotspot,
+            ImageWidth = 800,
+            ImageHeight = 600,
+            HotspotsJson = "[]",
+            LabelsJson = "[]"
+        };
+        
+        return View(model);
+    }
+
+    // POST: /Question/CreateImageBased
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> CreateImageBased(CreateImageBasedQuestionViewModel model)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var test = await _testRepository.GetTestByIdAsync(model.TestId);
+        var user = await _userManager.GetUserAsync(User);
+        if (test is null)
+            return NotFound("Test not found");
+        if (user is null || test.UserId != user.Id)
+            return Unauthorized();
+        
+        // Check question limit
+        var limitCheck = await CheckQuestionLimitAsync(user.Id);
+        if (limitCheck != null) return limitCheck;
+
+        try
+        {
+            var question = new ImageBasedQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                ImageUrl = model.ImageUrl,
+                QuestionType = model.QuestionType,
+                AltText = model.AltText,
+                ImageWidth = model.ImageWidth,
+                ImageHeight = model.ImageHeight,
+                HotspotsJson = model.HotspotsJson,
+                LabelsJson = model.LabelsJson,
+                Test = test,
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            TempData["SuccessMessage"] = "Image-based question created successfully!";
+            return RedirectToAction("Details", "Test", new { id = test.Id });
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddModelError("", "An error occurred while creating the question.");
+            return View(model);
         }
     }
 
@@ -593,6 +771,12 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
 
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            return Json(new { success = false, message = "Cannot delete questions from a test that has completed attempts. This preserves the integrity of student submissions." });
+        }
+
         try
         {
             await _questionRepository.Delete(question);
@@ -693,6 +877,13 @@ public class QuestionController : Controller
                     var test = await _testRepository.GetTestByIdAsync(question.TestId);
                     if (test != null && test.UserId == user.Id)
                     {
+                        // Check if test has completed attempts
+                        if (await TestHasAttemptsAsync(question.TestId))
+                        {
+                            errors.Add($"Cannot delete question from test with completed attempts");
+                            continue;
+                        }
+
                         await _questionRepository.Delete(question);
                         deletedCount++;
                     }

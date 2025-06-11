@@ -1,0 +1,353 @@
+@model TestPlatform2.Models.Questions.CreateDragDropQuestionViewModel
+
+@{
+    ViewData["Title"] = "Create Drag & Drop Question";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/drag-drop.css" asp-append-version="true" />
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4><i class="fas fa-hand-rock"></i> Create Drag & Drop Question</h4>
+                    <a href="@Url.Action("Details", "Test", new { id = Model.TestId })" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Test
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form asp-action="CreateDragDrop" method="post" id="dragDropForm" asp-antiforgery="true">
+                        <input type="hidden" asp-for="TestId" />
+                        <input type="hidden" asp-for="DraggableItemsJson" id="draggableItemsInput" />
+                        <input type="hidden" asp-for="DropZonesJson" id="dropZonesInput" />
+                        
+                        <!-- Basic Question Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label asp-for="Text" class="form-label">Question Text</label>
+                                <textarea asp-for="Text" class="form-control" rows="3" placeholder="Enter your drag & drop question..."></textarea>
+                                <span asp-validation-for="Text" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="Points" class="form-label">Points</label>
+                                <input asp-for="Points" type="number" class="form-control" min="0.1" step="0.1" />
+                                <span asp-validation-for="Points" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Question Settings -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AllowMultiplePerZone" class="form-check-input" type="checkbox" />
+                                    <label asp-for="AllowMultiplePerZone" class="form-check-label">
+                                        <i class="fas fa-layer-group me-2"></i>Allow multiple items per drop zone
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="OrderMatters" class="form-check-input" type="checkbox" />
+                                    <label asp-for="OrderMatters" class="form-check-label">
+                                        <i class="fas fa-sort-numeric-down me-2"></i>Order matters within drop zones
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Draggable Items Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-grip-vertical"></i> Draggable Items</h5>
+                                <button type="button" class="btn btn-success btn-sm" onclick="addDraggableItem()">
+                                    <i class="fas fa-plus"></i> Add Item
+                                </button>
+                            </div>
+                            <div id="draggableItemsContainer" class="border rounded p-3 bg-light">
+                                <!-- Draggable items will be added here -->
+                            </div>
+                        </div>
+
+                        <!-- Drop Zones Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5><i class="fas fa-bullseye"></i> Drop Zones</h5>
+                                <button type="button" class="btn btn-success btn-sm" onclick="addDropZone()">
+                                    <i class="fas fa-plus"></i> Add Zone
+                                </button>
+                            </div>
+                            <div id="dropZonesContainer" class="border rounded p-3 bg-light">
+                                <!-- Drop zones will be added here -->
+                            </div>
+                        </div>
+
+                        <!-- Preview Section -->
+                        <div class="mb-4">
+                            <h5><i class="fas fa-eye"></i> Preview</h5>
+                            <div id="dragDropPreview" class="border rounded p-3 bg-white" style="min-height: 300px;">
+                                <div class="text-muted text-center py-5">
+                                    Add items and drop zones to see preview
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden inputs for serialized data -->
+                        <input type="hidden" asp-for="DraggableItemsJson" id="draggableItemsJson" />
+                        <input type="hidden" asp-for="DropZonesJson" id="dropZonesJson" />
+
+                        <!-- Submit Button -->
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Create Question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Draggable Item Template -->
+<template id="draggableItemTemplate">
+    <div class="draggable-item-editor border rounded p-3 mb-2" data-item-id="">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">Draggable Item</h6>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeDraggableItem(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <label class="form-label">Text</label>
+                <input type="text" class="form-control item-text" placeholder="Item text..." />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Image URL (optional)</label>
+                <input type="url" class="form-control item-image" placeholder="https://..." />
+            </div>
+        </div>
+        <div class="mt-2">
+            <label class="form-label">Tooltip (optional)</label>
+            <input type="text" class="form-control item-tooltip" placeholder="Helpful hint..." />
+        </div>
+    </div>
+</template>
+
+<!-- Drop Zone Template -->
+<template id="dropZoneTemplate">
+    <div class="drop-zone-editor border rounded p-3 mb-2" data-zone-id="">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">Drop Zone</h6>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeDropZone(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Label</label>
+                <input type="text" class="form-control zone-label" placeholder="Zone label..." />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Max Items</label>
+                <input type="number" class="form-control zone-max-items" min="1" value="1" />
+            </div>
+        </div>
+        <div class="mt-2">
+            <label class="form-label">Description (optional)</label>
+            <input type="text" class="form-control zone-description" placeholder="Zone description..." />
+        </div>
+        <div class="mt-2">
+            <label class="form-label">Correct Items</label>
+            <select class="form-select zone-correct-items" multiple>
+                <!-- Options will be populated from draggable items -->
+            </select>
+            <small class="text-muted">Select which items belong in this zone</small>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <script>
+        let draggableItems = [];
+        let dropZones = [];
+        let itemCounter = 0;
+        let zoneCounter = 0;
+
+        function addDraggableItem() {
+            const template = document.getElementById('draggableItemTemplate');
+            const clone = template.content.cloneNode(true);
+            const itemId = 'item_' + (++itemCounter);
+            
+            clone.querySelector('.draggable-item-editor').setAttribute('data-item-id', itemId);
+            document.getElementById('draggableItemsContainer').appendChild(clone);
+            
+            updatePreview();
+            updateDropZoneOptions();
+        }
+
+        function removeDraggableItem(button) {
+            const itemEditor = button.closest('.draggable-item-editor');
+            const itemId = itemEditor.getAttribute('data-item-id');
+            
+            itemEditor.remove();
+            updatePreview();
+            updateDropZoneOptions();
+        }
+
+        function addDropZone() {
+            const template = document.getElementById('dropZoneTemplate');
+            const clone = template.content.cloneNode(true);
+            const zoneId = 'zone_' + (++zoneCounter);
+            
+            clone.querySelector('.drop-zone-editor').setAttribute('data-zone-id', zoneId);
+            document.getElementById('dropZonesContainer').appendChild(clone);
+            
+            updateDropZoneOptions();
+            updatePreview();
+        }
+
+        function removeDropZone(button) {
+            const zoneEditor = button.closest('.drop-zone-editor');
+            zoneEditor.remove();
+            updatePreview();
+        }
+
+        function updateDropZoneOptions() {
+            const items = collectDraggableItems();
+            const zoneSelects = document.querySelectorAll('.zone-correct-items');
+            
+            zoneSelects.forEach(select => {
+                const currentValues = Array.from(select.selectedOptions).map(option => option.value);
+                select.innerHTML = '';
+                
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.text || 'Untitled Item';
+                    if (currentValues.includes(item.id)) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function collectDraggableItems() {
+            const items = [];
+            document.querySelectorAll('.draggable-item-editor').forEach(editor => {
+                const id = editor.getAttribute('data-item-id');
+                const text = editor.querySelector('.item-text').value;
+                const imageUrl = editor.querySelector('.item-image').value;
+                const tooltip = editor.querySelector('.item-tooltip').value;
+                
+                items.push({
+                    id: id,
+                    text: text,
+                    imageUrl: imageUrl || null,
+                    tooltip: tooltip || null
+                });
+            });
+            return items;
+        }
+
+        function collectDropZones() {
+            const zones = [];
+            document.querySelectorAll('.drop-zone-editor').forEach(editor => {
+                const id = editor.getAttribute('data-zone-id');
+                const label = editor.querySelector('.zone-label').value;
+                const description = editor.querySelector('.zone-description').value;
+                const maxItems = parseInt(editor.querySelector('.zone-max-items').value) || 1;
+                const correctItems = Array.from(editor.querySelector('.zone-correct-items').selectedOptions)
+                    .map(option => option.value);
+                
+                zones.push({
+                    id: id,
+                    label: label,
+                    description: description || null,
+                    correctItems: correctItems,
+                    maxItems: maxItems,
+                    x: 0, y: 0, width: 200, height: 100
+                });
+            });
+            return zones;
+        }
+
+        function updatePreview() {
+            const items = collectDraggableItems();
+            const zones = collectDropZones();
+            const preview = document.getElementById('dragDropPreview');
+            
+            if (items.length === 0 && zones.length === 0) {
+                preview.innerHTML = '<div class="text-muted text-center py-5">Add items and drop zones to see preview</div>';
+                return;
+            }
+            
+            let html = '<div class="drag-drop-preview">';
+            
+            // Items area
+            if (items.length > 0) {
+                html += '<div class="mb-3"><h6>Items to drag:</h6><div class="d-flex flex-wrap gap-2">';
+                items.forEach(item => {
+                    html += `<div class="badge bg-primary p-2" style="cursor: move;">
+                        ${item.imageUrl ? `<img src="${item.imageUrl}" style="max-width: 20px; max-height: 20px;" class="me-1" />` : ''}
+                        ${item.text || 'Untitled'}
+                    </div>`;
+                });
+                html += '</div></div>';
+            }
+            
+            // Drop zones area
+            if (zones.length > 0) {
+                html += '<div><h6>Drop zones:</h6><div class="row">';
+                zones.forEach(zone => {
+                    html += `<div class="col-md-6 mb-2">
+                        <div class="border border-dashed p-3 text-center bg-light">
+                            <strong>${zone.label || 'Untitled Zone'}</strong>
+                            ${zone.description ? `<br><small class="text-muted">${zone.description}</small>` : ''}
+                            <br><small class="text-success">Accepts: ${zone.correctItems.length} item(s)</small>
+                        </div>
+                    </div>`;
+                });
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            preview.innerHTML = html;
+        }
+
+        // Form submission
+        document.getElementById('dragDropForm').addEventListener('submit', function(e) {
+            const items = collectDraggableItems();
+            const zones = collectDropZones();
+            
+            document.getElementById('draggableItemsJson').value = JSON.stringify(items);
+            document.getElementById('dropZonesJson').value = JSON.stringify(zones);
+        });
+
+        // Event listeners for real-time updates
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.item-text, .zone-label, .zone-description')) {
+                updatePreview();
+            }
+            if (e.target.matches('.item-text')) {
+                updateDropZoneOptions();
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('.zone-correct-items')) {
+                updatePreview();
+            }
+        });
+
+        // Initialize with one item and one zone
+        document.addEventListener('DOMContentLoaded', function() {
+            addDraggableItem();
+            addDropZone();
+        });
+    </script>
+}

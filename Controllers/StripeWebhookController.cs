@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using TestPlatform2.Data;
 using TestPlatform2.Repository;
 using TestPlatform2.Services;
 
@@ -149,6 +150,41 @@ public class StripeWebhookController : ControllerBase
 
             _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}", user.Id, isPro);
 
+            // Create Subscription record
+            try
+            {
+                var subscriptionRecord = new TestPlatform2.Data.Subscription
+                {
+                    UserId = user.Id,
+                    StripeCustomerId = subscription.CustomerId,
+                    StripeSubscriptionId = subscription.Id,
+                    StripePriceId = subscription.Items.Data.FirstOrDefault()?.Price?.Id,
+                    Status = MapStripeStatusToSubscriptionStatus(subscription.Status),
+                    Plan = SubscriptionPlan.Pro,
+                    PriceAmount = subscription.Items.Data.FirstOrDefault()?.Price?.UnitAmount / 100m ?? 0,
+                    Currency = subscription.Items.Data.FirstOrDefault()?.Price?.Currency ?? "usd",
+                    StartDate = subscription.StartDate,
+                    CurrentPeriodStart = subscription.CurrentPeriodStart,
+                    CurrentPeriodEnd = subscription.CurrentPeriodEnd,
+                    HasTrialPeriod = subscription.TrialEnd.HasValue,
+                    TrialEndDate = subscription.TrialEnd,
+                    Metadata = new Dictionary<string, string>
+                    {
+                        ["stripe_event_id"] = stripeEvent.Id,
+                        ["stripe_event_type"] = stripeEvent.Type
+                    }
+                };
+
+                await _subscriptionRepository.CreateSubscriptionAsync(subscriptionRecord);
+                _logger.LogInformation("Created subscription record {SubscriptionId} for user {UserId}", subscriptionRecord.Id, user.Id);
+            }
+            catch (Exception subEx)
+            {
+                _logger.LogError(subEx, "Failed to create subscription record for user {UserId}, Stripe subscription {StripeSubscriptionId}", 
+                    user.Id, subscription.Id);
+                // Don't fail the webhook because of this
+            }
+
             // Send welcome email
             if (isPro)
             {
@@ -242,6 +278,71 @@ public class StripeWebhookController : ControllerBase
 
             _logger.LogInformation("Updated subscription status for user {UserId} to Pro: {IsPro}, EndDate: {EndDate}", 
                 user.Id, isPro, subscriptionEndDate);
+
+            // Update or create Subscription record
+            try
+            {
+                var existingSubscription = await _subscriptionRepository.GetSubscriptionByStripeIdAsync(subscription.Id);
+                if (existingSubscription != null)
+                {
+                    // Update existing subscription
+                    existingSubscription.Status = MapStripeStatusToSubscriptionStatus(subscription.Status);
+                    existingSubscription.CurrentPeriodStart = subscription.CurrentPeriodStart;
+                    existingSubscription.CurrentPeriodEnd = subscription.CurrentPeriodEnd;
+                    existingSubscription.EndDate = subscriptionEndDate;
+                    if (subscription.CancelAtPeriodEnd || subscription.Status == "canceled")
+                    {
+                        existingSubscription.CancelledAt = DateTime.UtcNow;
+                        existingSubscription.CancellationReason = subscription.CancellationDetails?.Reason;
+                    }
+                    existingSubscription.Metadata["stripe_event_id"] = stripeEvent.Id;
+                    existingSubscription.Metadata["stripe_event_type"] = stripeEvent.Type;
+                    
+                    await _subscriptionRepository.UpdateSubscriptionAsync(existingSubscription);
+                    _logger.LogInformation("Updated subscription record {SubscriptionId} for user {UserId}", existingSubscription.Id, user.Id);
+                }
+                else
+                {
+                    // Create new subscription record if it doesn't exist (shouldn't happen in normal flow)
+                    var subscriptionRecord = new TestPlatform2.Data.Subscription
+                    {
+                        UserId = user.Id,
+                        StripeCustomerId = subscription.CustomerId,
+                        StripeSubscriptionId = subscription.Id,
+                        StripePriceId = subscription.Items.Data.FirstOrDefault()?.Price?.Id,
+                        Status = MapStripeStatusToSubscriptionStatus(subscription.Status),
+                        Plan = SubscriptionPlan.Pro,
+                        PriceAmount = subscription.Items.Data.FirstOrDefault()?.Price?.UnitAmount / 100m ?? 0,
+                        Currency = subscription.Items.Data.FirstOrDefault()?.Price?.Currency ?? "usd",
+                        StartDate = subscription.StartDate,
+                        CurrentPeriodStart = subscription.CurrentPeriodStart,
+                        CurrentPeriodEnd = subscription.CurrentPeriodEnd,
+                        EndDate = subscriptionEndDate,
+                        HasTrialPeriod = subscription.TrialEnd.HasValue,
+                        TrialEndDate = subscription.TrialEnd,
+                        Metadata = new Dictionary<string, string>
+                        {
+                            ["stripe_event_id"] = stripeEvent.Id,
+                            ["stripe_event_type"] = stripeEvent.Type
+                        }
+                    };
+
+                    if (subscription.CancelAtPeriodEnd || subscription.Status == "canceled")
+                    {
+                        subscriptionRecord.CancelledAt = DateTime.UtcNow;
+                        subscriptionRecord.CancellationReason = subscription.CancellationDetails?.Reason;
+                    }
+
+                    await _subscriptionRepository.CreateSubscriptionAsync(subscriptionRecord);
+                    _logger.LogInformation("Created new subscription record {SubscriptionId} for user {UserId}", subscriptionRecord.Id, user.Id);
+                }
+            }
+            catch (Exception subEx)
+            {
+                _logger.LogError(subEx, "Failed to update subscription record for user {UserId}, Stripe subscription {StripeSubscriptionId}", 
+                    user.Id, subscription.Id);
+                // Don't fail the webhook because of this
+            }
 
             // Send cancellation email if subscription was cancelled
             if (subscription.CancelAtPeriodEnd && isPro)
@@ -488,5 +589,21 @@ public class StripeWebhookController : ControllerBase
         }
         
         return null;
+    }
+
+    private static SubscriptionStatus MapStripeStatusToSubscriptionStatus(string stripeStatus)
+    {
+        return stripeStatus?.ToLower() switch
+        {
+            "active" => SubscriptionStatus.Active,
+            "trialing" => SubscriptionStatus.Trialing,
+            "past_due" => SubscriptionStatus.PastDue,
+            "canceled" => SubscriptionStatus.Cancelled,
+            "incomplete" => SubscriptionStatus.Incomplete,
+            "incomplete_expired" => SubscriptionStatus.IncompleteExpired,
+            "unpaid" => SubscriptionStatus.Unpaid,
+            "paused" => SubscriptionStatus.Paused,
+            _ => SubscriptionStatus.Incomplete
+        };
     }
 }

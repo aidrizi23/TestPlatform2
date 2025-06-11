@@ -28,6 +28,10 @@ public class Program
             options.Password.RequiredLength = 6;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
+            
+            // Email verification settings
+            options.SignIn.RequireConfirmedEmail = true;
+            options.User.RequireUniqueEmail = true;
         })
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
@@ -43,9 +47,13 @@ public class Program
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
         builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        builder.Services.AddScoped<IExportService, ExportService>();
+        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+        builder.Services.AddScoped<ITagRepository, TagRepository>();
         
         // Background services
         builder.Services.AddHostedService<SubscriptionCleanupService>();
+        builder.Services.AddHostedService<TestSchedulingService>();
 
         // Add HttpContextAccessor for accessing HttpContext in services
         builder.Services.AddHttpContextAccessor();

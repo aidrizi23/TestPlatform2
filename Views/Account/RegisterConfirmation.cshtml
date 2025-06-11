@@ -1,0 +1,120 @@
+@{
+    ViewData["Title"] = "Registration Confirmation";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3 class="mb-0"><i class="fas fa-envelope-circle-check me-2"></i>Check Your Email</h3>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <!-- Success/Warning/Error Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        </div>
+                    }
+                    @if (TempData["WarningMessage"] != null)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["WarningMessage"]
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle me-2"></i>@TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <!-- Email Icon -->
+                    <div class="mb-4">
+                        <i class="fas fa-envelope-open-text fa-5x text-primary"></i>
+                    </div>
+
+                    <!-- Main Message -->
+                    <h4 class="mb-3">Almost There!</h4>
+                    <p class="text-muted mb-4">
+                        We've sent a confirmation email to your inbox. Please click the link in the email to verify your account and complete the registration process.
+                    </p>
+
+                    <!-- Instructions -->
+                    <div class="bg-light p-3 rounded mb-4">
+                        <h6 class="mb-2"><i class="fas fa-info-circle me-2"></i>Next Steps:</h6>
+                        <ol class="text-start mb-0">
+                            <li>Check your email inbox (and spam folder)</li>
+                            <li>Click the confirmation link in the email</li>
+                            <li>Return here to log in to your account</li>
+                        </ol>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2 d-md-block">
+                        <a asp-action="Login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Go to Login
+                        </a>
+                        <a asp-action="ResendConfirmation" class="btn btn-outline-secondary">
+                            <i class="fas fa-paper-plane me-2"></i>Resend Email
+                        </a>
+                    </div>
+
+                    <!-- Help Text -->
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            <i class="fas fa-question-circle me-1"></i>
+                            Didn't receive the email? Check your spam folder or 
+                            <a asp-action="ResendConfirmation" class="text-decoration-none">click here to resend</a>.
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <small class="text-muted">
+                        Having trouble? <a href="mailto:support@testplatform.com" class="text-decoration-none">Contact Support</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-refresh page every 30 seconds to check for new messages
+            setTimeout(function() {
+                // Only refresh if no success message is shown (meaning user hasn't confirmed yet)
+                if (!document.querySelector('.alert-success')) {
+                    location.reload();
+                }
+            }, 30000);
+            
+            // Add animation to the email icon
+            const emailIcon = document.querySelector('.fa-envelope-open-text');
+            if (emailIcon) {
+                emailIcon.style.animation = 'pulse 2s infinite';
+            }
+        });
+    </script>
+    
+    <style>
+        @@keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+            color: white;
+            border-bottom: none;
+        }
+    </style>
+}

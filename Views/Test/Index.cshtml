@@ -26,12 +26,25 @@ ViewData["Title"] = "My Tests";
                         <span class="stat-number">@Model.Sum(t => t.Attempts.Count)</span>
                         <span class="stat-label">Total Attempts</span>
                     </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@Model.Sum(t => t.Questions.Count)</span>
+                        <span class="stat-label">Total Questions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">@(Model.Any() && Model.SelectMany(t => t.Attempts.Where(a => a.IsCompleted)).Any() ? Math.Round(Model.SelectMany(t => t.Attempts.Where(a => a.IsCompleted)).Average(a => a.Score), 1) : 0)%</span>
+                        <span class="stat-label">Avg Score</span>
+                    </div>
                 </div>
             </div>
             <div class="hero-action">
-                <button class="btn btn-primary btn-lg create-test-btn" data-bs-toggle="modal" data-bs-target="#createTestModal">
-                    <i class="fas fa-plus-circle me-2"></i>Create New Test
-                </button>
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-lg create-test-btn" data-bs-toggle="modal" data-bs-target="#createTestModal">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Test
+                    </button>
+                    <a href="@Url.Action("Index", "Category")" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-tags me-2"></i>Manage Categories & Tags
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -45,6 +58,114 @@ ViewData["Title"] = "My Tests";
             <span>@TempData["SuccessMessage"]</span>
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    }
+
+    @if (Model.Any())
+    {
+    <!-- Dashboard Insights Section -->
+    <div class="insights-section">
+        <div class="insights-content">
+            <h2 class="insights-title">
+                <i class="fas fa-chart-line me-2"></i>
+                Insights & Analytics
+            </h2>
+            
+            <div class="insights-grid">
+                <!-- Recent Activity Card -->
+                <div class="insight-card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-clock me-2"></i>
+                            Recent Activity
+                        </h5>
+                    </div>
+                    <div class="card-body" id="recentActivityContent">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Overview Card -->
+                <div class="insight-card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Performance Overview
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="performance-stats">
+                            <div class="performance-item">
+                                <div class="performance-label">Best Performing Test</div>
+                                <div class="performance-value">
+                                    @{
+                                        var bestTest = Model.Where(t => t.Attempts.Any(a => a.IsCompleted))
+                                                           .OrderByDescending(t => t.Attempts.Where(a => a.IsCompleted).Average(a => a.Score))
+                                                           .FirstOrDefault();
+                                    }
+                                    @if (bestTest != null)
+                                    {
+                                        <a href="@Url.Action("Details", new { id = bestTest.Id })" class="performance-link">
+                                            @bestTest.TestName
+                                        </a>
+                                        <span class="performance-score">@Math.Round(bestTest.Attempts.Where(a => a.IsCompleted).Average(a => a.Score), 1)%</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No completed attempts yet</span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="performance-item">
+                                <div class="performance-label">Most Popular Test</div>
+                                <div class="performance-value">
+                                    @{
+                                        var popularTest = Model.OrderByDescending(t => t.Attempts.Count).FirstOrDefault();
+                                    }
+                                    @if (popularTest != null && popularTest.Attempts.Any())
+                                    {
+                                        <a href="@Url.Action("Details", new { id = popularTest.Id })" class="performance-link">
+                                            @popularTest.TestName
+                                        </a>
+                                        <span class="performance-score">@popularTest.Attempts.Count attempts</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">No attempts yet</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div class="insight-card">
+                    <div class="card-header">
+                        <h5 class="card-title">
+                            <i class="fas fa-bolt me-2"></i>
+                            Quick Actions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#createTestModal">
+                                <i class="fas fa-plus me-2"></i>Create New Test
+                            </button>
+                            @* <a href="@Url.Action("SharedTests")" class="btn btn-outline-info w-100 mb-2"> *@
+                            @*     <i class="fas fa-share-alt me-2"></i>View Shared Tests *@
+                            @* </a> *@
+                            <a href="@Url.Action("Index", "Category")" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-tags me-2"></i>Manage Categories
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     }
 
@@ -80,6 +201,37 @@ ViewData["Title"] = "My Tests";
                         <input type="text" id="searchTests" class="form-control" placeholder="Search tests...">
                     </div>
                 </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="categoryFilter" class="filter-label">Category:</label>
+                        <select class="form-select filter-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="tagFilter" class="filter-label">Tag:</label>
+                        <select class="form-select filter-select" id="tagFilter">
+                            <option value="">All Tags</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <a href="@Url.Action("Index", "Category")" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-tags me-1"></i>Manage Categories & Tags
+                        </a>
+                    </div>
+                    @* <div class="filter-group"> *@
+                    @*     <a href="@Url.Action("SharedTests", "Test")" class="btn btn-outline-info btn-sm"> *@
+                    @*         <i class="fas fa-share-alt me-1"></i>Shared Tests *@
+                    @*     </a> *@
+                    @* </div> *@
+                </div>
+                <div class="archive-toggle">
+                    <a href="@Url.Action("Index", new { showArchived = !(ViewBag.ShowArchived ?? false) })" 
+                       class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")">
+                        <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
+                        @(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")
+                    </a>
+                </div>
                 <div class="view-options">
                     <button class="view-btn active" data-view="grid" title="Grid View">
                         <i class="fas fa-th-large"></i>
@@ -112,10 +264,22 @@ ViewData["Title"] = "My Tests";
                 <button class="btn btn-sm btn-success" id="bulkUnlockBtn">
                     <i class="fas fa-unlock me-1"></i>Unlock Selected
                 </button>
+                @if (ViewBag.ShowArchived == true)
+                {
+                    <button class="btn btn-sm btn-info" id="bulkUnarchiveBtn">
+                        <i class="fas fa-box-open me-1"></i>Unarchive Selected
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-secondary" id="bulkArchiveBtn">
+                        <i class="fas fa-archive me-1"></i>Archive Selected
+                    </button>
+                }
                 <button class="btn btn-sm btn-danger" id="bulkDeleteBtn">
                     <i class="fas fa-trash me-1"></i>Delete Selected
                 </button>
-                <button class="btn btn-sm btn-secondary" id="clearSelectionBtn">
+                <button class="btn btn-sm btn-outline-secondary" id="clearSelectionBtn">
                     <i class="fas fa-times me-1"></i>Clear Selection
                 </button>
             </div>
@@ -127,15 +291,15 @@ ViewData["Title"] = "My Tests";
         <div class="tests-grid" id="testsGrid">
             @foreach (var test in Model)
             {
-            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" >
+            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" data-category-id="@test.CategoryId" data-category-name="@(test.Category?.Name ?? "")" data-tags="@string.Join(",", test.Tags.Select(t => t.Name))" >
                 <div class="test-card-header">
                     <div class="test-status">
                         <div class="form-check">
                             <input class="form-check-input test-checkbox" type="checkbox" data-test-id="@test.Id">
                         </div>
-                        <span class="status-badge @(test.IsLocked ? "status-locked" : "status-active")">
-                            <i class="fas @(test.IsLocked ? "fa-lock" : "fa-unlock")"></i>
-                            @(test.IsLocked ? "Locked" : "Active")
+                        <span class="status-badge @(test.IsArchived ? "status-archived" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "status-scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "status-closed" : (test.IsLocked ? "status-locked" : "status-active"))))">
+                            <i class="fas @(test.IsArchived ? "fa-archive" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "fa-calendar-alt" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "fa-times-circle" : (test.IsLocked ? "fa-lock" : "fa-unlock"))))"></i>
+                            @(test.IsArchived ? "Archived" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "Scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "Closed" : (test.IsLocked ? "Locked" : "Active"))))
                         </span>
                     </div>
                     <div class="test-actions">
@@ -160,6 +324,9 @@ ViewData["Title"] = "My Tests";
                                         <i class="fas fa-chart-line me-2"></i>View Analytics
                                     </a></li>
                                 <li><hr class="dropdown-divider"></li>
+                                <li><button class="dropdown-item archive-test-btn" data-test-id="@test.Id" data-test-name="@test.TestName" data-archived="@test.IsArchived.ToString().ToLower()">
+                                        <i class="fas @(test.IsArchived ? "fa-box-open" : "fa-archive") me-2"></i>@(test.IsArchived ? "Unarchive" : "Archive") Test
+                                    </button></li>
                                 <li><button class="dropdown-item text-danger delete-test-btn" data-test-id="@test.Id" data-test-name="@test.TestName">
                                         <i class="fas fa-trash me-2"></i>Delete Test
                                     </button></li>
@@ -180,6 +347,34 @@ ViewData["Title"] = "My Tests";
                         @(test.Description.Length > 80 ? test.Description.Substring(0, 77) + "..." : test.Description)
                         }
                     </p>
+
+                    @if (test.Category != null || test.Tags.Any())
+                    {
+                    <div class="test-categories-tags">
+                        @if (test.Category != null)
+                        {
+                        <div class="category-badge" style="background-color: @test.Category.Color">
+                            @if (!string.IsNullOrEmpty(test.Category.Icon))
+                            {
+                            <i class="@test.Category.Icon"></i>
+                            }
+                            <span>@test.Category.Name</span>
+                        </div>
+                        }
+                        @foreach (var tag in test.Tags.Take(3))
+                        {
+                        <div class="tag-badge" style="background-color: @tag.Color">
+                            <span>@tag.Name</span>
+                        </div>
+                        }
+                        @if (test.Tags.Count > 3)
+                        {
+                        <div class="tag-badge tag-more">
+                            <span>+@(test.Tags.Count - 3) more</span>
+                        </div>
+                        }
+                    </div>
+                    }
 
                     <div class="test-stats">
                         <div class="stat-group">
@@ -216,10 +411,20 @@ ViewData["Title"] = "My Tests";
                             @test.MaxAttempts Attempts
                         </span>
                         }
-                        @* <span class="feature-tag created-date" title="Created: @test.CreatedAt.ToString("MMM dd, yyyy")"> *@
-                        @*     <i class="fas fa-calendar"></i> *@
-                        @*     @test.CreatedAt.ToString("MMM dd") *@
-                        @* </span> *@
+                        @if (test.IsScheduled)
+                        {
+                        <span class="feature-tag scheduling-info">
+                            <i class="fas fa-calendar-alt"></i>
+                            @if (test.ScheduledStartDate.HasValue)
+                            {
+                                <span>Starts: @test.ScheduledStartDate.Value.ToString("MMM dd, HH:mm")</span>
+                            }
+                            @if (test.ScheduledEndDate.HasValue)
+                            {
+                                <span>Ends: @test.ScheduledEndDate.Value.ToString("MMM dd, HH:mm")</span>
+                            }
+                        </span>
+                        }
                     </div>
                 </div>
 
@@ -324,6 +529,90 @@ ViewData["Title"] = "My Tests";
                                     </label>
                                 </div>
                                 <div class="form-text">Questions will appear in random order for each student</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Organization Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-tags me-2"></i>Organization
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="testCategory" class="form-label">Category</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-folder"></i></span>
+                                    <select class="form-select" id="testCategory" name="CategoryId">
+                                        <option value="">No Category</option>
+                                    </select>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Assign this test to a category for organization</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="testTags" class="form-label">Tags</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                    <input type="text" class="form-control" id="testTags" name="TagNames" 
+                                           placeholder="Enter tags separated by commas">
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Add tags to help categorize this test (comma separated)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduling Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-calendar-alt me-2"></i>Test Scheduling
+                        </h6>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isScheduled" name="IsScheduled">
+                                <label class="form-check-label" for="isScheduled">
+                                    <i class="fas fa-calendar-alt me-2"></i>Schedule this test
+                                </label>
+                            </div>
+                            <div class="form-text">Automatically publish and close the test at specific times</div>
+                        </div>
+
+                        <div class="scheduling-fields" id="schedulingFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="scheduledStartDate" class="form-label">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="scheduledStartDate" name="ScheduledStartDate">
+                                    <div class="form-text">When the test becomes available to students</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="scheduledEndDate" class="form-label">End Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="scheduledEndDate" name="ScheduledEndDate">
+                                    <div class="form-text">When the test automatically closes</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="autoPublish" name="AutoPublish">
+                                        <label class="form-check-label" for="autoPublish">
+                                            <i class="fas fa-play me-2"></i>Auto-publish at start time
+                                        </label>
+                                        <div class="form-text">Automatically make the test available when start time is reached</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="autoClose" name="AutoClose">
+                                        <label class="form-check-label" for="autoClose">
+                                            <i class="fas fa-stop me-2"></i>Auto-close at end time
+                                        </label>
+                                        <div class="form-text">Automatically close the test when end time is reached</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -468,6 +757,90 @@ ViewData["Title"] = "My Tests";
                             </div>
                         </div>
                     </div>
+
+                    <!-- Organization Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-tags me-2"></i>Organization
+                        </h6>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTestCategory" class="form-label">Category</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-folder"></i></span>
+                                    <select class="form-select" id="editTestCategory" name="CategoryId">
+                                        <option value="">Select a category...</option>
+                                        <!-- Categories will be loaded dynamically -->
+                                    </select>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="editTestTags" class="form-label">Tags</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                    <input type="text" class="form-control" id="editTestTags" name="TagNames" 
+                                           placeholder="Enter tags separated by commas">
+                                </div>
+                                <div class="invalid-feedback"></div>
+                                <div class="form-text">Add tags to help categorize this test (comma separated)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduling Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <i class="fas fa-calendar-alt me-2"></i>Test Scheduling
+                        </h6>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editIsScheduled" name="IsScheduled">
+                                <label class="form-check-label" for="editIsScheduled">
+                                    <i class="fas fa-calendar-alt me-2"></i>Schedule this test
+                                </label>
+                            </div>
+                            <div class="form-text">Automatically publish and close the test at specific times</div>
+                        </div>
+
+                        <div class="scheduling-fields" id="editSchedulingFields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="editScheduledStartDate" class="form-label">Start Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="editScheduledStartDate" name="ScheduledStartDate">
+                                    <div class="form-text">When the test becomes available to students</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="editScheduledEndDate" class="form-label">End Date & Time</label>
+                                    <input type="datetime-local" class="form-control" id="editScheduledEndDate" name="ScheduledEndDate">
+                                    <div class="form-text">When the test automatically closes</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="editAutoPublish" name="AutoPublish">
+                                        <label class="form-check-label" for="editAutoPublish">
+                                            <i class="fas fa-play me-2"></i>Auto-publish at start time
+                                        </label>
+                                        <div class="form-text">Automatically make the test available when start time is reached</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="editAutoClose" name="AutoClose">
+                                        <label class="form-check-label" for="editAutoClose">
+                                            <i class="fas fa-stop me-2"></i>Auto-close at end time
+                                        </label>
+                                        <div class="form-text">Automatically close the test when end time is reached</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -537,6 +910,66 @@ ViewData["Title"] = "My Tests";
                 </button>
                 <button type="button" class="btn btn-danger" id="confirmBulkDelete">
                     <i class="fas fa-trash me-2"></i>Delete Tests
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Archive Modal -->
+<div class="modal fade" id="bulkArchiveModal" tabindex="-1" aria-labelledby="bulkArchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="bulkArchiveModalLabel">
+                    <i class="fas fa-archive text-info me-2"></i>
+                    Confirm Bulk Archive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to archive <strong><span id="bulkArchiveCount"></span> selected tests</strong>?</p>
+                <div class="alert alert-info border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Archived tests will be hidden from the main view but can be restored at any time.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-info" id="confirmBulkArchive">
+                    <i class="fas fa-archive me-2"></i>Archive Tests
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Unarchive Modal -->
+<div class="modal fade" id="bulkUnarchiveModal" tabindex="-1" aria-labelledby="bulkUnarchiveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="bulkUnarchiveModalLabel">
+                    <i class="fas fa-box-open text-success me-2"></i>
+                    Confirm Bulk Unarchive
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Are you sure you want to unarchive <strong><span id="bulkUnarchiveCount"></span> selected tests</strong>?</p>
+                <div class="alert alert-success border-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Unarchived tests will be restored to the active tests view.
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="confirmBulkUnarchive">
+                    <i class="fas fa-box-open me-2"></i>Unarchive Tests
                 </button>
             </div>
         </div>
@@ -630,6 +1063,36 @@ ViewData["Title"] = "My Tests";
         box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25);
     }
 
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .action-buttons .btn {
+        padding: 0.875rem 2rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .action-buttons .btn-outline-primary {
+        border: 2px solid #2563eb;
+        color: #2563eb;
+        background: transparent;
+    }
+
+    .action-buttons .btn-outline-primary:hover {
+        background-color: #2563eb;
+        color: white;
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.25);
+    }
+
     /* Success Alert */
     .success-alert {
         border-radius: 8px;
@@ -700,6 +1163,44 @@ ViewData["Title"] = "My Tests";
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
+    }
+
+    /* Filter Controls */
+    .filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #64748b;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .filter-select {
+        min-width: 150px;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        background-color: white;
+        transition: border-color 0.2s ease;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
     }
 
     .search-box {
@@ -869,8 +1370,6 @@ ViewData["Title"] = "My Tests";
         font-weight: 600;
         color: #1f2937;
         margin-bottom: 0.5rem;
-        line-height: 1.4;
-        display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
@@ -945,6 +1444,48 @@ ViewData["Title"] = "My Tests";
         background: #f3f4f6;
         color: #6b7280;
         margin-left: auto;
+    }
+
+    /* Category and Tag Badges */
+    .test-categories-tags {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+    }
+
+    .category-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 12px;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .category-badge i {
+        font-size: 0.625rem;
+    }
+
+    .tag-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        color: white;
+        font-size: 0.675rem;
+        font-weight: 500;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .tag-badge.tag-more {
+        background-color: #6b7280 !important;
+        font-style: italic;
     }
 
     .test-card-footer {
@@ -1301,6 +1842,23 @@ ViewData["Title"] = "My Tests";
     .modal-footer {
         padding: 1.25rem 1.5rem;
     }
+
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+    }
+
+    .filter-select {
+        min-width: auto;
+        width: 100%;
+    }
     }
 
    @@media (max-width: 576px) {
@@ -1372,865 +1930,6 @@ ViewData["Title"] = "My Tests";
     .test-card:nth-child(6) { animation-delay: 0.6s; }
 </style>
 
-@* @section Scripts { *@
-@* <script> *@
-@*     document.addEventListener('DOMContentLoaded', function() { *@
-@*         // Global variables *@
-@*         let currentTestId = null; *@
-@*         let selectedTests = new Set(); *@
-@*         const loadingOverlay = document.getElementById('loadingOverlay'); *@
-@* *@
-@*         // Initialize components *@
-@*         const createTestModal = new bootstrap.Modal(document.getElementById('createTestModal')); *@
-@*         const editTestModal = new bootstrap.Modal(document.getElementById('editTestModal')); *@
-@*         const deleteTestModal = new bootstrap.Modal(document.getElementById('deleteTestModal')); *@
-@*         const bulkDeleteModal = new bootstrap.Modal(document.getElementById('bulkDeleteModal')); *@
-@* *@
-@*         // Form elements *@
-@*         const createTestForm = document.getElementById('createTestForm'); *@
-@*         const editTestForm = document.getElementById('editTestForm'); *@
-@* *@
-@*         // Utility functions *@
-@*         function showLoading() { *@
-@*             loadingOverlay.style.display = 'flex'; *@
-@*         } *@
-@* *@
-@*         function hideLoading() { *@
-@*             loadingOverlay.style.display = 'none'; *@
-@*         } *@
-@* *@
-@*         function clearFormErrors(form) { *@
-@*             const inputs = form.querySelectorAll('.form-control'); *@
-@*             const feedbacks = form.querySelectorAll('.invalid-feedback'); *@
-@* *@
-@*             inputs.forEach(input => { *@
-@*                 input.classList.remove('is-invalid'); *@
-@*             }); *@
-@* *@
-@*             feedbacks.forEach(feedback => { *@
-@*                 feedback.textContent = ''; *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         function showFormErrors(form, errors) { *@
-@*             clearFormErrors(form); *@
-@* *@
-@*             errors.forEach(error => { *@
-@*                 const input = form.querySelector(`[name="${error.Field}"]`); *@
-@*                 const feedback = input ? input.parentElement.querySelector('.invalid-feedback') : null; *@
-@* *@
-@*                 if (input && feedback) { *@
-@*                     input.classList.add('is-invalid'); *@
-@*                     feedback.textContent = error.Message; *@
-@*                 } *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         function showToast(message, type = 'success') { *@
-@*             // Create toast container if it doesn't exist *@
-@*             let toastContainer = document.querySelector('.toast-container'); *@
-@*             if (!toastContainer) { *@
-@*                 toastContainer = document.createElement('div'); *@
-@*                 toastContainer.className = 'toast-container'; *@
-@*                 document.body.appendChild(toastContainer); *@
-@*             } *@
-@* *@
-@*             // Create toast element *@
-@*             const toast = document.createElement('div'); *@
-@*             toast.className = `toast ${type}`; *@
-@*             toast.innerHTML = ` *@
-@*                 <div class="toast-body d-flex align-items-center p-3"> *@
-@*                     <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'} me-2"></i> *@
-@*                     <span>${message}</span> *@
-@*                 </div> *@
-@*             `; *@
-@* *@
-@*             toastContainer.appendChild(toast); *@
-@* *@
-@*             // Show toast *@
-@*             setTimeout(() => { *@
-@*                 toast.style.opacity = '1'; *@
-@*                 toast.style.transform = 'translateX(0)'; *@
-@*             }, 100); *@
-@* *@
-@*             // Hide toast after 4 seconds *@
-@*             setTimeout(() => { *@
-@*                 toast.style.opacity = '0'; *@
-@*                 toast.style.transform = 'translateX(100%)'; *@
-@*                 setTimeout(() => { *@
-@*                     toast.remove(); *@
-@*                 }, 300); *@
-@*             }, 4000); *@
-@*         } *@
-@* *@
-@*         // Search and filter functionality *@
-@*         const searchInput = document.getElementById('searchTests'); *@
-@*         const sortSelect = document.getElementById('sortTests'); *@
-@* *@
-@*         if (searchInput) { *@
-@*             searchInput.addEventListener('input', function() { *@
-@*                 filterAndSortTests(); *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         if (sortSelect) { *@
-@*             sortSelect.addEventListener('change', function() { *@
-@*                 filterAndSortTests(); *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         function filterAndSortTests() { *@
-@*             const searchTerm = searchInput ? searchInput.value.toLowerCase() : ''; *@
-@*             const sortBy = sortSelect ? sortSelect.value : 'recent'; *@
-@*             const testCards = document.querySelectorAll('.test-card'); *@
-@* *@
-@*             // Convert to array for sorting *@
-@*             const testArray = Array.from(testCards); *@
-@* *@
-@*             // Filter tests *@
-@*             testArray.forEach(card => { *@
-@*                 const testName = card.dataset.testName.toLowerCase(); *@
-@*                 const shouldShow = testName.includes(searchTerm); *@
-@*                 card.style.display = shouldShow ? 'block' : 'none'; *@
-@*             }); *@
-@* *@
-@*             // Sort tests *@
-@*             const visibleTests = testArray.filter(card => card.style.display !== 'none'); *@
-@* *@
-@*             visibleTests.sort((a, b) => { *@
-@*                 switch (sortBy) { *@
-@*                     case 'name': *@
-@*                         return a.dataset.testName.localeCompare(b.dataset.testName); *@
-@*                     case 'questions': *@
-@*                         return parseInt(b.dataset.questionCount) - parseInt(a.dataset.questionCount); *@
-@*                     case 'attempts': *@
-@*                         return parseInt(b.dataset.attemptCount) - parseInt(a.dataset.attemptCount); *@
-@*                     case 'locked': *@
-@*                         return b.dataset.locked.localeCompare(a.dataset.locked); *@
-@*                     case 'recent': *@
-@*                     default: *@
-@*                         return parseInt(b.dataset.created) - parseInt(a.dataset.created); *@
-@*                 } *@
-@*             }); *@
-@* *@
-@*             // Reorder in DOM *@
-@*             const container = document.getElementById('testsGrid'); *@
-@*             visibleTests.forEach(card => { *@
-@*                 container.appendChild(card); *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         // Checkbox selection functionality *@
-@*         const testCheckboxes = document.querySelectorAll('.test-checkbox'); *@
-@*         const bulkActionsBar = document.getElementById('bulkActionsBar'); *@
-@*         const bulkSelectedCount = bulkActionsBar ? bulkActionsBar.querySelector('.bulk-selected-count') : null; *@
-@* *@
-@*         testCheckboxes.forEach(checkbox => { *@
-@*             checkbox.addEventListener('change', function() { *@
-@*                 const testId = this.dataset.testId; *@
-@*                 const testCard = this.closest('.test-card'); *@
-@* *@
-@*                 if (this.checked) { *@
-@*                     selectedTests.add(testId); *@
-@*                     testCard.classList.add('selected'); *@
-@*                 } else { *@
-@*                     selectedTests.delete(testId); *@
-@*                     testCard.classList.remove('selected'); *@
-@*                 } *@
-@* *@
-@*                 updateBulkActionsBar(); *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         function updateBulkActionsBar() { *@
-@*             const count = selectedTests.size; *@
-@* *@
-@*             if (count > 0) { *@
-@*                 bulkActionsBar.style.display = 'block'; *@
-@*                 if (bulkSelectedCount) { *@
-@*                     bulkSelectedCount.textContent = `${count} test${count !== 1 ? 's' : ''} selected`; *@
-@*                 } *@
-@*             } else { *@
-@*                 bulkActionsBar.style.display = 'none'; *@
-@*             } *@
-@*         } *@
-@* *@
-@*         // Clear selection *@
-@*         const clearSelectionBtn = document.getElementById('clearSelectionBtn'); *@
-@*         if (clearSelectionBtn) { *@
-@*             clearSelectionBtn.addEventListener('click', function() { *@
-@*                 selectedTests.clear(); *@
-@*                 testCheckboxes.forEach(checkbox => { *@
-@*                     checkbox.checked = false; *@
-@*                     checkbox.closest('.test-card').classList.remove('selected'); *@
-@*                 }); *@
-@*                 updateBulkActionsBar(); *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         // Create Test functionality *@
-@*         if (createTestForm) { *@
-@*             // Form inputs for live preview *@
-@*             const titleInput = document.getElementById('testTitle'); *@
-@*             const descriptionInput = document.getElementById('testDescription'); *@
-@*             const timeLimitInput = document.getElementById('timeLimit'); *@
-@*             const maxAttemptsInput = document.getElementById('maxAttempts'); *@
-@*             const randomizeInput = document.getElementById('randomizeQuestions'); *@
-@* *@
-@*             // Preview elements *@
-@*             const previewTitle = document.getElementById('preview-title'); *@
-@*             const previewTime = document.getElementById('preview-time'); *@
-@*             const previewAttempts = document.getElementById('preview-attempts'); *@
-@*             const previewRandomize = document.getElementById('preview-randomize'); *@
-@*             const previewFeatures = document.getElementById('preview-features'); *@
-@* *@
-@*             // Live preview updates *@
-@*             function updatePreview() { *@
-@*                 const title = titleInput.value.trim() || 'Your test title'; *@
-@*                 const timeLimit = timeLimitInput.value || '60'; *@
-@*                 const maxAttempts = maxAttemptsInput.value || '1'; *@
-@*                 const isRandomized = randomizeInput.checked; *@
-@* *@
-@*                 previewTitle.textContent = title; *@
-@*                 previewTime.textContent = `${timeLimit} minutes`; *@
-@*                 previewAttempts.textContent = maxAttempts; *@
-@*                 previewRandomize.textContent = isRandomized ? 'Randomized' : 'Sequential'; *@
-@* *@
-@*                 // Update feature tags *@
-@*                 let featuresHTML = ''; *@
-@*                 if (isRandomized) { *@
-@*                     featuresHTML += '<span class="feature-tag"><i class="fas fa-random"></i> Randomized Questions</span>'; *@
-@*                 } *@
-@*                 if (parseInt(maxAttempts) > 1) { *@
-@*                     featuresHTML += '<span class="feature-tag"><i class="fas fa-redo"></i> Multiple Attempts</span>'; *@
-@*                 } *@
-@*                 if (parseInt(timeLimit) >= 120) { *@
-@*                     featuresHTML += '<span class="feature-tag"><i class="fas fa-clock"></i> Extended Time</span>'; *@
-@*                 } *@
-@*                 previewFeatures.innerHTML = featuresHTML; *@
-@*             } *@
-@* *@
-@*             // Add event listeners for live preview *@
-@*             titleInput.addEventListener('input', updatePreview); *@
-@*             timeLimitInput.addEventListener('input', updatePreview); *@
-@*             maxAttemptsInput.addEventListener('input', updatePreview); *@
-@*             randomizeInput.addEventListener('change', updatePreview); *@
-@* *@
-@*             // Form submission *@
-@*             createTestForm.addEventListener('submit', async function(e) { *@
-@*                 e.preventDefault(); *@
-@* *@
-@*                 const submitButton = this.querySelector('.btn-create-test'); *@
-@*                 const originalText = submitButton.innerHTML; *@
-@* *@
-@*                 showLoading(); *@
-@*                 submitButton.disabled = true; *@
-@*                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...'; *@
-@*                 clearFormErrors(this); *@
-@* *@
-@*                 try { *@
-@*                     const data = { *@
-@*                         Title: titleInput.value.trim(), *@
-@*                         Description: descriptionInput.value.trim(), *@
-@*                         TimeLimit: parseInt(timeLimitInput.value) || 60, *@
-@*                         MaxAttempts: parseInt(maxAttemptsInput.value) || 1, *@
-@*                         RandomizeQuestions: randomizeInput.checked *@
-@*                     }; *@
-@* *@
-@*                     const response = await fetch('@Url.Action("CreateAjax", "Test")', { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify(data) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         createTestModal.hide(); *@
-@*                         showToast('Test created successfully! Redirecting to test details...', 'success'); *@
-@* *@
-@*                         // Redirect to test details after a short delay *@
-@*                         setTimeout(() => { *@
-@*                             window.location.href = `@Url.Action("Details", "Test")/${result.testId}`; *@
-@*                         }, 500); *@
-@*                     } else { *@
-@*                         if (result.errors) { *@
-@*                             showFormErrors(this, result.errors); *@
-@*                         } else { *@
-@*                             showToast(result.message || 'An error occurred', 'error'); *@
-@*                         } *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error creating test:', error); *@
-@*                     showToast('An error occurred while creating the test', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                     submitButton.disabled = false; *@
-@*                     submitButton.innerHTML = originalText; *@
-@*                 } *@
-@*             }); *@
-@* *@
-@*             // Reset form when modal is hidden *@
-@*             document.getElementById('createTestModal').addEventListener('hidden.bs.modal', function() { *@
-@*                 createTestForm.reset(); *@
-@*                 clearFormErrors(createTestForm); *@
-@*                 updatePreview(); *@
-@*             }); *@
-@* *@
-@*             // Focus title input when modal is shown *@
-@*             document.getElementById('createTestModal').addEventListener('shown.bs.modal', function() { *@
-@*                 titleInput.focus(); *@
-@*             }); *@
-@* *@
-@*             // Initialize preview with default values *@
-@*             updatePreview(); *@
-@*         } *@
-@* *@
-@*         // Edit Test functionality *@
-@*         const editTestButtons = document.querySelectorAll('.edit-test-btn'); *@
-@*         editTestButtons.forEach(btn => { *@
-@*             btn.addEventListener('click', async function() { *@
-@*                 const testId = this.dataset.testId; *@
-@*                 currentTestId = testId; *@
-@* *@
-@*                 showLoading(); *@
-@* *@
-@*                 try { *@
-@*                     const response = await fetch(`@Url.Action("GetTestDataAjax", "Test")?id=${testId}`, { *@
-@*                         headers: { *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         } *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         // Populate the form *@
-@*                         document.getElementById('editTestId').value = result.data.id; *@
-@*                         document.getElementById('editTestName').value = result.data.testName; *@
-@*                         document.getElementById('editTestDescription').value = result.data.description || ''; *@
-@*                         document.getElementById('editTimeLimit').value = result.data.timeLimit; *@
-@*                         document.getElementById('editMaxAttempts').value = result.data.maxAttempts; *@
-@*                         document.getElementById('editRandomizeQuestions').checked = result.data.randomizeQuestions; *@
-@*                         document.getElementById('editIsLocked').checked = result.data.isLocked; *@
-@*                         editTestModal.show(); *@
-@*                     } else { *@
-@*                         showToast(result.message || 'Error loading test data', 'error'); *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error loading test data:', error); *@
-@*                     showToast('Error loading test data', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                 } *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         if (editTestForm) { *@
-@*             editTestForm.addEventListener('submit', async function(e) { *@
-@*                 e.preventDefault(); *@
-@* *@
-@*                 const submitButton = this.querySelector('.btn-update-test'); *@
-@*                 const originalText = submitButton.innerHTML; *@
-@* *@
-@*                 showLoading(); *@
-@*                 submitButton.disabled = true; *@
-@*                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...'; *@
-@*                 clearFormErrors(this); *@
-@* *@
-@*                 try { *@
-@*                     const data = { *@
-@*                         Id: document.getElementById('editTestId').value, *@
-@*                         TestName: document.getElementById('editTestName').value.trim(), *@
-@*                         Description: document.getElementById('editTestDescription').value.trim(), *@
-@*                         TimeLimit: parseInt(document.getElementById('editTimeLimit').value) || 60, *@
-@*                         MaxAttempts: parseInt(document.getElementById('editMaxAttempts').value) || 1, *@
-@*                         RandomizeQuestions: document.getElementById('editRandomizeQuestions').checked, *@
-@*                         IsLocked: document.getElementById('editIsLocked').checked *@
-@*                     }; *@
-@* *@
-@*                     const response = await fetch('@Url.Action("EditAjax", "Test")', { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify(data) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         editTestModal.hide(); *@
-@*                         showToast('Test updated successfully! Refreshing page...', 'success'); *@
-@* *@
-@*                         // Refresh the page to show updated test *@
-@*                         updateTestCardInDOM(data); *@
-@*                     } else { *@
-@*                         if (result.errors) { *@
-@*                             showFormErrors(this, result.errors); *@
-@*                         } else { *@
-@*                             showToast(result.message || 'An error occurred', 'error'); *@
-@*                         } *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error updating test:', error); *@
-@*                     showToast('An error occurred while updating the test', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                     submitButton.disabled = false; *@
-@*                     submitButton.innerHTML = originalText; *@
-@*                 } *@
-@*             }); *@
-@* *@
-@*             // Reset form when modal is hidden *@
-@*             document.getElementById('editTestModal').addEventListener('hidden.bs.modal', function() { *@
-@*                 editTestForm.reset(); *@
-@*                 clearFormErrors(editTestForm); *@
-@*                 currentTestId = null; *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         // Delete Test functionality *@
-@*         const deleteTestButtons = document.querySelectorAll('.delete-test-btn'); *@
-@*         const confirmDeleteBtn = document.getElementById('confirmDeleteTest'); *@
-@* *@
-@*         deleteTestButtons.forEach(btn => { *@
-@*             btn.addEventListener('click', function() { *@
-@*                 const testId = this.dataset.testId; *@
-@*                 const testName = this.dataset.testName; *@
-@* *@
-@*                 currentTestId = testId; *@
-@*                 document.getElementById('deleteTestName').textContent = testName; *@
-@*                 deleteTestModal.show(); *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         if (confirmDeleteBtn) { *@
-@*             confirmDeleteBtn.addEventListener('click', async function() { *@
-@*                 if (!currentTestId) return; *@
-@* *@
-@*                 const submitButton = this; *@
-@*                 const originalText = submitButton.innerHTML; *@
-@* *@
-@*                 showLoading(); *@
-@*                 submitButton.disabled = true; *@
-@*                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...'; *@
-@* *@
-@*                 try { *@
-@*                     const response = await fetch(`@Url.Action("DeleteAjax", "Test")`, { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify({ Id: currentTestId }) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         deleteTestModal.hide(); *@
-@*                         showToast(result.message, 'success'); *@
-@* *@
-@*                         // Remove the test card from the UI with animation *@
-@*                         const testCard = document.querySelector(`[data-test-id="${currentTestId}"]`); *@
-@*                         if (testCard) { *@
-@*                             testCard.style.transform = 'scale(0)'; *@
-@*                             testCard.style.opacity = '0'; *@
-@*                             setTimeout(() => { *@
-@*                                 testCard.remove(); *@
-@* *@
-@*                                 // Check if no tests left and reload page to show empty state *@
-@*                                 const remainingCards = document.querySelectorAll('.test-card').length; *@
-@*                                 if (remainingCards === 0) { *@
-@*                                     setTimeout(() => { *@
-@*                                         window.location.reload(); *@
-@*                                     }, 500); *@
-@*                                 } *@
-@*                             }, 300); *@
-@*                         } *@
-@*                     } else { *@
-@*                         showToast(result.message || 'Error deleting test', 'error'); *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error deleting test:', error); *@
-@*                     showToast('Error deleting test', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                     submitButton.disabled = false; *@
-@*                     submitButton.innerHTML = originalText; *@
-@*                     currentTestId = null; *@
-@*                 } *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         // Lock/Unlock Test functionality *@
-@*         const lockTestButtons = document.querySelectorAll('.lock-test-btn'); *@
-@*         lockTestButtons.forEach(btn => { *@
-@*             btn.addEventListener('click', async function() { *@
-@*                 const testId = this.dataset.testId; *@
-@*                 const isLocked = this.dataset.locked === 'true'; *@
-@* *@
-@*                 try { *@
-@*                     const response = await fetch(`@Url.Action("LockTestAjax", "Test")`, { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify({ Id: testId }) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         showToast(result.message, 'success'); *@
-@* *@
-@*                         // Update the UI *@
-@*                         const testCard = document.querySelector(`[data-test-id="${testId}"]`); *@
-@*                         const statusBadge = testCard.querySelector('.status-badge'); *@
-@*                         const dropdownButton = this; *@
-@* *@
-@*                         if (result.isLocked) { *@
-@*                             statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked'; *@
-@*                             statusBadge.className = 'status-badge status-locked'; *@
-@*                             dropdownButton.innerHTML = '<i class="fas fa-unlock me-2"></i>Unlock Test'; *@
-@*                             dropdownButton.dataset.locked = 'true'; *@
-@*                             testCard.dataset.locked = 'true'; *@
-@*                         } else { *@
-@*                             statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active'; *@
-@*                             statusBadge.className = 'status-badge status-active'; *@
-@*                             dropdownButton.innerHTML = '<i class="fas fa-lock me-2"></i>Lock Test'; *@
-@*                             dropdownButton.dataset.locked = 'false'; *@
-@*                             testCard.dataset.locked = 'false'; *@
-@*                         } *@
-@*                     } else { *@
-@*                         showToast(result.message || 'Error updating test status', 'error'); *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error updating test status:', error); *@
-@*                     showToast('Error updating test status', 'error'); *@
-@*                 } *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         // Clone Test functionality *@
-@*         const cloneTestButtons = document.querySelectorAll('.clone-test-btn'); *@
-@*         cloneTestButtons.forEach(btn => { *@
-@*             btn.addEventListener('click', async function() { *@
-@*                 const testId = this.dataset.testId; *@
-@*                 const testName = this.dataset.testName; *@
-@* *@
-@*                 const submitButton = this; *@
-@*                 const originalText = submitButton.innerHTML; *@
-@* *@
-@*                 showLoading(); *@
-@*                 submitButton.disabled = true; *@
-@*                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cloning...'; *@
-@* *@
-@*                 try { *@
-@*                     const response = await fetch(`@Url.Action("CloneTestAjax", "Test")`, { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify({ Id: testId }) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         showToast(`${result.message}! Refreshing page...`, 'success'); *@
-@* *@
-@*                         addClonedTestCardToDOM(result.newTestId, result.newTestName); *@
-@*                     } else { *@
-@*                         showToast(result.message || 'Error cloning test', 'error'); *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error cloning test:', error); *@
-@*                     showToast('Error cloning test', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                     submitButton.disabled = false; *@
-@*                     submitButton.innerHTML = originalText; *@
-@*                 } *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         // Bulk actions functionality *@
-@*         const bulkDeleteBtn = document.getElementById('bulkDeleteBtn'); *@
-@*         const bulkLockBtn = document.getElementById('bulkLockBtn'); *@
-@*         const bulkUnlockBtn = document.getElementById('bulkUnlockBtn'); *@
-@*         const confirmBulkDeleteBtn = document.getElementById('confirmBulkDelete'); *@
-@* *@
-@*         if (bulkDeleteBtn) { *@
-@*             bulkDeleteBtn.addEventListener('click', function() { *@
-@*                 document.getElementById('bulkDeleteCount').textContent = selectedTests.size; *@
-@*                 bulkDeleteModal.show(); *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         if (confirmBulkDeleteBtn) { *@
-@*             confirmBulkDeleteBtn.addEventListener('click', async function() { *@
-@*                 const testIds = Array.from(selectedTests); *@
-@* *@
-@*                 const submitButton = this; *@
-@*                 const originalText = submitButton.innerHTML; *@
-@* *@
-@*                 showLoading(); *@
-@*                 submitButton.disabled = true; *@
-@*                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...'; *@
-@* *@
-@*                 try { *@
-@*                     const response = await fetch(`@Url.Action("BulkDeleteTestsAjax", "Test")`, { *@
-@*                         method: 'POST', *@
-@*                         headers: { *@
-@*                             'Content-Type': 'application/json', *@
-@*                             'X-Requested-With': 'XMLHttpRequest' *@
-@*                         }, *@
-@*                         body: JSON.stringify({ TestIds: testIds }) *@
-@*                     }); *@
-@* *@
-@*                     const result = await response.json(); *@
-@* *@
-@*                     if (result.success) { *@
-@*                         bulkDeleteModal.hide(); *@
-@*                         showToast(`${result.message}! Refreshing page...`, 'success'); *@
-@* *@
-@*                         // Refresh the page to show updated tests *@
-@*                         removeSelectedTestCardsFromDOM(); *@
-@*                     } else { *@
-@*                         showToast(result.message || 'Error deleting tests', 'error'); *@
-@*                     } *@
-@*                 } catch (error) { *@
-@*                     console.error('Error deleting tests:', error); *@
-@*                     showToast('Error deleting tests', 'error'); *@
-@*                 } finally { *@
-@*                     hideLoading(); *@
-@*                     submitButton.disabled = false; *@
-@*                     submitButton.innerHTML = originalText; *@
-@*                 } *@
-@*             }); *@
-@*         } *@
-@* *@
-@*         // Bulk lock/unlock functionality *@
-@*         async function bulkLockUnlock(lock) { *@
-@*             const testIds = Array.from(selectedTests); *@
-@* *@
-@*             showLoading(); *@
-@* *@
-@*             try { *@
-@*                 // Process each test individually since we don't have a bulk lock endpoint *@
-@*                 let successCount = 0; *@
-@*                 for (const testId of testIds) { *@
-@*                     try { *@
-@*                         const response = await fetch(`@Url.Action("LockTestAjax", "Test")`, { *@
-@*                             method: 'POST', *@
-@*                             headers: { *@
-@*                                 'Content-Type': 'application/json', *@
-@*                                 'X-Requested-With': 'XMLHttpRequest' *@
-@*                             }, *@
-@*                             body: JSON.stringify({ Id: testId }) *@
-@*                         }); *@
-@* *@
-@*                         const result = await response.json(); *@
-@*                         if (result.success && result.isLocked === lock) { *@
-@*                             successCount++; *@
-@*                         } *@
-@*                     } catch (error) { *@
-@*                         console.error(`Error processing test ${testId}:`, error); *@
-@*                     } *@
-@*                 } *@
-@* *@
-@*                 if (successCount > 0) { *@
-@*                     showToast(`Successfully ${lock ? 'locked' : 'unlocked'} ${successCount} test(s)! Refreshing page...`, 'success'); *@
-@*                     setTimeout(() => { *@
-@*                         window.location.reload(); *@
-@*                     }, 500); *@
-@*                 } else { *@
-@*                     showToast('No tests were updated', 'warning'); *@
-@*                 } *@
-@*             } catch (error) { *@
-@*                 console.error('Error in bulk operation:', error); *@
-@*                 showToast('Error processing bulk operation', 'error'); *@
-@*             } finally { *@
-@*                 hideLoading(); *@
-@*             } *@
-@*         } *@
-@* *@
-@*         if (bulkLockBtn) { *@
-@*             bulkLockBtn.addEventListener('click', () => bulkLockUnlock(true)); *@
-@*         } *@
-@* *@
-@*         if (bulkUnlockBtn) { *@
-@*             bulkUnlockBtn.addEventListener('click', () => bulkLockUnlock(false)); *@
-@*         } *@
-@* *@
-@*         // View toggle functionality *@
-@*         const viewButtons = document.querySelectorAll('.view-btn'); *@
-@*         const testsContainer = document.getElementById('testsContainer'); *@
-@* *@
-@*         viewButtons.forEach(btn => { *@
-@*             btn.addEventListener('click', function() { *@
-@*                 viewButtons.forEach(b => b.classList.remove('active')); *@
-@*                 this.classList.add('active'); *@
-@* *@
-@*                 const view = this.dataset.view; *@
-@*                 if (view === 'list') { *@
-@*                     testsContainer.classList.add('list-view'); *@
-@*                     document.getElementById('testsGrid').style.gridTemplateColumns = '1fr'; *@
-@*                 } else { *@
-@*                     testsContainer.classList.remove('list-view'); *@
-@*                     document.getElementById('testsGrid').style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))'; *@
-@*                 } *@
-@*             }); *@
-@*         }); *@
-@* *@
-@*         // Initialize page *@
-@*         filterAndSortTests(); *@
-@*     }); *@
-@* *@
-@*     function updateTestCardInDOM(testData) { *@
-@*         const testCard = document.querySelector(`[data-test-id="${testData.Id}"]`); *@
-@*         if (testCard) { *@
-@*             // Update test name *@
-@*             const titleElement = testCard.querySelector('.test-title'); *@
-@*             if (titleElement) titleElement.textContent = testData.TestName; *@
-@* *@
-@*             // Update description *@
-@*             const descElement = testCard.querySelector('.test-description'); *@
-@*             if (descElement) { *@
-@*                 descElement.innerHTML = testData.Description ? *@
-@*                     (testData.Description.length > 80 ? testData.Description.substring(0, 77) + "..." : testData.Description) : *@
-@*                     '<span class="text-muted">No description provided</span>'; *@
-@*             } *@
-@* *@
-@*             // Update time limit *@
-@*             const timeElement = testCard.querySelector('.stat-value'); *@
-@*             if (timeElement) timeElement.textContent = testData.TimeLimit; *@
-@* *@
-@*             // Update status badge *@
-@*             const statusBadge = testCard.querySelector('.status-badge'); *@
-@*             if (statusBadge) { *@
-@*                 if (testData.IsLocked) { *@
-@*                     statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked'; *@
-@*                     statusBadge.className = 'status-badge status-locked'; *@
-@*                 } else { *@
-@*                     statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active'; *@
-@*                     statusBadge.className = 'status-badge status-active'; *@
-@*                 } *@
-@*             } *@
-@* *@
-@*             // Update data attributes *@
-@*             testCard.dataset.testName = testData.TestName; *@
-@*             testCard.dataset.locked = testData.IsLocked.toString().toLowerCase(); *@
-@*         } *@
-@*     } *@
-@* *@
-@*     function addClonedTestCardToDOM(newTestId, newTestName) { *@
-@*         // Find the original test card that was cloned *@
-@*         const originalCard = document.querySelector(`[data-test-id="${testId}"]`); *@
-@*         if (originalCard) { *@
-@*             // Clone the card element *@
-@*             const newCard = originalCard.cloneNode(true); *@
-@* *@
-@*             // Update the new card's data *@
-@*             newCard.dataset.testId = newTestId; *@
-@*             newCard.dataset.testName = newTestName; *@
-@*             newCard.dataset.questionCount = "0"; // New test has no questions *@
-@*             newCard.dataset.attemptCount = "0"; // New test has no attempts *@
-@*             newCard.dataset.locked = "false"; // New tests start unlocked *@
-@* *@
-@*             // Update the title *@
-@*             newCard.querySelector('.test-title').textContent = newTestName; *@
-@* *@
-@*             // Update status to unlocked *@
-@*             const statusBadge = newCard.querySelector('.status-badge'); *@
-@*             statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active'; *@
-@*             statusBadge.className = 'status-badge status-active'; *@
-@* *@
-@*             // Update stats (0 questions, 0 attempts) *@
-@*             const statValues = newCard.querySelectorAll('.stat-value'); *@
-@*             statValues[0].textContent = "0"; // Questions *@
-@*             statValues[2].textContent = "0"; // Attempts *@
-@* *@
-@*             // Update all data attributes in dropdowns *@
-@*             newCard.querySelectorAll('[data-test-id]').forEach(el => { *@
-@*                 el.dataset.testId = newTestId; *@
-@*             }); *@
-@*             newCard.querySelectorAll('[data-test-name]').forEach(el => { *@
-@*                 el.dataset.testName = newTestName; *@
-@*             }); *@
-@* *@
-@*             // Insert the new card after the original *@
-@*             originalCard.parentNode.insertBefore(newCard, originalCard.nextSibling); *@
-@* *@
-@*             // Add animation *@
-@*             newCard.style.opacity = '0'; *@
-@*             newCard.style.transform = 'scale(0.8)'; *@
-@*             setTimeout(() => { *@
-@*                 newCard.style.opacity = '1'; *@
-@*                 newCard.style.transform = 'scale(1)'; *@
-@*             }, 100); *@
-@*         } *@
-@*     } *@
-@* *@
-@* *@
-@*     function removeSelectedTestCardsFromDOM() { *@
-@*         selectedTests.forEach(testId => { *@
-@*             const testCard = document.querySelector(`[data-test-id="${testId}"]`); *@
-@*             if (testCard) { *@
-@*                 testCard.style.transform = 'scale(0)'; *@
-@*                 testCard.style.opacity = '0'; *@
-@*                 setTimeout(() => { *@
-@*                     testCard.remove(); *@
-@* *@
-@*                     // Check if no tests left and show empty state *@
-@*                     const remainingCards = document.querySelectorAll('.test-card').length; *@
-@*                     if (remainingCards === 0) { *@
-@*                         showEmptyState(); *@
-@*                     } *@
-@*                 }, 300); *@
-@*             } *@
-@*         }); *@
-@* *@
-@*         // Clear selection *@
-@*         selectedTests.clear(); *@
-@*         updateBulkActionsBar(); *@
-@*     } *@
-@* *@
-@*     function showEmptyState() { *@
-@*         const testsContainer = document.getElementById('testsContainer'); *@
-@*         testsContainer.innerHTML = ` *@
-@*         <div class="empty-state"> *@
-@*             <div class="empty-state-content"> *@
-@*                 <div class="empty-state-icon"> *@
-@*                     <i class="fas fa-clipboard-list"></i> *@
-@*                 </div> *@
-@*                 <h3 class="empty-state-title">No Tests Yet</h3> *@
-@*                 <p class="empty-state-description"> *@
-@*                     Get started by creating your first test. You can add various question types, *@
-@*                     set time limits, and invite students to take your tests. *@
-@*                 </p> *@
-@*                 <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#createTestModal"> *@
-@*                     <i class="fas fa-plus-circle me-2"></i>Create Your First Test *@
-@*                 </button> *@
-@*             </div> *@
-@*         </div> *@
-@*     `; *@
-@*     } *@
-@*      *@
-@* </script> *@
-@* } *@
-
-
-
-
 @section Scripts {
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -2248,6 +1947,18 @@ ViewData["Title"] = "My Tests";
         // Form elements
         const createTestForm = document.getElementById('createTestForm');
         const editTestForm = document.getElementById('editTestForm');
+        
+        // Set up scheduling event listeners
+        const isScheduledCheckbox = document.getElementById('isScheduled');
+        const editIsScheduledCheckbox = document.getElementById('editIsScheduled');
+        
+        if (isScheduledCheckbox) {
+            isScheduledCheckbox.addEventListener('change', toggleSchedulingFields);
+        }
+        
+        if (editIsScheduledCheckbox) {
+            editIsScheduledCheckbox.addEventListener('change', toggleEditSchedulingFields);
+        }
 
         // Utility functions
         function showLoading() {
@@ -2322,13 +2033,101 @@ ViewData["Title"] = "My Tests";
             }, 4000);
         }
 
-        // Search and filter functionality
+        function showSharingSuccessModal(message, shareUrl) {
+            // Update the sharing success modal with the URL and message
+            document.getElementById('shareSuccessMessage').textContent = message;
+            document.getElementById('shareUrl').value = shareUrl;
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('shareSuccessModal'));
+            modal.show();
+        }
+
+        // Scheduling functionality
+        function toggleSchedulingFields() {
+            const isScheduled = document.getElementById('isScheduled').checked;
+            const schedulingFields = document.getElementById('schedulingFields');
+            
+            if (isScheduled) {
+                schedulingFields.style.display = 'block';
+                // Set default start time to current time + 1 hour
+                const now = new Date();
+                now.setHours(now.getHours() + 1);
+                const startInput = document.getElementById('scheduledStartDate');
+                if (startInput && !startInput.value) {
+                    startInput.value = now.toISOString().slice(0, 16);
+                }
+                // Set default end time to start time + 2 hours
+                const endTime = new Date(now);
+                endTime.setHours(endTime.getHours() + 2);
+                const endInput = document.getElementById('scheduledEndDate');
+                if (endInput && !endInput.value) {
+                    endInput.value = endTime.toISOString().slice(0, 16);
+                }
+            } else {
+                schedulingFields.style.display = 'none';
+            }
+        }
+
+        function toggleEditSchedulingFields() {
+            const isScheduled = document.getElementById('editIsScheduled').checked;
+            const schedulingFields = document.getElementById('editSchedulingFields');
+            
+            if (isScheduled) {
+                schedulingFields.style.display = 'block';
+            } else {
+                schedulingFields.style.display = 'none';
+            }
+        }
+
+        function copyShareUrl() {
+            const shareUrlInput = document.getElementById('shareUrl');
+            shareUrlInput.select();
+            shareUrlInput.setSelectionRange(0, 99999); // For mobile devices
+            navigator.clipboard.writeText(shareUrlInput.value);
+            showToast('Share URL copied to clipboard!', 'success');
+        }
+
+        // Enhanced search and filter functionality with performance optimizations
         const searchInput = document.getElementById('searchTests');
         const sortSelect = document.getElementById('sortTests');
+        let searchTimeout;
+        let lastSearchTerm = '';
+        let filterCache = new Map();
 
         if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                filterAndSortTests();
+            // Add debounced search with caching
+            searchInput.addEventListener('input', function(e) {
+                clearTimeout(searchTimeout);
+                const term = e.target.value.trim();
+                
+                // Performance optimization: Only filter if term changed
+                if (term === lastSearchTerm) return;
+                lastSearchTerm = term;
+                
+                searchTimeout = setTimeout(() => {
+                    filterAndSortTests();
+                }, 200); // Reduced debounce time for better responsiveness
+            });
+            
+            // Add keyboard shortcuts
+            searchInput.addEventListener('keydown', function(e) {
+                switch(e.key) {
+                    case 'Escape':
+                        this.value = '';
+                        lastSearchTerm = '';
+                        filterAndSortTests();
+                        this.blur();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        // Focus first visible test card
+                        const firstVisible = document.querySelector('.test-card:not([style*="display: none"])');
+                        if (firstVisible) {
+                            firstVisible.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        break;
+                }
             });
         }
 
@@ -2338,46 +2137,233 @@ ViewData["Title"] = "My Tests";
             });
         }
 
+        // Category and Tag filter listeners
+        const categoryFilter = document.getElementById('categoryFilter');
+        const tagFilter = document.getElementById('tagFilter');
+
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', function() {
+                filterAndSortTests();
+            });
+        }
+
+        if (tagFilter) {
+            tagFilter.addEventListener('change', function() {
+                filterAndSortTests();
+            });
+        }
+
         function filterAndSortTests() {
             const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
             const sortBy = sortSelect ? sortSelect.value : 'recent';
+            const selectedCategory = document.getElementById('categoryFilter')?.value || '';
+            const selectedTag = document.getElementById('tagFilter')?.value || '';
             const testCards = document.querySelectorAll('.test-card');
+
+            // Create cache key for performance
+            const cacheKey = `${searchTerm}-${sortBy}-${selectedCategory}-${selectedTag}`;
+            
+            // Check if we have cached result
+            if (filterCache.has(cacheKey)) {
+                applyFilteredState(filterCache.get(cacheKey));
+                return;
+            }
 
             // Convert to array for sorting
             const testArray = Array.from(testCards);
-
-            // Filter tests
-            testArray.forEach(card => {
-                const testName = card.dataset.testName.toLowerCase();
-                const shouldShow = testName.includes(searchTerm);
-                card.style.display = shouldShow ? 'block' : 'none';
-            });
-
-            // Sort tests
-            const visibleTests = testArray.filter(card => card.style.display !== 'none');
-
-            visibleTests.sort((a, b) => {
-                switch (sortBy) {
-                    case 'name':
-                        return a.dataset.testName.localeCompare(b.dataset.testName);
-                    case 'questions':
-                        return parseInt(b.dataset.questionCount) - parseInt(a.dataset.questionCount);
-                    case 'attempts':
-                        return parseInt(b.dataset.attemptCount) - parseInt(a.dataset.attemptCount);
-                    case 'locked':
-                        return b.dataset.locked.localeCompare(a.dataset.locked);
-                    case 'recent':
-                    default:
-                        return parseInt(b.dataset.created) - parseInt(a.dataset.created);
-                }
-            });
-
-            // Reorder in DOM
-            const container = document.getElementById('testsGrid');
-            if (container) {
-                visibleTests.forEach(card => {
-                    container.appendChild(card);
+            
+            // Performance optimization: Use requestAnimationFrame for smoother UI
+            requestAnimationFrame(() => {
+                const results = [];
+                
+                // Filter tests with enhanced matching
+                testArray.forEach(card => {
+                    const testName = card.dataset.testName.toLowerCase();
+                    const testCategory = card.dataset.categoryId || '';
+                    const testTags = (card.dataset.tags || '').split(',').filter(tag => tag.trim());
+                    
+                    // Enhanced search - match partial words and fuzzy search
+                    const matchesSearch = !searchTerm || 
+                        testName.includes(searchTerm) ||
+                        testName.split(' ').some(word => word.startsWith(searchTerm));
+                    
+                    const matchesCategory = !selectedCategory || testCategory === selectedCategory;
+                    const matchesTag = !selectedTag || testTags.some(tag => 
+                        tag.toLowerCase().includes(selectedTag.toLowerCase()));
+                    
+                    const shouldShow = matchesSearch && matchesCategory && matchesTag;
+                    
+                    results.push({
+                        card: card,
+                        visible: shouldShow,
+                        sortValue: getSortValue(card, sortBy)
+                    });
                 });
+
+                // Sort visible tests
+                const visibleResults = results.filter(r => r.visible);
+                visibleResults.sort((a, b) => {
+                    switch (sortBy) {
+                        case 'name':
+                            return a.card.dataset.testName.localeCompare(b.card.dataset.testName);
+                        case 'questions':
+                            return parseInt(b.card.dataset.questionCount || '0') - parseInt(a.card.dataset.questionCount || '0');
+                        case 'attempts':
+                            return parseInt(b.card.dataset.attemptCount || '0') - parseInt(a.card.dataset.attemptCount || '0');
+                        case 'locked':
+                            return b.card.dataset.locked.localeCompare(a.card.dataset.locked);
+                        case 'recent':
+                        default:
+                            return parseInt(b.card.dataset.created || '0') - parseInt(a.card.dataset.created || '0');
+                    }
+                });
+
+                // Cache the result
+                filterCache.set(cacheKey, {
+                    hiddenCards: results.filter(r => !r.visible).map(r => r.card),
+                    visibleCards: visibleResults.map(r => r.card)
+                });
+
+                // Apply the filtered state
+                applyFilteredState(filterCache.get(cacheKey));
+                
+                // Update results count
+                updateResultsCount(visibleResults.length, testArray.length);
+            });
+        }
+        
+        function getSortValue(card, sortBy) {
+            switch (sortBy) {
+                case 'name': return card.dataset.testName;
+                case 'questions': return parseInt(card.dataset.questionCount || '0');
+                case 'attempts': return parseInt(card.dataset.attemptCount || '0');
+                case 'locked': return card.dataset.locked;
+                default: return parseInt(card.dataset.created || '0');
+            }
+        }
+        
+        function applyFilteredState(state) {
+            const container = document.getElementById('testsGrid');
+            if (!container || !state) return;
+            
+            // Hide filtered out cards
+            state.hiddenCards.forEach(card => {
+                card.style.display = 'none';
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+            });
+            
+            // Show and reorder visible cards with animation
+            state.visibleCards.forEach((card, index) => {
+                card.style.display = 'block';
+                card.style.opacity = '1';
+                card.style.transform = 'scale(1)';
+                card.style.transition = 'all 0.3s ease';
+                card.style.animationDelay = `${index * 50}ms`;
+                container.appendChild(card);
+            });
+        }
+        
+        function updateResultsCount(visible, total) {
+            let countElement = document.getElementById('resultsCount');
+            if (!countElement) {
+                // Create results count element if it doesn't exist
+                const controlsSection = document.querySelector('.controls-section .controls-content');
+                if (controlsSection) {
+                    countElement = document.createElement('div');
+                    countElement.id = 'resultsCount';
+                    countElement.className = 'results-count text-muted';
+                    controlsSection.appendChild(countElement);
+                }
+            }
+            
+            if (countElement) {
+                countElement.textContent = visible === total ? 
+                    `Showing all ${total} tests` : 
+                    `Showing ${visible} of ${total} tests`;
+            }
+        }
+
+        // Category and Tag Management Functions
+        async function loadCategories() {
+            try {
+                const response = await fetch('@Url.Action("GetUserCategories", "Category")');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const categoryFilter = document.getElementById('categoryFilter');
+                    const testCategorySelect = document.getElementById('testCategory');
+                    
+                    // Clear existing options (keep default options)
+                    if (categoryFilter) {
+                        categoryFilter.innerHTML = '<option value="">All Categories</option>';
+                    }
+                    if (testCategorySelect) {
+                        testCategorySelect.innerHTML = '<option value="">No Category</option>';
+                    }
+                    
+                    // Add categories to both dropdowns
+                    result.data.forEach(category => {
+                        if (categoryFilter) {
+                            const filterOption = new Option(category.name, category.id);
+                            categoryFilter.appendChild(filterOption);
+                        }
+                        if (testCategorySelect) {
+                            const createOption = new Option(category.name, category.id);
+                            testCategorySelect.appendChild(createOption);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadTags() {
+            try {
+                const response = await fetch('@Url.Action("GetUserTags", "Category")');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const tagFilter = document.getElementById('tagFilter');
+                    
+                    // Clear existing options (keep "All Tags")
+                    if (tagFilter) {
+                        tagFilter.innerHTML = '<option value="">All Tags</option>';
+                        
+                        // Add tags to filter dropdown
+                        result.data.forEach(tag => {
+                            const option = new Option(tag.name, tag.id);
+                            tagFilter.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading tags:', error);
+            }
+        }
+
+        async function loadCategoriesForEdit() {
+            try {
+                const response = await fetch('@Url.Action("GetUserCategories", "Category")');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const editCategorySelect = document.getElementById('editTestCategory');
+                    
+                    // Clear existing options and add default
+                    if (editCategorySelect) {
+                        editCategorySelect.innerHTML = '<option value="">No Category</option>';
+                        
+                        // Add categories to edit dropdown
+                        result.data.forEach(category => {
+                            const option = new Option(category.name, category.id);
+                            editCategorySelect.appendChild(option);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading categories for edit:', error);
             }
         }
 
@@ -2519,6 +2505,7 @@ ViewData["Title"] = "My Tests";
             initializeDeleteButtons();
             initializeLockButtons();
             initializeCloneButtons();
+            initializeShareButtons();
         }
 
         // Checkbox selection functionality
@@ -2590,6 +2577,9 @@ ViewData["Title"] = "My Tests";
                         const result = await response.json();
 
                         if (result.success) {
+                            // Load categories into dropdown
+                            await loadCategoriesForEdit();
+                            
                             // Populate the form
                             document.getElementById('editTestId').value = result.data.id;
                             document.getElementById('editTestName').value = result.data.testName;
@@ -2598,6 +2588,33 @@ ViewData["Title"] = "My Tests";
                             document.getElementById('editMaxAttempts').value = result.data.maxAttempts;
                             document.getElementById('editRandomizeQuestions').checked = result.data.randomizeQuestions;
                             document.getElementById('editIsLocked').checked = result.data.isLocked;
+                            
+                            // Populate category and tags
+                            if (result.data.categoryId) {
+                                document.getElementById('editTestCategory').value = result.data.categoryId;
+                            }
+                            if (result.data.tagNames && result.data.tagNames.length > 0) {
+                                document.getElementById('editTestTags').value = result.data.tagNames.join(', ');
+                            }
+                            
+                            // Populate scheduling fields
+                            document.getElementById('editIsScheduled').checked = result.data.isScheduled;
+                            if (result.data.scheduledStartDate) {
+                                // Convert to local datetime-local format
+                                const startDate = new Date(result.data.scheduledStartDate);
+                                document.getElementById('editScheduledStartDate').value = startDate.toISOString().slice(0, 16);
+                            }
+                            if (result.data.scheduledEndDate) {
+                                // Convert to local datetime-local format
+                                const endDate = new Date(result.data.scheduledEndDate);
+                                document.getElementById('editScheduledEndDate').value = endDate.toISOString().slice(0, 16);
+                            }
+                            document.getElementById('editAutoPublish').checked = result.data.autoPublish;
+                            document.getElementById('editAutoClose').checked = result.data.autoClose;
+                            
+                            // Show/hide scheduling fields based on checkbox
+                            toggleEditSchedulingFields();
+                            
                             editTestModal.show();
                         } else {
                             showToast(result.message || 'Error loading test data', 'error');
@@ -2818,7 +2835,10 @@ ViewData["Title"] = "My Tests";
                         Description: descriptionInput.value.trim(),
                         TimeLimit: parseInt(timeLimitInput.value) || 60,
                         MaxAttempts: parseInt(maxAttemptsInput.value) || 1,
-                        RandomizeQuestions: randomizeInput.checked
+                        RandomizeQuestions: randomizeInput.checked,
+                        CategoryId: document.getElementById('testCategory').value || null,
+                        TagNames: document.getElementById('testTags').value.trim() ? 
+                            document.getElementById('testTags').value.trim().split(',').map(tag => tag.trim()).filter(tag => tag) : []
                     };
 
                     const response = await fetch('@Url.Action("CreateAjax", "Test")', {
@@ -2867,6 +2887,7 @@ ViewData["Title"] = "My Tests";
             // Focus title input when modal is shown
             document.getElementById('createTestModal').addEventListener('shown.bs.modal', function() {
                 titleInput.focus();
+                loadCategories();
             });
 
             // Initialize preview with default values
@@ -2894,7 +2915,10 @@ ViewData["Title"] = "My Tests";
                         TimeLimit: parseInt(document.getElementById('editTimeLimit').value) || 60,
                         MaxAttempts: parseInt(document.getElementById('editMaxAttempts').value) || 1,
                         RandomizeQuestions: document.getElementById('editRandomizeQuestions').checked,
-                        IsLocked: document.getElementById('editIsLocked').checked
+                        IsLocked: document.getElementById('editIsLocked').checked,
+                        CategoryId: document.getElementById('editTestCategory').value || null,
+                        TagNames: document.getElementById('editTestTags').value.trim() ? 
+                            document.getElementById('editTestTags').value.trim().split(',').map(tag => tag.trim()).filter(tag => tag) : []
                     };
 
                     const response = await fetch('@Url.Action("EditAjax", "Test")', {
@@ -3063,45 +3087,82 @@ ViewData["Title"] = "My Tests";
         async function bulkLockUnlock(lock) {
             const testIds = Array.from(selectedTests);
 
+            if (testIds.length === 0) {
+                showToast('No tests selected', 'warning');
+                return;
+            }
+
             showLoading();
 
             try {
-                // Process each test individually since we don't have a bulk lock endpoint
-                let successCount = 0;
-                for (const testId of testIds) {
-                    try {
-                        const response = await fetch(`@Url.Action("LockTestAjax", "Test")`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            body: JSON.stringify({ Id: testId })
-                        });
+                const response = await fetch(`@Url.Action("BulkLockTestsAjax", "Test")`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ TestIds: testIds, Lock: lock })
+                });
 
-                        const result = await response.json();
-                        if (result.success && result.isLocked === lock) {
-                            successCount++;
-                        }
-                    } catch (error) {
-                        console.error(`Error processing test ${testId}:`, error);
-                    }
-                }
+                const result = await response.json();
 
-                if (successCount > 0) {
-                    showToast(`Successfully ${lock ? 'locked' : 'unlocked'} ${successCount} test(s)! Refreshing page...`, 'success');
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 500);
+                if (result.success) {
+                    showToast(`Successfully ${lock ? 'locked' : 'unlocked'} ${result.updatedCount} test(s)!`, 'success');
+                    
+                    // Update test cards in DOM instead of full refresh
+                    updateTestCardsLockStatus(testIds, lock);
+                    
+                    // Clear selection and hide bulk actions
+                    selectedTests.clear();
+                    updateBulkActionsVisibility();
                 } else {
-                    showToast('No tests were updated', 'warning');
+                    showToast(result.message || `Error ${lock ? 'locking' : 'unlocking'} tests`, 'error');
                 }
             } catch (error) {
-                console.error('Error in bulk operation:', error);
-                showToast('Error processing bulk operation', 'error');
+                console.error('Error in bulk lock operation:', error);
+                showToast(`Error ${lock ? 'locking' : 'unlocking'} tests`, 'error');
             } finally {
                 hideLoading();
             }
+        }
+
+        function updateTestCardsLockStatus(testIds, isLocked) {
+            testIds.forEach(testId => {
+                const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+                if (testCard) {
+                    // Update status badge
+                    const statusBadge = testCard.querySelector('.status-badge');
+                    if (statusBadge) {
+                        if (isLocked) {
+                            statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
+                            statusBadge.className = 'status-badge status-locked';
+                        } else {
+                            statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
+                            statusBadge.className = 'status-badge status-active';
+                        }
+                    }
+
+                    // Update data attributes
+                    testCard.dataset.locked = isLocked.toString().toLowerCase();
+
+                    // Update dropdown lock button
+                    const lockBtn = testCard.querySelector('.lock-test-btn');
+                    if (lockBtn) {
+                        lockBtn.dataset.locked = isLocked.toString().toLowerCase();
+                        const icon = lockBtn.querySelector('i');
+                        if (icon) {
+                            icon.className = `fas ${isLocked ? 'fa-unlock' : 'fa-lock'} me-2`;
+                        }
+                        lockBtn.innerHTML = `<i class="fas ${isLocked ? 'fa-unlock' : 'fa-lock'} me-2"></i>${isLocked ? 'Unlock' : 'Lock'} Test`;
+                    }
+
+                    // Uncheck the checkbox
+                    const checkbox = testCard.querySelector('.test-checkbox');
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                }
+            });
         }
 
         if (bulkLockBtn) {
@@ -3110,6 +3171,114 @@ ViewData["Title"] = "My Tests";
 
         if (bulkUnlockBtn) {
             bulkUnlockBtn.addEventListener('click', () => bulkLockUnlock(false));
+        }
+
+        // Bulk archive/unarchive functionality
+        const bulkArchiveBtn = document.getElementById('bulkArchiveBtn');
+        const bulkUnarchiveBtn = document.getElementById('bulkUnarchiveBtn');
+        const confirmBulkArchiveBtn = document.getElementById('confirmBulkArchive');
+        const confirmBulkUnarchiveBtn = document.getElementById('confirmBulkUnarchive');
+        const bulkArchiveModal = new bootstrap.Modal(document.getElementById('bulkArchiveModal'));
+        const bulkUnarchiveModal = new bootstrap.Modal(document.getElementById('bulkUnarchiveModal'));
+
+        if (bulkArchiveBtn) {
+            bulkArchiveBtn.addEventListener('click', function() {
+                document.getElementById('bulkArchiveCount').textContent = selectedTests.size;
+                bulkArchiveModal.show();
+            });
+        }
+
+        if (bulkUnarchiveBtn) {
+            bulkUnarchiveBtn.addEventListener('click', function() {
+                document.getElementById('bulkUnarchiveCount').textContent = selectedTests.size;
+                bulkUnarchiveModal.show();
+            });
+        }
+
+        if (confirmBulkArchiveBtn) {
+            confirmBulkArchiveBtn.addEventListener('click', async function() {
+                const testIds = Array.from(selectedTests);
+
+                const submitButton = this;
+                const originalText = submitButton.innerHTML;
+
+                showLoading();
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Archiving...';
+
+                try {
+                    const response = await fetch(`@Url.Action("BulkArchiveTestsAjax", "Test")`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ TestIds: testIds, Archive: true })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        bulkArchiveModal.hide();
+                        showToast(`${result.message}! Refreshing page...`, 'success');
+
+                        // Remove selected test cards from DOM
+                        removeSelectedTestCardsFromDOM();
+                    } else {
+                        showToast(result.message || 'Error archiving tests', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error archiving tests:', error);
+                    showToast('Error archiving tests', 'error');
+                } finally {
+                    hideLoading();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
+        }
+
+        if (confirmBulkUnarchiveBtn) {
+            confirmBulkUnarchiveBtn.addEventListener('click', async function() {
+                const testIds = Array.from(selectedTests);
+
+                const submitButton = this;
+                const originalText = submitButton.innerHTML;
+
+                showLoading();
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Unarchiving...';
+
+                try {
+                    const response = await fetch(`@Url.Action("BulkArchiveTestsAjax", "Test")`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ TestIds: testIds, Archive: false })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        bulkUnarchiveModal.hide();
+                        showToast(`${result.message}! Refreshing page...`, 'success');
+
+                        // Remove selected test cards from DOM
+                        removeSelectedTestCardsFromDOM();
+                    } else {
+                        showToast(result.message || 'Error unarchiving tests', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error unarchiving tests:', error);
+                    showToast('Error unarchiving tests', 'error');
+                } finally {
+                    hideLoading();
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }
+            });
         }
 
         // View toggle functionality
@@ -3548,8 +3717,410 @@ ViewData["Title"] = "My Tests";
             });
         }
 
+        // Initialize categories and tags
+        loadCategories();
+        loadTags();
+
+        // Share Test functionality
+        function initializeShareButtons() {
+            const shareButtons = document.querySelectorAll('.share-test-btn');
+            shareButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    openShareTestModal(this.dataset.testId, this.dataset.testName);
+                });
+            });
+        }
+
+        function openShareTestModal(testId, testName) {
+            const modal = new bootstrap.Modal(document.getElementById('shareTestModal'));
+            
+            document.getElementById('shareTestId').value = testId;
+            document.getElementById('shareTestNameDisplay').textContent = testName;
+            
+            // Reset form and clear validation errors
+            const form = document.getElementById('shareTestForm');
+            form.reset();
+            clearFormErrors(form);
+            
+            modal.show();
+        }
+
+        async function shareTest() {
+            const form = document.getElementById('shareTestForm');
+            const submitButton = form.closest('.modal').querySelector('.btn-primary');
+            
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sharing...';
+            
+            // Clear previous errors
+            clearFormErrors(form);
+            
+            // Validate form
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-share-alt me-2"></i>Share Test';
+                return;
+            }
+            
+            const formData = new FormData(form);
+            
+            // Get expiration date and convert to proper format
+            let expiresAt = formData.get('ExpiresAt');
+            if (expiresAt) {
+                // Convert datetime-local to ISO string
+                expiresAt = new Date(expiresAt).toISOString();
+            } else {
+                expiresAt = null;
+            }
+            
+            const shareData = {
+                TestId: document.getElementById('shareTestId').value,
+                Email: formData.get('Email'),
+                Permission: parseInt(formData.get('Permission')),
+                Message: formData.get('Message') || null,
+                ExpiresAt: expiresAt
+            };
+
+            try {
+                // Get CSRF token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                             document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+
+                const response = await fetch('@Url.Action("ShareTest", "Test")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(shareData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('shareTestModal'));
+                    modal.hide();
+                    
+                    // Show success message with sharing URL
+                    if (result.shareUrl) {
+                        showSharingSuccessModal(result.message, result.shareUrl);
+                    } else {
+                        showToast(result.message, 'success');
+                    }
+                } else {
+                    if (result.errors && Array.isArray(result.errors)) {
+                        showFormErrors(form, result.errors);
+                        result.errors.forEach(error => {
+                            showToast(error.Message, 'error');
+                        });
+                    } else {
+                        showToast(result.message || 'Error sharing test', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Share test error:', error);
+                showToast('Error sharing test. Please try again.', 'error');
+            } finally {
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<i class="fas fa-share-alt me-2"></i>Share Test';
+            }
+        }
+
+        // Initialize share buttons
+        initializeShareButtons();
+        
+        // Keyboard shortcuts
+        function initializeKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                // Don't trigger shortcuts when typing in inputs
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
+                    return;
+                }
+                
+                // Ctrl/Cmd + combinations
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'n': // Ctrl+N - New test
+                            e.preventDefault();
+                            const createBtn = document.querySelector('[data-bs-target="#createTestModal"]');
+                            if (createBtn) createBtn.click();
+                            break;
+                        case 'f': // Ctrl+F - Focus search
+                            e.preventDefault();
+                            const searchInput = document.getElementById('searchTests');
+                            if (searchInput) {
+                                searchInput.focus();
+                                searchInput.select();
+                            }
+                            break;
+                        case 'a': // Ctrl+A - Select all tests
+                            e.preventDefault();
+                            selectAllTests();
+                            break;
+                    }
+                } else {
+                    // Single key shortcuts
+                    switch(e.key) {
+                        case '/': // Focus search
+                            e.preventDefault();
+                            const searchInput = document.getElementById('searchTests');
+                            if (searchInput) {
+                                searchInput.focus();
+                                searchInput.select();
+                            }
+                            break;
+                        case 'Escape': // Clear search/Close modals
+                            const activeModal = document.querySelector('.modal.show');
+                            if (activeModal) {
+                                const closeBtn = activeModal.querySelector('.btn-close, [data-bs-dismiss="modal"]');
+                                if (closeBtn) closeBtn.click();
+                            } else {
+                                clearSearch();
+                            }
+                            break;
+                        case '1': case '2': case '3': case '4': case '5': // Quick sort
+                            const sortOptions = ['recent', 'name', 'questions', 'attempts', 'locked'];
+                            const sortIndex = parseInt(e.key) - 1;
+                            if (sortIndex >= 0 && sortIndex < sortOptions.length) {
+                                const sortSelect = document.getElementById('sortTests');
+                                if (sortSelect) {
+                                    sortSelect.value = sortOptions[sortIndex];
+                                    filterAndSortTests();
+                                    showToast(`Sorted by: ${sortOptions[sortIndex]}`, 'info');
+                                }
+                            }
+                            break;
+                        case 'g': // Grid view
+                            switchView('grid');
+                            break;
+                        case 'l': // List view  
+                            switchView('list');
+                            break;
+                    }
+                }
+            });
+        }
+        
+        function selectAllTests() {
+            const checkboxes = document.querySelectorAll('.test-checkbox:not(:disabled)');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+                if (checkbox.checked) {
+                    selectedTests.add(checkbox.dataset.testId);
+                } else {
+                    selectedTests.delete(checkbox.dataset.testId);
+                }
+            });
+            
+            updateBulkActionsBar();
+            showToast(allChecked ? 'All tests deselected' : 'All tests selected', 'info');
+        }
+        
+        function clearSearch() {
+            const searchInput = document.getElementById('searchTests');
+            if (searchInput && searchInput.value) {
+                searchInput.value = '';
+                lastSearchTerm = '';
+                filterAndSortTests();
+                showToast('Search cleared', 'info');
+            }
+        }
+        
+        function switchView(viewType) {
+            const viewButtons = document.querySelectorAll('.view-btn');
+            const container = document.getElementById('testsContainer');
+            
+            viewButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewType);
+            });
+            
+            if (container) {
+                container.className = viewType === 'list' ? 'tests-container list-view' : 'tests-container grid-view';
+                showToast(`Switched to ${viewType} view`, 'info');
+            }
+        }
+        
+        // Show keyboard shortcuts help
+        function showKeyboardShortcuts() {
+            const shortcuts = [
+                { key: 'Ctrl+N', action: 'Create new test' },
+                { key: 'Ctrl+F or /', action: 'Focus search' },
+                { key: 'Ctrl+A', action: 'Select all tests' },
+                { key: 'Esc', action: 'Clear search or close modal' },
+                { key: '1-5', action: 'Quick sort (Recent, Name, Questions, Attempts, Locked)' },
+                { key: 'G', action: 'Grid view' },
+                { key: 'L', action: 'List view' }
+            ];
+            
+            const helpHtml = shortcuts.map(s => 
+                `<div class="shortcut-item"><kbd>${s.key}</kbd> ${s.action}</div>`
+            ).join('');
+            
+            // You could show this in a modal or tooltip
+            console.log('Keyboard shortcuts:', shortcuts);
+        }
+        
+        // Initialize keyboard shortcuts
+        initializeKeyboardShortcuts();
+
+        // Recent Activity Dashboard Function
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivityContent');
+            if (!container) return;
+
+            try {
+                const response = await fetch('@Url.Action("GetRecentActivityAjax", "Test")');
+                const result = await response.json();
+
+                if (result.success && result.data && result.data.length > 0) {
+                    const activityHtml = result.data.map(activity => `
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-clipboard-check text-primary"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">
+                                    <strong>${activity.studentName}</strong> completed <a href="/Test/Details/${activity.testId}">${activity.testName}</a>
+                                </div>
+                                <div class="activity-meta">
+                                    <span class="activity-score">Score: ${activity.score}%</span>
+                                    <span class="activity-time">${formatTimeAgo(activity.startTime)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    container.innerHTML = activityHtml;
+                } else {
+                    container.innerHTML = '<div class="text-muted text-center">No recent activity</div>';
+                }
+            } catch (error) {
+                console.error('Error loading recent activity:', error);
+                container.innerHTML = '<div class="text-muted text-center">Error loading activity</div>';
+            }
+        }
+
+        function formatTimeAgo(dateString) {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) return 'Just now';
+            if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+            if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+            return `${Math.floor(diffInSeconds / 86400)}d ago`;
+        }
+
+        // Load Recent Activity for Dashboard
+        loadRecentActivity();
+
         // Final initialization message
         console.log('Test Index page initialized successfully');
     });
 </script>
+
+<!-- Share Test Modal -->
+<div class="modal fade" id="shareTestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share Test: <span id="shareTestNameDisplay"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareTestForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" id="shareTestId" name="TestId">
+                    
+                    <div class="mb-3">
+                        <label for="shareEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="shareEmail" name="Email" required
+                               placeholder="Enter teacher's email address">
+                        <div class="invalid-feedback"></div>
+                        <div class="form-text">Enter the email address of the teacher you want to share this test with.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sharePermission" class="form-label">Permission Level</label>
+                        <select class="form-select" id="sharePermission" name="Permission" required>
+                            <option value="0">View Only - Can view test and questions but not edit</option>
+                            <option value="1">View & Copy - Can view and create a copy of the test</option>
+                            <option value="2">Edit - Can view and edit the original test</option>
+                        </select>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="shareMessage" class="form-label">Message (Optional)</label>
+                        <textarea class="form-control" id="shareMessage" name="Message" rows="3"
+                                  placeholder="Add a personal message..."></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="shareExpiresAt" class="form-label">Expiration Date (Optional)</label>
+                        <input type="datetime-local" class="form-control" id="shareExpiresAt" name="ExpiresAt">
+                        <div class="invalid-feedback"></div>
+                        <div class="form-text">Leave empty for permanent access.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="shareTest()">
+                    <i class="fas fa-share-alt me-2"></i>Share Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Success Modal -->
+<div class="modal fade" id="shareSuccessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Test Shared Successfully!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="shareSuccessMessage" class="mb-3"></p>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    The recipient can access the shared test using the URL below:
+                </div>
+                
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="shareUrl" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
+                        <i class="fas fa-copy me-2"></i>Copy URL
+                    </button>
+                </div>
+                
+                <div class="form-text">
+                    You can copy this URL and send it via email, or the recipient will receive a notification if they're registered.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>Done
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 }

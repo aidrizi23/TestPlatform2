@@ -21,4 +21,15 @@ public record TestForCreationDto
     [Range(1, 10, ErrorMessage = "No more than 10 attempts allowed")]
     public int MaxAttempts { get; init; } = 1;
 
+    public string? CategoryId { get; init; }
+    
+    public List<string> TagNames { get; init; } = new();
+    
+    // Scheduling properties
+    public bool IsScheduled { get; init; } = false;
+    public DateTime? ScheduledStartDate { get; init; }
+    public DateTime? ScheduledEndDate { get; init; }
+    public bool AutoPublish { get; init; } = false;
+    public bool AutoClose { get; init; } = false;
+
 }

@@ -16,6 +16,26 @@
                     <div class="text-center mb-4">
                         <p class="text-muted">Sign in to manage your tests and view student results</p>
                     </div>
+
+                    <!-- Status Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                        </div>
+                    }
+                    @if (TempData["InfoMessage"] != null)
+                    {
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>@TempData["InfoMessage"]
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                        </div>
+                    }
                 
                     <!-- Validation Summary -->
                     @if (!ViewData.ModelState.IsValid)
@@ -25,7 +45,7 @@
                         </div>
                     }
                     
-                    <form asp-action="Login" method="post">
+                    <form asp-action="Login" method="post" asp-antiforgery="true">
                         <!-- Email -->
                         <div class="mb-3">
                             <label asp-for="Email" class="form-label">Email Address</label>
@@ -40,7 +60,7 @@
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <label asp-for="Password" class="form-label">Password</label>
-                                <a href="#" class="form-text">Forgot password?</a>
+                                <a asp-action="ForgotPassword" class="form-text">Forgot password?</a>
                             </div>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
@@ -70,6 +90,12 @@
                     <p class="mb-0">
                         Don't have an account? 
                         <a asp-action="Register" class="fw-bold">Create Account</a>
+                    </p>
+                    <p class="mb-0 mt-2">
+                        <small class="text-muted">
+                            Need to confirm your email? 
+                            <a asp-action="ResendConfirmation" class="text-decoration-none">Resend confirmation</a>
+                        </small>
                     </p>
                 </div>
             </div>

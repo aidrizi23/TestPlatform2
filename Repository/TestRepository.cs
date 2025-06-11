@@ -84,6 +84,27 @@ public class TestRepository : ITestRepository
         _context.Tests.Remove(test);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<Test>> GetTestsByIdsAsync(List<string> testIds, string userId)
+    {
+        return await _context.Tests
+            .Where(t => testIds.Contains(t.Id) && t.UserId == userId)
+            .Include(t => t.Questions)
+            .Include(t => t.Attempts)
+            .ToListAsync();
+    }
+
+    public async Task BulkDeleteAsync(List<Test> tests)
+    {
+        _context.Tests.RemoveRange(tests);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task BulkUpdateAsync(List<Test> tests)
+    {
+        _context.Tests.UpdateRange(tests);
+        await _context.SaveChangesAsync();
+    }
     
 }
 
@@ -95,5 +116,8 @@ public interface ITestRepository
     Task Update(Test test);
     Task Delete(Test test);
     Task<Dictionary<string, object>> GetTestAnalyticsSummaryAsync(string testId);
+    Task<List<Test>> GetTestsByIdsAsync(List<string> testIds, string userId);
+    Task BulkDeleteAsync(List<Test> tests);
+    Task BulkUpdateAsync(List<Test> tests);
 }
 

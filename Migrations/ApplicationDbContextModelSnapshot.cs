@@ -344,11 +344,32 @@ namespace TestPlatform2.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("AutoClose")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AutoPublish")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CategoryId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsScheduled")
                         .HasColumnType("boolean");
 
                     b.Property<int>("MaxAttempts")
@@ -357,6 +378,15 @@ namespace TestPlatform2.Migrations
                     b.Property<bool>("RandomizeQuestions")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("ScheduledEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ScheduledStartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<string>("TestName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -364,11 +394,16 @@ namespace TestPlatform2.Migrations
                     b.Property<int>("TimeLimit")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("UserId");
 
@@ -418,6 +453,46 @@ namespace TestPlatform2.Migrations
                     b.ToTable("TestAttempts");
                 });
 
+            modelBuilder.Entity("TestPlatform2.Data.TestCategory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TestCategories");
+                });
+
             modelBuilder.Entity("TestPlatform2.Data.TestInvite", b =>
                 {
                     b.Property<string>("Id")
@@ -446,6 +521,35 @@ namespace TestPlatform2.Migrations
                     b.HasIndex("TestId");
 
                     b.ToTable("TestInvites");
+                });
+
+            modelBuilder.Entity("TestPlatform2.Data.TestTag", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TestTags");
                 });
 
             modelBuilder.Entity("TestPlatform2.Data.User", b =>
@@ -548,6 +652,70 @@ namespace TestPlatform2.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("TestTagRelation", b =>
+                {
+                    b.Property<string>("TestId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TagId")
+                        .HasColumnType("text");
+
+                    b.HasKey("TestId", "TagId");
+
+                    b.HasIndex("TagId");
+
+                    b.ToTable("TestTagRelations", (string)null);
+                });
+
+            modelBuilder.Entity("TestPlatform2.Data.Questions.DragDropQuestion", b =>
+                {
+                    b.HasBaseType("TestPlatform2.Data.Questions.Question");
+
+                    b.Property<bool>("AllowMultiplePerZone")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("DraggableItemsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DropZonesJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("OrderMatters")
+                        .HasColumnType("boolean");
+
+                    b.HasDiscriminator().HasValue(3);
+                });
+
+            modelBuilder.Entity("TestPlatform2.Data.Questions.ImageBasedQuestion", b =>
+                {
+                    b.HasBaseType("TestPlatform2.Data.Questions.Question");
+
+                    b.Property<string>("AltText")
+                        .HasColumnType("text");
+
+                    b.Property<string>("HotspotsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ImageHeight")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ImageWidth")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LabelsJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue(4);
                 });
 
             modelBuilder.Entity("TestPlatform2.Data.Questions.MultipleChoiceQuestion", b =>
@@ -696,11 +864,18 @@ namespace TestPlatform2.Migrations
 
             modelBuilder.Entity("TestPlatform2.Data.Test", b =>
                 {
+                    b.HasOne("TestPlatform2.Data.TestCategory", "Category")
+                        .WithMany("Tests")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("TestPlatform2.Data.User", "User")
                         .WithMany("Tests")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Category");
 
                     b.Navigation("User");
                 });
@@ -716,6 +891,17 @@ namespace TestPlatform2.Migrations
                     b.Navigation("Test");
                 });
 
+            modelBuilder.Entity("TestPlatform2.Data.TestCategory", b =>
+                {
+                    b.HasOne("TestPlatform2.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TestPlatform2.Data.TestInvite", b =>
                 {
                     b.HasOne("TestPlatform2.Data.Test", "Test")
@@ -725,6 +911,32 @@ namespace TestPlatform2.Migrations
                         .IsRequired();
 
                     b.Navigation("Test");
+                });
+
+            modelBuilder.Entity("TestPlatform2.Data.TestTag", b =>
+                {
+                    b.HasOne("TestPlatform2.Data.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TestTagRelation", b =>
+                {
+                    b.HasOne("TestPlatform2.Data.TestTag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TestPlatform2.Data.Test", null)
+                        .WithMany()
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TestPlatform2.Data.Test", b =>
@@ -739,6 +951,11 @@ namespace TestPlatform2.Migrations
             modelBuilder.Entity("TestPlatform2.Data.TestAttempt", b =>
                 {
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("TestPlatform2.Data.TestCategory", b =>
+                {
+                    b.Navigation("Tests");
                 });
 
             modelBuilder.Entity("TestPlatform2.Data.User", b =>
