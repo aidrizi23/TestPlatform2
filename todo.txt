@@ -22,3 +22,6 @@
 
 
 
+make the show archived test filter be ajax and also include it in other filters.
+also at the test invite section make sure you use the correct method and add the correct parameters because i can not send the emails to the students.
+also keep in mind to make the methods to add the questions (in the test details view so that they will be ajax only) and also keep in mind to add the ajax question endpoint to the question controller to create each type of question with ajax.

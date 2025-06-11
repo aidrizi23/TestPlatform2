@@ -243,6 +243,50 @@ public class SubscriptionController : Controller
                             
                             _logger.LogInformation("Successfully updated subscription status for user {UserId}. Customer: {CustomerId}, Subscription: {SubscriptionId}", 
                                 user.Id, session.CustomerId, session.SubscriptionId);
+
+                            // Create subscription record if it doesn't exist
+                            try
+                            {
+                                var existingSubscription = await _subscriptionRepository.GetSubscriptionByStripeIdAsync(session.SubscriptionId);
+                                if (existingSubscription == null)
+                                {
+                                    var subscriptionRecord = new TestPlatform2.Data.Subscription
+                                    {
+                                        UserId = user.Id,
+                                        StripeCustomerId = session.CustomerId,
+                                        StripeSubscriptionId = session.SubscriptionId,
+                                        StripePriceId = stripeSubscription.Items.Data.FirstOrDefault()?.Price?.Id,
+                                        Status = MapStripeStatusToSubscriptionStatus(stripeSubscription.Status),
+                                        Plan = TestPlatform2.Data.SubscriptionPlan.Pro,
+                                        PriceAmount = stripeSubscription.Items.Data.FirstOrDefault()?.Price?.UnitAmount / 100m ?? 0,
+                                        Currency = stripeSubscription.Items.Data.FirstOrDefault()?.Price?.Currency ?? "usd",
+                                        StartDate = stripeSubscription.StartDate,
+                                        CurrentPeriodStart = stripeSubscription.CurrentPeriodStart,
+                                        CurrentPeriodEnd = stripeSubscription.CurrentPeriodEnd,
+                                        HasTrialPeriod = stripeSubscription.TrialEnd.HasValue,
+                                        TrialEndDate = stripeSubscription.TrialEnd,
+                                        Metadata = new Dictionary<string, string>
+                                        {
+                                            ["stripe_session_id"] = session_id,
+                                            ["created_via"] = "checkout_success"
+                                        }
+                                    };
+
+                                    await _subscriptionRepository.CreateSubscriptionAsync(subscriptionRecord);
+                                    _logger.LogInformation("Created subscription record {SubscriptionId} for user {UserId} via checkout success", 
+                                        subscriptionRecord.Id, user.Id);
+                                }
+                                else
+                                {
+                                    _logger.LogInformation("Subscription record already exists for Stripe subscription {StripeSubscriptionId}", session.SubscriptionId);
+                                }
+                            }
+                            catch (Exception subEx)
+                            {
+                                _logger.LogError(subEx, "Failed to create subscription record for user {UserId}, Stripe subscription {StripeSubscriptionId}", 
+                                    user.Id, session.SubscriptionId);
+                                // Don't fail the success flow because of this
+                            }
                             
                             TempData["SuccessMessage"] = "Welcome to TestPlatform Pro! You now have unlimited access. Check your email for confirmation.";
                         }
@@ -396,5 +440,21 @@ public class SubscriptionController : Controller
         }
 
         return RedirectToAction("Index");
+    }
+
+    private static SubscriptionStatus MapStripeStatusToSubscriptionStatus(string stripeStatus)
+    {
+        return stripeStatus?.ToLower() switch
+        {
+            "active" => SubscriptionStatus.Active,
+            "trialing" => SubscriptionStatus.Trialing,
+            "past_due" => SubscriptionStatus.PastDue,
+            "canceled" => SubscriptionStatus.Cancelled,
+            "incomplete" => SubscriptionStatus.Incomplete,
+            "incomplete_expired" => SubscriptionStatus.IncompleteExpired,
+            "unpaid" => SubscriptionStatus.Unpaid,
+            "paused" => SubscriptionStatus.Paused,
+            _ => SubscriptionStatus.Incomplete
+        };
     }
 }

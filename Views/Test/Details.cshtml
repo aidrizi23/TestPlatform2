@@ -6,58 +6,107 @@ ViewData["Title"] = "Test Details";
 }
 
 <div class="test-details-container">
-    <!-- Header Section -->
-    <div class="test-header">
-        <div class="header-content">
-            <div class="header-main">
-                <div class="breadcrumb-nav">
-                    <a asp-action="Index" class="breadcrumb-link">
-                        <i class="fas fa-arrow-left me-2"></i>My Tests
-                    </a>
-                    <span class="breadcrumb-separator">/</span>
-                    <span class="breadcrumb-current">Test Details</span>
-                </div>
+    <!-- Enhanced Header Section -->
+    <div class="modern-header">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb-nav mb-4">
+            <a asp-action="Index" class="breadcrumb-link">
+                <i class="fas fa-arrow-left me-2"></i>My Tests
+            </a>
+            <span class="breadcrumb-separator">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+            <span class="breadcrumb-current">Test Details</span>
+        </nav>
 
-                <div class="test-title-section">
-                    <h1 class="test-title">
-                        @Model.TestName
-                        <span class="status-indicator @(Model.IsLocked ? "status-locked" : "status-active")" id="statusIndicator">
-                            <i class="fas @(Model.IsLocked ? "fa-lock" : "fa-unlock")" id="statusIcon"></i>
-                            <span id="statusText">@(Model.IsLocked ? "Locked" : "Active")</span>
-                        </span>
-                    </h1>
-                    @if (!string.IsNullOrEmpty(Model.Description))
-                    {
-                    <p class="test-description">@Model.Description</p>
-                    }
-                </div>
-            </div>
+        <!-- Main Header Card -->
+        <div class="header-card">
+            <div class="header-card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <!-- Test Title and Status -->
+                        <div class="test-info">
+                            <div class="d-flex align-items-center mb-2">
+                                <h1 class="test-title-modern mb-0">@Model.TestName</h1>
+                                <span class="status-badge @(Model.IsLocked ? "status-locked" : "status-active") ms-3" id="statusIndicator">
+                                    <i class="fas @(Model.IsLocked ? "fa-lock" : "fa-check-circle") me-1" id="statusIcon"></i>
+                                    <span id="statusText">@(Model.IsLocked ? "Locked" : "Active")</span>
+                                </span>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="test-description-modern text-muted mb-3">@Model.Description</p>
+                            }
 
-            <div class="header-actions">
-                <div class="action-buttons">
-                    <button id="lockTestButton" class="btn @(Model.IsLocked ? "btn-success" : "btn-warning") btn-sm" onclick="toggleTestLock('@Model.Id')">
-                        <i class="fas @(Model.IsLocked ? "fa-lock-open" : "fa-lock") me-2" id="lockIcon"></i>
-                        <span id="lockButtonText">@(Model.IsLocked ? "Unlock" : "Lock")</span>
-                    </button>
-                    <button class="btn btn-outline-primary btn-sm" onclick="openEditTestModal('@Model.Id')">
-                        <i class="fas fa-edit me-2"></i>Edit
-                    </button>
-                    <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-outline-info btn-sm">
-                        <i class="fas fa-chart-line me-2"></i>Analytics
-                    </a>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-download me-2"></i>Export
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" asp-controller="Test" asp-action="ExportTestSummaryPdf" asp-route-testId="@Model.Id">
-                                    <i class="fas fa-file-pdf text-danger me-2"></i>Test Summary (PDF)
-                                </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" asp-controller="Test" asp-action="AllAttempts" asp-route-testId="@Model.Id">
-                                    <i class="fas fa-chart-bar me-2"></i>View Results to Export
-                                </a></li>
-                        </ul>
+                            <!-- Quick Stats -->
+                            <div class="quick-stats">
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-question-circle text-primary me-1"></i>
+                                    <span class="fw-semibold">@Model.Questions.Count</span> Questions
+                                </div>
+                                <div class="quick-stat-divider">•</div>
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-envelope text-info me-1"></i>
+                                    <span class="fw-semibold">@Model.InvitedStudents.Count</span> Invites
+                                </div>
+                                <div class="quick-stat-divider">•</div>
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-clipboard-check text-success me-1"></i>
+                                    <span class="fw-semibold">@Model.Attempts.Count(a => a.IsCompleted)</span> Completed
+                                </div>
+                                <div class="quick-stat-divider">•</div>
+                                <div class="quick-stat-item">
+                                    <i class="fas fa-clock text-warning me-1"></i>
+                                    <span class="fw-semibold">@Model.TimeLimit</span> min limit
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <!-- Action Buttons -->
+                        <div class="action-buttons-modern text-end">
+                            <div class="btn-group mb-2 w-100" role="group">
+                                <button id="lockTestButton" class="btn @(Model.IsLocked ? "btn-success" : "btn-warning")" onclick="toggleTestLock('@Model.Id')">
+                                    <i class="fas @(Model.IsLocked ? "fa-lock-open" : "fa-lock") me-1" id="lockIcon"></i>
+                                    <span id="lockButtonText">@(Model.IsLocked ? "Unlock" : "Lock")</span>
+                                </button>
+                                <button class="btn btn-primary" onclick="openEditTestModal('@Model.Id')">
+                                    <i class="fas fa-edit me-1"></i>Edit
+                                </button>
+                            </div>
+                            
+                            <div class="btn-group w-100" role="group">
+                                <a asp-action="Analytics" asp-route-id="@Model.Id" class="btn btn-outline-info">
+                                    <i class="fas fa-chart-line me-1"></i>Analytics
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-download me-1"></i>Export
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" asp-controller="Test" asp-action="ExportTestSummaryPdf" asp-route-testId="@Model.Id">
+                                                <i class="fas fa-file-pdf text-danger me-2"></i>Test Summary (PDF)
+                                            </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" asp-controller="Test" asp-action="AllAttempts" asp-route-testId="@Model.Id">
+                                                <i class="fas fa-chart-bar me-2"></i>View Results
+                                            </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Additional Actions -->
+                            <div class="mt-2">
+                                <button class="btn btn-outline-danger btn-sm me-1" onclick="openDeleteTestModal('@Model.Id')" title="Delete Test">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="openCloneTestModal('@Model.Id')" title="Clone Test">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1059,39 +1108,94 @@ ViewData["Title"] = "Test Details";
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Header Section */
-    .test-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 16px;
-        padding: 2rem;
+    /* Modern Header Section */
+    .modern-header {
         margin-bottom: 2rem;
-        color: white;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-        position: relative;
+    }
+
+    .header-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
         overflow: hidden;
+        transition: all 0.3s ease;
     }
 
-    .test-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%),
-        linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.1) 75%);
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
-        opacity: 0.3;
+    .header-card:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
     }
 
-    .header-content {
-        position: relative;
-        z-index: 1;
+    .header-card-body {
+        padding: 2rem;
+    }
+
+    .test-title-modern {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1.2;
+    }
+
+    .test-description-modern {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        max-width: 600px;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        animation: pulse 2s infinite;
+    }
+
+    .status-badge.status-active {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .status-badge.status-locked {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .quick-stats {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 2rem;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .quick-stat-item {
+        display: flex;
+        align-items: center;
+        color: #4a5568;
+    }
+
+    .quick-stat-divider {
+        color: #cbd5e0;
+        font-weight: bold;
+    }
+
+    .action-buttons-modern .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.625rem 1.25rem;
+        transition: all 0.2s ease;
+    }
+
+    .action-buttons-modern .btn:hover {
+        transform: translateY(-1px);
     }
 
     .breadcrumb-nav {
@@ -2847,13 +2951,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     const isLocked = result.isLocked;
                     
                     // Update button
-                    lockButton.className = isLocked ? 'btn btn-success btn-sm' : 'btn btn-warning btn-sm';
-                    lockIcon.className = isLocked ? 'fas fa-lock-open me-2' : 'fas fa-lock me-2';
+                    lockButton.className = isLocked ? 'btn btn-success' : 'btn btn-warning';
+                    lockIcon.className = isLocked ? 'fas fa-lock-open me-1' : 'fas fa-lock me-1';
                     lockButtonText.textContent = isLocked ? 'Unlock' : 'Lock';
                     
                     // Update status indicator
-                    statusIndicator.className = isLocked ? 'status-indicator status-locked' : 'status-indicator status-active';
-                    statusIcon.className = isLocked ? 'fas fa-lock' : 'fas fa-unlock';
+                    statusIndicator.className = isLocked ? 'status-badge status-locked ms-3' : 'status-badge status-active ms-3';
+                    statusIcon.className = isLocked ? 'fas fa-lock me-1' : 'fas fa-check-circle me-1';
                     statusText.textContent = isLocked ? 'Locked' : 'Active';
                     
                     showToast(result.message, 'success');
@@ -3078,7 +3182,156 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Enhanced email invitation functionality
+    // Email invitation functionality
+    let emailFieldCount = 0;
+
+    window.generateEmailFields = function() {
+        const emailCount = parseInt(document.getElementById('emailCount').value);
+        if (!emailCount || emailCount < 1 || emailCount > 50) {
+            showToast('Please enter a valid number between 1 and 50', 'warning');
+            return;
+        }
+
+        const emailFieldsContainer = document.getElementById('emailFieldsContainer');
+        const emailFields = document.getElementById('emailFields');
+        
+        // Clear existing fields
+        emailFields.innerHTML = '';
+        emailFieldCount = 0;
+
+        // Generate fields
+        for (let i = 0; i < emailCount; i++) {
+            addEmailField();
+        }
+
+        emailFieldsContainer.style.display = 'block';
+        showToast(`Generated ${emailCount} email fields`, 'success');
+    };
+
+    window.addSingleField = function() {
+        addEmailField();
+        showToast('Email field added', 'success');
+    };
+
+    function addEmailField() {
+        emailFieldCount++;
+        const emailFields = document.getElementById('emailFields');
+        
+        const fieldHtml = `
+            <div class="email-field-group" id="emailField${emailFieldCount}">
+                <div class="input-group mb-3">
+                    <span class="input-group-text">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                    <input type="email" class="form-control email-input" 
+                           placeholder="student${emailFieldCount}\@@example.com"
+                           data-field-id="${emailFieldCount}" required>
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="removeEmailField(${emailFieldCount})" 
+                            title="Remove this field">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        emailFields.insertAdjacentHTML('beforeend', fieldHtml);
+    }
+
+    window.removeEmailField = function(fieldId) {
+        const field = document.getElementById(`emailField${fieldId}`);
+        if (field) {
+            field.remove();
+            
+            // Check if any fields remain
+            const remainingFields = document.querySelectorAll('.email-field-group');
+            if (remainingFields.length === 0) {
+                document.getElementById('emailFieldsContainer').style.display = 'none';
+            }
+            
+            showToast('Email field removed', 'info');
+        }
+    };
+
+    window.sendInvites = async function(testId) {
+        const emailInputs = document.querySelectorAll('.email-input');
+        const emails = [];
+        
+        // Collect all email addresses
+        emailInputs.forEach(input => {
+            if (input.value.trim()) {
+                emails.push(input.value.trim());
+            }
+        });
+
+        if (emails.length === 0) {
+            showToast('Please enter at least one email address', 'warning');
+            return;
+        }
+
+        // Validate email addresses
+        const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+        const invalidEmails = emails.filter(email => !emailRegex.test(email));
+        if (invalidEmails.length > 0) {
+            showToast(`Invalid email addresses: ${invalidEmails.join(', ')}`, 'error');
+            return;
+        }
+
+        const sendButton = document.querySelector('[onclick*="sendInvites"]');
+        const originalText = sendButton.innerHTML;
+        
+        showLoading();
+        sendButton.disabled = true;
+        sendButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending Invitations...';
+
+        try {
+            const response = await fetch('/TestInvite/SendInvites', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    TestId: testId,
+                    EmailAddresses: emails.join(', '),
+                    CustomMessage: '' // You can add a message field if needed
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`Successfully sent ${result.sentCount || emails.length} invitations`, 'success');
+                    
+                    // Clear all email fields
+                    document.getElementById('emailFields').innerHTML = '';
+                    document.getElementById('emailFieldsContainer').style.display = 'none';
+                    document.getElementById('emailCount').value = '';
+                    emailFieldCount = 0;
+                    
+                    // Update invites count if elements exist
+                    const invitesCount = document.querySelector('[data-invite-count]');
+                    if (invitesCount && result.totalInvites !== undefined) {
+                        invitesCount.textContent = result.totalInvites;
+                    }
+                } else {
+                    showToast(result.message || 'Failed to send invitations', 'error');
+                }
+            } else {
+                const errorText = await response.text();
+                showToast('Failed to send invitations: ' + errorText, 'error');
+            }
+        } catch (error) {
+            console.error('Error sending invitations:', error);
+            showToast('An error occurred while sending invitations', 'error');
+        } finally {
+            hideLoading();
+            sendButton.disabled = false;
+            sendButton.innerHTML = originalText;
+        }
+    };
+
+    // Enhanced email invitation functionality (keeping the old form if it exists)
     const emailForm = document.getElementById('emailForm');
     if (emailForm) {
         emailForm.addEventListener('submit', async function(e) {
@@ -3099,7 +3352,7 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
 
             try {
-                const response = await fetch('/TestInvite/SendInvitesAjax', {
+                const response = await fetch('/TestInvite/SendInvites', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -3115,7 +3368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        showToast(`Successfully sent ${result.sentCount} invitations`, 'success');
+                        showToast(`Successfully sent ${result.sentCount || 'all'} invitations`, 'success');
                         emailForm.reset();
                         
                         // Update invites count
