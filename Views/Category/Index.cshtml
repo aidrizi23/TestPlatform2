@@ -67,13 +67,13 @@
                 @foreach (var category in Model.Categories)
                 {
                     <div class="category-card" data-category-id="@category.Id">
-                        <div class="card-background" style="background: linear-gradient(135deg, @category.Color 0%, @(category.Color)CC 100%);">
+                        <div class="card-background" style="background: linear-gradient(135deg, @Html.Raw(Html.Encode(category.Color)) 0%, @Html.Raw(Html.Encode(category.Color))CC 100%);">
                             <div class="card-pattern"></div>
                         </div>
                         
                         <div class="card-content">
                             <div class="card-header">
-                                <div class="category-icon" style="background: @category.Color;">
+                                <div class="category-icon" style="background: @Html.Raw(Html.Encode(category.Color));">
                                     @if (!string.IsNullOrEmpty(category.Icon))
                                     {
                                         <i class="@category.Icon"></i>

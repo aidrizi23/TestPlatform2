@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "Resend Email Confirmation";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h3 class="mb-0"><i class="fas fa-paper-plane me-2"></i>Resend Confirmation Email</h3>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Introduction -->
+                    <div class="text-center mb-4">
+                        <p class="text-muted">Enter your email address to receive a new confirmation link</p>
+                    </div>
+
+                    <!-- Status Messages -->
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+                        </div>
+                    }
+
+                    <!-- Validation Summary -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            <div asp-validation-summary="ModelOnly" class="mb-0"></div>
+                        </div>
+                    }
+
+                    <form asp-action="ResendConfirmation" method="post">
+                        <!-- Email -->
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" id="email" name="email" class="form-control" 
+                                       value="@TempData["ResendEmail"]"
+                                       placeholder="Enter your email address" required autocomplete="email" />
+                            </div>
+                            <div class="form-text">
+                                We'll send a new confirmation link to this email address.
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Send Confirmation Email
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <p class="mb-0">
+                        Remember your login details? 
+                        <a asp-action="Login" class="fw-bold">Sign In</a>
+                    </p>
+                    <p class="mb-0 mt-2">
+                        Need to register? 
+                        <a asp-action="Register" class="fw-bold">Create Account</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus the email field when the page loads
+            document.getElementById('email').focus();
+            
+            // Form submission handling
+            const form = document.querySelector('form');
+            const submitButton = form.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            
+            form.addEventListener('submit', function() {
+                // Disable button and show loading state
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+                
+                // Re-enable button after 5 seconds (in case of server error)
+                setTimeout(function() {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalText;
+                }, 5000);
+            });
+        });
+    </script>
+    
+    <style>
+        .card {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+            color: white;
+            border-bottom: none;
+        }
+    </style>
+}

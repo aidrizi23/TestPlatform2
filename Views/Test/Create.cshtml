@@ -32,7 +32,7 @@ ViewData["Title"] = "Create Test";
             </div>
             }
 
-            <form asp-action="Create" method="post">
+            <form asp-action="Create" method="post" asp-antiforgery="true">
                 <!-- Test Title -->
                 <div class="mb-4">
                     <label asp-for="Title" class="form-label">Test Title</label>

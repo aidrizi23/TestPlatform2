@@ -45,7 +45,7 @@
                         </div>
                     }
                     
-                    <form asp-action="Login" method="post">
+                    <form asp-action="Login" method="post" asp-antiforgery="true">
                         <!-- Email -->
                         <div class="mb-3">
                             <label asp-for="Email" class="form-label">Email Address</label>
