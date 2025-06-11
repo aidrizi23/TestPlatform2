@@ -1,19 +1,5 @@
-﻿ // FUTURE IMPROVEMENTS:
-// 1. Add email verification for new user registrations --done
-// 2. Implement password reset functionality --done
-// 3. Add bulk test operations (delete multiple, archive, etc.) --done
-// 4. Create test templates for common question patterns (--do not do)
-// 5. Add export functionality for test results (PDF, Excel) --done
-// 6. Implement test categories/tags for better organization --done
-// 7. Add collaborative features (share tests with other teachers) --done
-// 8. Create mobile app for test taking (--do not do)
-// 9. Add plagiarism detection for written answers (--do not do)
-// 10. Implement advanced question types (drag & drop, image-based)
-// 11. Add test scheduling and automatic publishing
-// 12. Create dashboard with analytics and insights
-// 13. Add integration with LMS platforms (Canvas, Blackboard)
-// 14. Implement accessibility features (screen reader support, high contrast)
-// 15. Add multi-language support for international users 
+﻿
+// 14. Implement accessibility features (screen reader support, high contrast) (do not do)
 
 
 
@@ -23,5 +9,8 @@
 
 
 make the show archived test filter be ajax and also include it in other filters.
-also at the test invite section make sure you use the correct method and add the correct parameters because i can not send the emails to the students.
 also keep in mind to make the methods to add the questions (in the test details view so that they will be ajax only) and also keep in mind to add the ajax question endpoint to the question controller to create each type of question with ajax.
+also keep in mind that i want you to redesign the take test view so that it will support the new types of quesitons. 
+i would also like you to add another type of question. the one where the user can choose in a table form. and also remove the picture question. 
+add the ability to add images to questions and save the images in the wwwroot folder based on the user and the question id. 
+also remove everything for the image based question. and also make sure to make the taketest view support all types of questions.
