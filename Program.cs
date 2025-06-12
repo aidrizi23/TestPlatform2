@@ -46,14 +46,12 @@ public class Program
         builder.Services.AddScoped<ITestAttemptRepository, TestAttemptRepository>();
         builder.Services.AddScoped<ITestInviteRepository, TestInviteRepository>();
         builder.Services.AddScoped<ITestAnalyticsRepository, TestAnalyticsRepository>();
-        builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         builder.Services.AddScoped<IExportService, ExportService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<ITagRepository, TagRepository>();
         builder.Services.AddScoped<IImageService, ImageService>();
         
         // Background services
-        builder.Services.AddHostedService<SubscriptionCleanupService>();
         builder.Services.AddHostedService<TestSchedulingService>();
 
         // Add HttpContextAccessor for accessing HttpContext in services

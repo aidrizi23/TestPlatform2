@@ -62,9 +62,6 @@ ViewData["Title"] = "Home";
                 <a asp-controller="Test" asp-action="Index" class="btn btn-outline-primary btn-lg">
                     <i class="fas fa-clipboard-list me-2"></i>My Tests
                 </a>
-                <a asp-controller="Subscription" asp-action="Index" class="btn btn-outline-success btn-lg">
-                    <i class="fas fa-crown me-2"></i>Upgrade Plan
-                </a>
                 }
             </div>
         </div>
@@ -323,73 +320,6 @@ ViewData["Title"] = "Home";
     }
     else
     {
-    <!-- Subscription Benefits Section for Authenticated Users -->
-    <section class="subscription-section">
-        <div class="subscription-content">
-            <div class="subscription-header">
-                <div class="subscription-icon">
-                    <i class="fas fa-crown"></i>
-                </div>
-                <h2 class="subscription-title">Unlock Premium Features</h2>
-                <p class="subscription-description">
-                    Take your testing to the next level with our premium subscription.
-                    Get advanced features, unlimited tests, and priority support.
-                </p>
-            </div>
-            
-            <div class="benefits-grid">
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-infinity"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h4>Unlimited Tests</h4>
-                        <p>Create as many tests as you need without any restrictions</p>
-                    </div>
-                </div>
-                
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h4>Advanced Analytics</h4>
-                        <p>Get detailed insights and performance reports</p>
-                    </div>
-                </div>
-                
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-headset"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h4>Priority Support</h4>
-                        <p>Get help when you need it with priority customer support</p>
-                    </div>
-                </div>
-                
-                <div class="benefit-item">
-                    <div class="benefit-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="benefit-content">
-                        <h4>Team Collaboration</h4>
-                        <p>Share tests and collaborate with your team members</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="subscription-actions">
-                <a asp-controller="Subscription" asp-action="Index" class="btn btn-success btn-lg subscription-cta">
-                    <i class="fas fa-crown me-2"></i>Upgrade Now
-                </a>
-                <div class="subscription-note">
-                    <i class="fas fa-shield-alt me-2"></i>
-                    30-day money-back guarantee • Cancel anytime
-                </div>
-            </div>
-        </div>
-    </section>
     }
 </div>
 

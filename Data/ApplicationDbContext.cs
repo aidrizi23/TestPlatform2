@@ -20,8 +20,6 @@ namespace TestPlatform2.Data
         public DbSet<TestAttempt> TestAttempts { get; set; }
         public DbSet<Answer> Answers { get; set; }
         
-        public DbSet<Subscription> Subscriptions { get; set; }
-        public DbSet<SubscriptionHistory> SubscriptionHistories { get; set; }
         
         public DbSet<TestCategory> TestCategories { get; set; }
         public DbSet<TestTag> TestTags { get; set; }

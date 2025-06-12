@@ -14,32 +14,20 @@ public class QuestionController : Controller
     private readonly IQuestionRepository _questionRepository;
     private readonly UserManager<User> _userManager;
     private readonly ITestRepository _testRepository;
-    private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly ITestAttemptRepository _testAttemptRepository;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
-        ISubscriptionRepository subscriptionRepository,
         ITestAttemptRepository testAttemptRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
-        _subscriptionRepository = subscriptionRepository;
         _testAttemptRepository = testAttemptRepository;
     }
     
-    private async Task<IActionResult> CheckQuestionLimitAsync(string userId)
-    {
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(userId))
-        {
-            TempData["ErrorMessage"] = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!";
-            return RedirectToAction("Index", "Subscription");
-        }
-        return null;
-    }
     
     private async Task<bool> TestHasAttemptsAsync(string testId)
     {
@@ -62,9 +50,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
        
         var model = new CreateTrueFalseQuestionViewModel()
         {
@@ -89,9 +74,6 @@ public class QuestionController : Controller
         if (user is null)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
         
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test is null)
@@ -113,7 +95,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             TempData["SuccessMessage"] = "True/False question created successfully!";
             return RedirectToAction("Details", "Test", new { id = test.Id });
@@ -138,9 +119,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
         
         var model = new CreateMultipleChoiceQuestionViewModel()
         {
@@ -170,9 +148,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
 
         try
         {
@@ -189,7 +164,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             TempData["SuccessMessage"] = "Multiple choice question created successfully!";
             return RedirectToAction("Details", "Test", new { id = test.Id });
@@ -214,9 +188,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
 
         var model = new CreateShortAnswerQuestionViewModel()
         {
@@ -245,9 +216,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Unauthorized();
         
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
 
         try
         {
@@ -263,7 +231,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             TempData["SuccessMessage"] = "Short answer question created successfully!";
             return RedirectToAction("Details", "Test", new { id = test.Id });
@@ -329,9 +296,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
        
         var model = new CreateTrueFalseQuestionViewModel()
         {
@@ -363,9 +327,6 @@ public class QuestionController : Controller
         if (user is null)
             return Json(new { success = false, message = "User not authenticated" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
         
         var test = await _testRepository.GetTestByIdAsync(model.TestId);
         if (test is null)
@@ -387,7 +348,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             return Json(new { 
                 success = true, 
@@ -422,9 +382,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
         
         var model = new CreateMultipleChoiceQuestionViewModel()
         {
@@ -461,9 +418,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
 
         try
         {
@@ -480,7 +434,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             return Json(new { 
                 success = true, 
@@ -517,9 +470,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
 
         var model = new CreateShortAnswerQuestionViewModel()
         {
@@ -555,9 +505,6 @@ public class QuestionController : Controller
         if (user is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
         
-        // Check question limit
-        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
-            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
 
         try
         {
@@ -573,7 +520,6 @@ public class QuestionController : Controller
             };
             
             await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
 
             return Json(new { 
                 success = true, 

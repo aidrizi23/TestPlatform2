@@ -16,7 +16,6 @@
     private readonly IEmailService _emailService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITestRepository _testRepository;
-    private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly UserManager<User> _userManager;
 
     public TestInviteController(
@@ -24,14 +23,12 @@
     IEmailService emailService,
     IHttpContextAccessor httpContextAccessor,
     ITestRepository testRepository,
-    ISubscriptionRepository subscriptionRepository,
     UserManager<User> userManager)
     {
     _inviteRepository = inviteRepository;
     _emailService = emailService;
     _httpContextAccessor = httpContextAccessor;
     _testRepository = testRepository;
-    _subscriptionRepository = subscriptionRepository;
     _userManager = userManager;
     }
 
@@ -71,12 +68,6 @@
 
     foreach (var email in emails)
     {
-    // Check if user can send invite
-    if (!await _subscriptionRepository.CanSendInviteAsync(user.Id))
-    {
-    failedInvites.Add(email);
-    continue;
-    }
 
     var invite = new TestInvite
     {
@@ -85,8 +76,6 @@
     };
     await _inviteRepository.Create(invite);
 
-    // Increment invite count
-    await _subscriptionRepository.IncrementInviteCountAsync(user.Id);
 
     // Generate the test URL dynamically
     var testUrl = UrlHelper.GenerateTestUrl(HttpContext, testId, invite.UniqueToken);
@@ -114,7 +103,6 @@
     }
 
     // Get remaining invites
-    var remainingInvites = await _subscriptionRepository.GetRemainingWeeklyInvitesAsync(user.Id);
 
     // Return response with details (enhanced to match frontend expectations)
     return Ok(new 
@@ -123,10 +111,7 @@
     sentCount = successfulInvites.Count,
     successfulInvites = successfulInvites,
     failedInvites = failedInvites,
-    remainingInvites = remainingInvites,
-    message = failedInvites.Any() && !user.IsPro
-    ? "Some invites failed. You've reached your weekly limit. Upgrade to Pro for unlimited invites!"
-    : "Invites sent successfully!"
+    message = "Invites sent successfully!"
     });
     } 
     }
