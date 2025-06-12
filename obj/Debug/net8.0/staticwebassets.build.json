@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "kPVRBMX+IhiJRwdkxMqGechSrgLSyxkJ3VLkvv/hUlo=",
+  "Hash": "QQP3CDe1dtiDKd1MaR9Be6yO7RnxjQly3zR9FWD71ZM=",
   "Source": "TestPlatform2",
   "BasePath": "_content/TestPlatform2",
   "Mode": "Default",
@@ -1155,25 +1155,6 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "/home/albi/.nuget/packages/microsoft.aspnetcore.identity.ui/8.0.10/staticwebassets/V5/lib/jquery/LICENSE.txt"
-    },
-    {
-      "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/drag-drop.css",
-      "SourceId": "TestPlatform2",
-      "SourceType": "Discovered",
-      "ContentRoot": "/home/albi/RiderProjects/TestPlatform3/wwwroot/",
-      "BasePath": "_content/TestPlatform2",
-      "RelativePath": "css/drag-drop.css",
-      "AssetKind": "All",
-      "AssetMode": "All",
-      "AssetRole": "Primary",
-      "AssetMergeBehavior": "PreferTarget",
-      "AssetMergeSource": "",
-      "RelatedAsset": "",
-      "AssetTraitName": "",
-      "AssetTraitValue": "",
-      "CopyToOutputDirectory": "Never",
-      "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "wwwroot/css/drag-drop.css"
     },
     {
       "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/home.css",

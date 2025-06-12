@@ -1,10 +1,6 @@
 {
   "Files": [
     {
-      "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/drag-drop.css",
-      "PackagePath": "staticwebassets/css/drag-drop.css"
-    },
-    {
       "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/home.css",
       "PackagePath": "staticwebassets/css/home.css"
     },

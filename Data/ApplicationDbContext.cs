@@ -43,8 +43,7 @@ namespace TestPlatform2.Data
                 .HasDiscriminator<ApplicationDbContext.QuestionType>("QuestionType")
                 .HasValue<MultipleChoiceQuestion>(ApplicationDbContext.QuestionType.MultipleChoice)
                 .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
-                .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer)
-                .HasValue<TableQuestion>(ApplicationDbContext.QuestionType.Table);
+                .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer);
 
             // TestInvite relationships
             modelBuilder.Entity<TestInvite>()
@@ -111,8 +110,7 @@ namespace TestPlatform2.Data
         {
             MultipleChoice,
             TrueFalse,
-            ShortAnswer,
-            Table
+            ShortAnswer
         }
     }
 }

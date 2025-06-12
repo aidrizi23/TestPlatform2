@@ -368,15 +368,6 @@ ViewData["Title"] = "Test Details";
                         </div>
                     </button>
 
-                    <button class="question-type-card" onclick="openCreateQuestionModal('Table', '@Model.Id')">
-                        <div class="question-type-icon table">
-                            <i class="fas fa-table"></i>
-                        </div>
-                        <div class="question-type-content">
-                            <div class="question-type-title">Table Question</div>
-                            <div class="question-type-desc">Grid-based selection questions</div>
-                        </div>
-                    </button>
 
                 </div>
             </div>
@@ -431,7 +422,6 @@ ViewData["Title"] = "Test Details";
                     TrueFalseQuestion => "True/False",
                     MultipleChoiceQuestion => "Multiple Choice",
                     ShortAnswerQuestion => "Short Answer",
-                    TableQuestion => "Table",
                     _ => "Unknown"
                     };
 
@@ -666,18 +656,24 @@ ViewData["Title"] = "Test Details";
     </div>
 </div>
 
-<!-- Enhanced Modals -->
+<!-- Enhanced Modals with Animations -->
 
 <!-- Edit Test Modal -->
-<div class="modal fade" id="editTestModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header gradient-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit me-2"></i>
-                    Edit Test Settings
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade modal-enhanced" id="editTestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-slideInDown">
+        <div class="modal-content modal-content-enhanced">
+            <div class="modal-header modal-header-modern gradient-header">
+                <div class="modal-title-container">
+                    <div class="modal-icon-wrapper">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h5 class="modal-title modal-title-enhanced">
+                        Edit Test Settings
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-modern" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="editTestForm">
@@ -882,14 +878,21 @@ ViewData["Title"] = "Test Details";
 </div>
 
 <!-- Edit Question Modal -->
-<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header gradient-header">
-                <h5 class="modal-title" id="editQuestionModalLabel">
-                    <i class="fas fa-edit me-2"></i>Edit Question
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade modal-enhanced" id="editQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-zoomIn">
+        <div class="modal-content modal-content-enhanced">
+            <div class="modal-header modal-header-modern gradient-header-edit">
+                <div class="modal-title-container">
+                    <div class="modal-icon-wrapper icon-edit">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <h5 class="modal-title modal-title-enhanced" id="editQuestionModalLabel">
+                        Edit Question
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-modern" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="editQuestionForm">
@@ -1000,14 +1003,21 @@ ViewData["Title"] = "Test Details";
 </div>
 
 <!-- Create Question Modal -->
-<div class="modal fade" id="createQuestionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header gradient-header">
-                <h5 class="modal-title" id="createQuestionModalLabel">
-                    <i class="fas fa-plus-circle me-2"></i>Create Question
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade modal-enhanced" id="createQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-slideInUp">
+        <div class="modal-content modal-content-enhanced">
+            <div class="modal-header modal-header-modern gradient-header-create">
+                <div class="modal-title-container">
+                    <div class="modal-icon-wrapper icon-create">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <h5 class="modal-title modal-title-enhanced" id="createQuestionModalLabel">
+                        Create Question
+                    </h5>
+                </div>
+                <button type="button" class="btn-close btn-close-modern" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
                 <form id="createQuestionForm">
@@ -3045,6 +3055,244 @@ ViewData["Title"] = "Test Details";
         to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Enhanced Modal Styles with Animations */
+    .modal-enhanced {
+        backdrop-filter: blur(8px);
+    }
+
+    .modal-enhanced .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(8px);
+    }
+
+    .modal-content-enhanced {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.98);
+    }
+
+    .modal-header-modern {
+        border: none;
+        padding: 2rem 2rem 1rem 2rem;
+        background: transparent;
+        position: relative;
+    }
+
+    .gradient-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .gradient-header-create {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+    .gradient-header-edit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .modal-title-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .modal-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        animation: iconPulse 2s infinite;
+    }
+
+    .icon-create {
+        background: rgba(56, 239, 125, 0.2);
+    }
+
+    .icon-edit {
+        background: rgba(118, 75, 162, 0.2);
+    }
+
+    @@keyframes iconPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .modal-title-enhanced {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+    }
+
+    .btn-close-modern {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2rem;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+    }
+
+    .btn-close-modern:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg) scale(1.1);
+        color: white;
+    }
+
+    /* Modal Animation Classes */
+    .modal-dialog-slideInDown {
+        animation: slideInDown 0.5s ease-out;
+    }
+
+    .modal-dialog-slideInUp {
+        animation: slideInUp 0.5s ease-out;
+    }
+
+    .modal-dialog-zoomIn {
+        animation: zoomIn 0.4s ease-out;
+    }
+
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -100%) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translate(-50%, 100%) scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    @@keyframes zoomIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.6);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+    }
+
+    /* Enhanced Form Elements in Modals */
+    .modal-enhanced .form-floating > label {
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .modal-enhanced .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .modal-enhanced .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    .modal-enhanced .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .modal-enhanced .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .modal-enhanced .btn-secondary {
+        background: #6b7280;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .modal-enhanced .btn-secondary:hover {
+        background: #4b5563;
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced Modal Body */
+    .modal-enhanced .modal-body {
+        padding: 1rem 2rem 2rem 2rem;
+    }
+
+    .modal-enhanced .modal-footer {
+        border: none;
+        padding: 1rem 2rem 2rem 2rem;
+        gap: 1rem;
+    }
+
+    /* Smooth Show/Hide Transitions */
+    .modal.fade .modal-dialog {
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .modal.show .modal-dialog {
+        transform: none;
+    }
+
+    /* Question Type Sections Enhanced */
+    .modal-enhanced .question-type-section {
+        background: #f8fafc;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .modal-enhanced .question-type-section:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .modal-enhanced .section-title {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
 </style>
 
 
@@ -3262,10 +3510,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.openCreateQuestionModal = async function(questionType, testId) {
         
-        if (questionType === 'Table') {
-            showToast('Table questions are currently being implemented. Please use other question types.', 'warning');
-            return;
-        }
         
         currentQuestionType = questionType;
         currentTestId = testId;
@@ -3673,12 +3917,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Question management functions
     window.openDeleteQuestionModal = function(questionId) {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
-        currentQuestionId = questionId;
-        deleteModal.show();
-    };
-
-    window.openDeleteQuestionModal = function(questionId) {
         currentQuestionId = questionId;
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
         deleteModal.show();
@@ -3978,7 +4216,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ QuestionId: currentQuestionId })
+                body: JSON.stringify({ Id: currentQuestionId })
             });
 
             if (response.ok) {
