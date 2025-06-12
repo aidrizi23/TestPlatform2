@@ -91,6 +91,11 @@ public class Program
 
         app.Urls.Add("http://0.0.0.0:5000");
 
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.Migrate();
+        }
         app.Run();
     }
 }
