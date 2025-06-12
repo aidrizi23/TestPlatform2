@@ -54,6 +54,10 @@ public class TestController : Controller
     public async Task<IActionResult> Index(bool showArchived = false)
     {
         var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
         var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
         
         // Filter archived tests based on the parameter

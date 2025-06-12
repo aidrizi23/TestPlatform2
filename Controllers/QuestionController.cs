@@ -16,22 +16,19 @@ public class QuestionController : Controller
     private readonly ITestRepository _testRepository;
     private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly ITestAttemptRepository _testAttemptRepository;
-    private readonly IImageService _imageService;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
         ISubscriptionRepository subscriptionRepository,
-        ITestAttemptRepository testAttemptRepository,
-        IImageService imageService)
+        ITestAttemptRepository testAttemptRepository)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
         _subscriptionRepository = subscriptionRepository;
         _testAttemptRepository = testAttemptRepository;
-        _imageService = imageService;
     }
     
     private async Task<IActionResult> CheckQuestionLimitAsync(string userId)
@@ -315,83 +312,6 @@ public class QuestionController : Controller
         }
     }
 
-    // GET: /Question/CreateDragDrop
-    [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> CreateDragDrop(string testId)
-    {
-        var test = await _testRepository.GetTestByIdAsync(testId);
-        if (test is null)
-            return NotFound("Test not found");
-        
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null || test.UserId != user.Id)
-            return Unauthorized();
-        
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
-
-        var model = new CreateDragDropQuestionViewModel()
-        {
-            TestId = testId,
-            Points = 1,
-            Text = "",
-            AllowMultiplePerZone = false,
-            OrderMatters = false,
-            DraggableItemsJson = "[]",
-            DropZonesJson = "[]"
-        };
-        
-        return View(model);
-    }
-
-    // POST: /Question/CreateDragDrop
-    [HttpPost]
-    [Authorize]
-    public async Task<IActionResult> CreateDragDrop(CreateDragDropQuestionViewModel model)
-    {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        var test = await _testRepository.GetTestByIdAsync(model.TestId);
-        var user = await _userManager.GetUserAsync(User);
-        if (test is null)
-            return NotFound("Test not found");
-        if (user is null || test.UserId != user.Id)
-            return Unauthorized();
-        
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
-
-        try
-        {
-            var question = new DragDropQuestion()
-            {
-                TestId = model.TestId,
-                Points = model.Points,
-                Text = model.Text,
-                Position = test.Questions.Count,
-                AllowMultiplePerZone = model.AllowMultiplePerZone,
-                OrderMatters = model.OrderMatters,
-                DraggableItemsJson = model.DraggableItemsJson,
-                DropZonesJson = model.DropZonesJson,
-                Test = test,
-            };
-            
-            await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
-
-            TempData["SuccessMessage"] = "Drag & drop question created successfully!";
-            return RedirectToAction("Details", "Test", new { id = test.Id });
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError("", "An error occurred while creating the question.");
-            return View(model);
-        }
-    }
 
 
     // ========== AJAX METHODS ==========
@@ -1002,76 +922,175 @@ public class QuestionController : Controller
         }
     }
 
-    // POST: /Question/UploadQuestionImageAjax
+
+
+    // ========== EDIT METHODS ==========
+    
+    // POST: /Question/EditTrueFalseAjax
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> UploadQuestionImageAjax(IFormFile file, string questionId)
+    public async Task<IActionResult> EditTrueFalseAjax([FromBody] EditTrueFalseQuestionViewModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                .ToArray();
+            
+            return Json(new { success = false, errors = errors });
+        }
+        
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
             return Json(new { success = false, message = "User not authenticated" });
-
-        if (file == null || file.Length == 0)
-            return Json(new { success = false, message = "No file provided" });
-
-        if (!_imageService.IsValidImage(file))
-            return Json(new { success = false, message = "Invalid image file. Please upload a valid image (JPG, PNG, GIF, WEBP) under 10MB." });
+        
+        var question = await _questionRepository.GetQuestionByIdAsync(model.Id) as TrueFalseQuestion;
+        if (question is null)
+            return Json(new { success = false, message = "Question not found" });
+        
+        var test = await _testRepository.GetTestByIdAsync(question.TestId);
+        if (test is null || test.UserId != user.Id)
+            return Json(new { success = false, message = "Unauthorized access" });
 
         try
         {
-            var imagePath = await _imageService.UploadQuestionImageAsync(file, user.Id, questionId);
+            question.Text = model.Text;
+            question.Points = model.Points;
+            question.CorrectAnswer = model.CorrectAnswer;
             
+            await _questionRepository.Update(question);
+
             return Json(new { 
                 success = true, 
-                message = "Image uploaded successfully!",
-                imagePath = "/" + imagePath.Replace("\\", "/"),
-                fileName = file.FileName
+                message = "True/False question updated successfully!",
+                question = new {
+                    id = question.Id,
+                    text = question.Text,
+                    points = question.Points,
+                    position = question.Position,
+                    type = "TrueFalse",
+                    correctAnswer = question.CorrectAnswer
+                }
             });
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = "An error occurred while uploading the image." });
+            return Json(new { success = false, message = "An error occurred while updating the question." });
         }
     }
 
-    // POST: /Question/DeleteQuestionImageAjax
+    // POST: /Question/EditMultipleChoiceAjax
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> DeleteQuestionImageAjax([FromBody] DeleteImageRequest request)
+    public async Task<IActionResult> EditMultipleChoiceAjax([FromBody] EditMultipleChoiceQuestionViewModel model)
     {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                .ToArray();
+            
+            return Json(new { success = false, errors = errors });
+        }
+        
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
             return Json(new { success = false, message = "User not authenticated" });
-
-        if (string.IsNullOrEmpty(request.ImagePath))
-            return Json(new { success = false, message = "Image path not provided" });
-
-        // Verify the image belongs to the user (path should contain user ID)
-        if (!request.ImagePath.Contains($"images/questions/{user.Id}/"))
-            return Json(new { success = false, message = "Unauthorized access to image" });
+        
+        var question = await _questionRepository.GetQuestionByIdAsync(model.Id) as MultipleChoiceQuestion;
+        if (question is null)
+            return Json(new { success = false, message = "Question not found" });
+        
+        var test = await _testRepository.GetTestByIdAsync(question.TestId);
+        if (test is null || test.UserId != user.Id)
+            return Json(new { success = false, message = "Unauthorized access" });
 
         try
         {
-            var deleted = await _imageService.DeleteQuestionImageAsync(request.ImagePath);
+            question.Text = model.Text;
+            question.Points = model.Points;
+            question.Options = model.Options;
+            question.CorrectAnswers = model.CorrectAnswers;
+            question.AllowMultipleSelections = model.AllowMultipleSelections;
             
-            if (deleted)
-            {
-                return Json(new { 
-                    success = true, 
-                    message = "Image deleted successfully!"
-                });
-            }
-            else
-            {
-                return Json(new { 
-                    success = false, 
-                    message = "Image file not found or already deleted"
-                });
-            }
+            await _questionRepository.Update(question);
+
+            return Json(new { 
+                success = true, 
+                message = "Multiple choice question updated successfully!",
+                question = new {
+                    id = question.Id,
+                    text = question.Text,
+                    points = question.Points,
+                    position = question.Position,
+                    type = "MultipleChoice",
+                    options = question.Options,
+                    correctAnswers = question.CorrectAnswers,
+                    allowMultipleSelections = question.AllowMultipleSelections
+                }
+            });
         }
         catch (Exception ex)
         {
-            return Json(new { success = false, message = "An error occurred while deleting the image." });
+            return Json(new { success = false, message = "An error occurred while updating the question." });
+        }
+    }
+
+    // POST: /Question/EditShortAnswerAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> EditShortAnswerAjax([FromBody] EditShortAnswerQuestionViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                .ToArray();
+            
+            return Json(new { success = false, errors = errors });
+        }
+        
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+        
+        var question = await _questionRepository.GetQuestionByIdAsync(model.Id) as ShortAnswerQuestion;
+        if (question is null)
+            return Json(new { success = false, message = "Question not found" });
+        
+        var test = await _testRepository.GetTestByIdAsync(question.TestId);
+        if (test is null || test.UserId != user.Id)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            question.Text = model.Text;
+            question.Points = model.Points;
+            question.ExpectedAnswer = model.ExpectedAnswer;
+            question.CaseSensitive = model.CaseSensitive;
+            
+            await _questionRepository.Update(question);
+
+            return Json(new { 
+                success = true, 
+                message = "Short answer question updated successfully!",
+                question = new {
+                    id = question.Id,
+                    text = question.Text,
+                    points = question.Points,
+                    position = question.Position,
+                    type = "ShortAnswer",
+                    expectedAnswer = question.ExpectedAnswer,
+                    caseSensitive = question.CaseSensitive
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating the question." });
         }
     }
 
@@ -1087,8 +1106,4 @@ public class QuestionController : Controller
         public List<string> QuestionIds { get; set; }
     }
 
-    public class DeleteImageRequest
-    {
-        public string ImagePath { get; set; } = string.Empty;
-    }
 }

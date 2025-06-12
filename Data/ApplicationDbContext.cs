@@ -44,7 +44,6 @@ namespace TestPlatform2.Data
                 .HasValue<MultipleChoiceQuestion>(ApplicationDbContext.QuestionType.MultipleChoice)
                 .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
                 .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer)
-                .HasValue<DragDropQuestion>(ApplicationDbContext.QuestionType.DragDrop)
                 .HasValue<TableQuestion>(ApplicationDbContext.QuestionType.Table);
 
             // TestInvite relationships
@@ -113,7 +112,6 @@ namespace TestPlatform2.Data
             MultipleChoice,
             TrueFalse,
             ShortAnswer,
-            DragDrop,
             Table
         }
     }

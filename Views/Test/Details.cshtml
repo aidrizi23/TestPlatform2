@@ -378,15 +378,6 @@ ViewData["Title"] = "Test Details";
                         </div>
                     </button>
 
-                    <button class="question-type-card" onclick="openCreateQuestionModal('DragDrop', '@Model.Id')">
-                        <div class="question-type-icon drag-drop">
-                            <i class="fas fa-hand-rock"></i>
-                        </div>
-                        <div class="question-type-content">
-                            <div class="question-type-title">Drag & Drop</div>
-                            <div class="question-type-desc">Interactive sorting questions</div>
-                        </div>
-                    </button>
                 </div>
             </div>
 
@@ -418,9 +409,6 @@ ViewData["Title"] = "Test Details";
                             <button class="filter-btn" data-filter="short-answer" onclick="filterQuestions('short-answer')">
                                 <i class="fas fa-pen me-1"></i>Short Answer (@(Model.Questions.OfType<ShortAnswerQuestion>().Count()))
                             </button>
-                            <button class="filter-btn" data-filter="drag-drop" onclick="filterQuestions('drag-drop')">
-                                <i class="fas fa-hand-rock me-1"></i>Drag & Drop (@(Model.Questions.OfType<DragDropQuestion>().Count()))
-                            </button>
                         </div>
                     </div>
                     
@@ -443,7 +431,6 @@ ViewData["Title"] = "Test Details";
                     TrueFalseQuestion => "True/False",
                     MultipleChoiceQuestion => "Multiple Choice",
                     ShortAnswerQuestion => "Short Answer",
-                    DragDropQuestion => "Drag & Drop",
                     TableQuestion => "Table",
                     _ => "Unknown"
                     };
@@ -469,9 +456,6 @@ ViewData["Title"] = "Test Details";
                                                 break;
                                                 case ShortAnswerQuestion:
                                                 <i class="fas fa-pen me-1"></i>
-                                                break;
-                                                case DragDropQuestion:
-                                                <i class="fas fa-hand-rock me-1"></i>
                                                 break;
                                                 }
                                                 @questionType
@@ -542,20 +526,6 @@ ViewData["Title"] = "Test Details";
                                 </div>
                             </div>
                             break;
-                            case DragDropQuestion ddq:
-                            <div class="question-preview">
-                                <div class="dragdrop-preview">
-                                    <div class="preview-info">
-                                        <i class="fas fa-hand-rock me-2"></i>
-                                        @ddq.DraggableItems.Count draggable items, @ddq.DropZones.Count drop zones
-                                        @if (ddq.OrderMatters)
-                                        {
-                                            <span class="badge badge-info ms-2">Order Matters</span>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                            break;
                             }
                         </div>
 
@@ -620,25 +590,7 @@ ViewData["Title"] = "Test Details";
                         </div>
                     </button>
 
-                    <button class="question-type-card" onclick="openCreateQuestionModal('DragDrop', '@Model.Id')">
-                        <div class="question-type-icon drag-drop">
-                            <i class="fas fa-hand-rock"></i>
-                        </div>
-                        <div class="question-type-content">
-                            <div class="question-type-title">Drag & Drop</div>
-                            <div class="question-type-desc">Interactive sorting questions</div>
-                        </div>
-                    </button>
 
-                    <button class="question-type-card" onclick="openCreateQuestionModal('ImageBased', '@Model.Id')">
-                        <div class="question-type-icon image-based">
-                            <i class="fas fa-image"></i>
-                        </div>
-                        <div class="question-type-content">
-                            <div class="question-type-title">Image-Based</div>
-                            <div class="question-type-desc">Visual hotspot questions</div>
-                        </div>
-                    </button>
                 </div>
             </div>
             }
@@ -929,6 +881,124 @@ ViewData["Title"] = "Test Details";
     </div>
 </div>
 
+<!-- Edit Question Modal -->
+<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header gradient-header">
+                <h5 class="modal-title" id="editQuestionModalLabel">
+                    <i class="fas fa-edit me-2"></i>Edit Question
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editQuestionForm">
+                    <input type="hidden" id="editQuestionId">
+                    
+                    <!-- Common Question Fields -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="form-floating">
+                                <textarea class="form-control" id="editQuestionText" placeholder="Enter your question text..." style="height: 120px;" required></textarea>
+                                <label for="editQuestionText">Question Text</label>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="editQuestionPoints" min="1" max="100" value="1" required>
+                                <label for="editQuestionPoints">Points</label>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- True/False Section -->
+                    <div id="editTrueFalseSection" style="display: none;">
+                        <div class="question-type-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-check-circle me-2"></i>True/False Settings
+                            </h6>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editTrueFalseCorrect" checked>
+                                <label class="form-check-label" for="editTrueFalseCorrect">
+                                    <span class="fw-semibold">Correct Answer:</span>
+                                    <span id="editTrueFalseLabel">True</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Multiple Choice Section -->
+                    <div id="editMultipleChoiceSection" style="display: none;">
+                        <div class="question-type-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-list-ul me-2"></i>Multiple Choice Settings
+                            </h6>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="editAllowMultipleSelections">
+                                <label class="form-check-label" for="editAllowMultipleSelections">
+                                    Allow multiple correct answers
+                                </label>
+                            </div>
+
+                            <div class="options-section">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <label class="form-label fw-semibold">Answer Options</label>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addEditMultipleChoiceOption()">
+                                        <i class="fas fa-plus me-1"></i>Add Option
+                                    </button>
+                                </div>
+                                <div id="editOptionsContainer">
+                                    <!-- Options will be dynamically added here -->
+                                </div>
+                                <div class="form-text">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Check the box next to correct answers. At least one option must be marked as correct.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Short Answer Section -->
+                    <div id="editShortAnswerSection" style="display: none;">
+                        <div class="question-type-section">
+                            <h6 class="section-title">
+                                <i class="fas fa-pen me-2"></i>Short Answer Settings
+                            </h6>
+                            
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" id="editExpectedAnswer" placeholder="Expected answer..." required>
+                                <label for="editExpectedAnswer">Expected Answer</label>
+                                <div class="invalid-feedback"></div>
+                            </div>
+
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editCaseSensitive">
+                                <label class="form-check-label" for="editCaseSensitive">
+                                    Case sensitive matching
+                                </label>
+                                <div class="form-text">
+                                    When enabled, student answers must match the exact capitalization.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitEditQuestionForm()">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Create Question Modal -->
 <div class="modal fade" id="createQuestionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -959,43 +1029,6 @@ ViewData["Title"] = "Test Details";
                         </div>
                     </div>
 
-                    <!-- Image Upload Section -->
-                    <div class="mb-4">
-                        <div class="question-type-section">
-                            <h6 class="section-title">
-                                <i class="fas fa-image me-2"></i>Question Image (Optional)
-                            </h6>
-                            
-                            <div class="image-upload-container">
-                                <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('questionImageFile').click()">
-                                    <div class="upload-placeholder" id="uploadPlaceholder">
-                                        <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
-                                        <div class="upload-text">Click to upload an image</div>
-                                        <div class="upload-hint">Supports JPG, PNG, GIF, WEBP (max 10MB)</div>
-                                    </div>
-                                    <div class="upload-preview" id="uploadPreview" style="display: none;">
-                                        <img id="previewImage" src="" alt="Preview" />
-                                        <div class="preview-overlay">
-                                            <button type="button" class="btn btn-sm btn-outline-light me-2" onclick="changeImage()">
-                                                <i class="fas fa-edit me-1"></i>Change
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage()">
-                                                <i class="fas fa-trash me-1"></i>Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="file" id="questionImageFile" accept="image/*" style="display: none" onchange="handleImageUpload(this)">
-                                <input type="hidden" id="questionImagePath" value="">
-                                <div class="upload-progress" id="uploadProgress" style="display: none;">
-                                    <div class="progress">
-                                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
-                                    </div>
-                                    <div class="upload-status">Uploading...</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- True/False Section -->
                     <div id="trueFalseSection" style="display: none;">
@@ -3012,112 +3045,6 @@ ViewData["Title"] = "Test Details";
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Image Upload Styles */
-    .image-upload-container {
-        margin-top: 1rem;
-    }
-
-    .image-upload-area {
-        border: 2px dashed #e2e8f0;
-        border-radius: 12px;
-        padding: 2rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        min-height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .image-upload-area:hover {
-        border-color: #3182ce;
-        background-color: #f8fafc;
-    }
-
-    .upload-placeholder {
-        color: #718096;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .upload-text {
-        font-size: 1.1rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .upload-hint {
-        font-size: 0.9rem;
-        color: #a0aec0;
-    }
-
-    .upload-preview {
-        position: relative;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .upload-preview img {
-        max-width: 100%;
-        max-height: 300px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .preview-overlay {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        display: flex;
-        gap: 0.5rem;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .upload-preview:hover .preview-overlay {
-        opacity: 1;
-    }
-
-    .upload-progress {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .upload-progress .progress {
-        height: 8px;
-        margin-bottom: 0.5rem;
-    }
-
-    .upload-status {
-        font-size: 0.9rem;
-        color: #4a5568;
-        text-align: center;
-    }
-
-    .image-upload-area.uploading {
-        border-color: #3182ce;
-        background-color: #ebf8ff;
-    }
-
-    .image-upload-area.error {
-        border-color: #e53e3e;
-        background-color: #fed7d7;
-    }
-
-    .image-upload-area.success {
-        border-color: #38a169;
-        background-color: #f0fff4;
-    }
 </style>
 
 
@@ -3129,7 +3056,7 @@ ViewData["Title"] = "Test Details";
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Global variables
-    const currentTestId = '@Model.Id';
+    let currentTestId = '@Model.Id';
     let currentQuestionType = '';
     let currentQuestionId = '';
 
@@ -3334,6 +3261,12 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.openCreateQuestionModal = async function(questionType, testId) {
+        
+        if (questionType === 'Table') {
+            showToast('Table questions are currently being implemented. Please use other question types.', 'warning');
+            return;
+        }
+        
         currentQuestionType = questionType;
         currentTestId = testId;
         
@@ -3373,8 +3306,6 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'MultipleChoice': return 'Multiple Choice';
             case 'ShortAnswer': return 'Short Answer';
             case 'Table': return 'Table Question';
-            case 'DragDrop': return 'Drag & Drop';
-            case 'ImageBased': return 'Image-Based';
             default: return questionType;
         }
     }
@@ -3388,7 +3319,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('trueFalseSection').style.display = 'none';
         document.getElementById('multipleChoiceSection').style.display = 'none';
         document.getElementById('shortAnswerSection').style.display = 'none';
-        document.getElementById('tableSection').style.display = 'none';
         
         // Clear errors
         const errorElements = document.querySelectorAll('#createQuestionModal .invalid-feedback');
@@ -3422,10 +3352,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('caseSensitive').checked = data.caseSensitive || false;
                 break;
                 
-            case 'Table':
-                document.getElementById('tableSection').style.display = 'block';
-                populateTableForm(data);
-                break;
         }
     }
 
@@ -3530,18 +3456,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     formData.CaseSensitive = document.getElementById('caseSensitive').checked;
                     break;
                     
-                case 'Table':
-                    formData.TableTitle = document.getElementById('tableTitle').value.trim();
-                    formData.Rows = parseInt(document.getElementById('tableRows').value) || 3;
-                    formData.Columns = parseInt(document.getElementById('tableColumns').value) || 3;
-                    formData.AllowMultipleSelections = document.getElementById('tableAllowMultiple').checked;
-                    formData.ShowRowHeaders = document.getElementById('showRowHeaders').checked;
-                    formData.ShowColumnHeaders = document.getElementById('showColumnHeaders').checked;
-                    formData.ColumnHeaders = getTableHeaders('column');
-                    formData.RowHeaders = getTableHeaders('row');
-                    formData.Cells = getTableCells();
-                    formData.CorrectAnswers = getTableCorrectAnswers();
-                    break;
             }
             
             // Submit to appropriate endpoint
@@ -3764,6 +3678,297 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteModal.show();
     };
 
+    window.openDeleteQuestionModal = function(questionId) {
+        currentQuestionId = questionId;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
+        deleteModal.show();
+    };
+
+    window.openEditQuestionModal = async function(questionId) {
+        currentQuestionId = questionId;
+        
+        try {
+            showLoading();
+            
+            // Get question data
+            const response = await fetch(`/Question/GetQuestionDataAjax?id=${questionId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const questionData = result.data.question;
+                const typeSpecific = result.data.typeSpecific;
+                
+                // Clear and populate edit form
+                clearEditQuestionForm();
+                populateEditQuestionForm(questionData, typeSpecific);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editQuestionModal'));
+                modal.show();
+            } else {
+                showToast(result.message || 'Error loading question data', 'error');
+            }
+        } catch (error) {
+            console.error('Error opening edit modal:', error);
+            showToast('Error loading question data', 'error');
+        } finally {
+            hideLoading();
+        }
+    };
+
+    function clearEditQuestionForm() {
+        document.getElementById('editQuestionId').value = '';
+        document.getElementById('editQuestionText').value = '';
+        document.getElementById('editQuestionPoints').value = 1;
+        
+        // Hide all type-specific sections
+        document.getElementById('editTrueFalseSection').style.display = 'none';
+        document.getElementById('editMultipleChoiceSection').style.display = 'none';
+        document.getElementById('editShortAnswerSection').style.display = 'none';
+        
+        // Clear errors
+        const errorElements = document.querySelectorAll('#editQuestionModal .invalid-feedback');
+        errorElements.forEach(el => el.textContent = '');
+        
+        const inputElements = document.querySelectorAll('#editQuestionModal .form-control');
+        inputElements.forEach(el => el.classList.remove('is-invalid'));
+    }
+
+    function populateEditQuestionForm(questionData, typeSpecific) {
+        // Populate common fields
+        document.getElementById('editQuestionId').value = questionData.id;
+        document.getElementById('editQuestionText').value = questionData.text;
+        document.getElementById('editQuestionPoints').value = questionData.points;
+        
+        // Show appropriate type-specific section and populate
+        switch (questionData.type) {
+            case 'TrueFalse':
+                document.getElementById('editTrueFalseSection').style.display = 'block';
+                document.getElementById('editTrueFalseCorrect').checked = typeSpecific.correctAnswer;
+                break;
+                
+            case 'MultipleChoice':
+                document.getElementById('editMultipleChoiceSection').style.display = 'block';
+                document.getElementById('editAllowMultipleSelections').checked = typeSpecific.allowMultipleSelections;
+                populateEditMultipleChoiceOptions(typeSpecific.options, typeSpecific.correctAnswers);
+                break;
+                
+            case 'ShortAnswer':
+                document.getElementById('editShortAnswerSection').style.display = 'block';
+                document.getElementById('editExpectedAnswer').value = typeSpecific.expectedAnswer;
+                document.getElementById('editCaseSensitive').checked = typeSpecific.caseSensitive;
+                break;
+        }
+    }
+
+    function populateEditMultipleChoiceOptions(options, correctAnswers) {
+        const container = document.getElementById('editOptionsContainer');
+        container.innerHTML = '';
+        
+        options.forEach((option, index) => {
+            addEditMultipleChoiceOption(option, index, correctAnswers.includes(option));
+        });
+        
+        // Ensure at least 2 options
+        if (options.length < 2) {
+            addEditMultipleChoiceOption('', options.length, false);
+        }
+    }
+
+    function addEditMultipleChoiceOption(value = '', index = null, isCorrect = false) {
+        const container = document.getElementById('editOptionsContainer');
+        const optionIndex = index !== null ? index : container.children.length;
+        
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option-item mb-3';
+        optionDiv.innerHTML = `
+            <div class="row align-items-center">
+                <div class="col-1">
+                    <input type="checkbox" class="form-check-input edit-option-correct" data-option-index="${optionIndex}" ${isCorrect ? 'checked' : ''}>
+                </div>
+                <div class="col-10">
+                    <input type="text" class="form-control edit-option-text" placeholder="Option ${optionIndex + 1}" 
+                           value="${value}" data-option-index="${optionIndex}">
+                </div>
+                <div class="col-1">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeEditMultipleChoiceOption(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(optionDiv);
+    }
+
+    window.addEditMultipleChoiceOption = function() {
+        addEditMultipleChoiceOption();
+    };
+
+    window.removeEditMultipleChoiceOption = function(button) {
+        const container = document.getElementById('editOptionsContainer');
+        if (container.children.length > 2) {
+            button.closest('.option-item').remove();
+            
+            // Update indices
+            Array.from(container.children).forEach((item, index) => {
+                const checkbox = item.querySelector('.edit-option-correct');
+                const input = item.querySelector('.edit-option-text');
+                checkbox.dataset.optionIndex = index;
+                input.dataset.optionIndex = index;
+                input.placeholder = `Option ${index + 1}`;
+            });
+        } else {
+            showToast('At least 2 options are required', 'warning');
+        }
+    };
+
+    window.submitEditQuestionForm = async function() {
+        try {
+            showLoading();
+            
+            const questionId = document.getElementById('editQuestionId').value;
+            const questionData = await getQuestionDataForEdit();
+            
+            if (!questionData) {
+                return;
+            }
+            
+            // Submit to appropriate endpoint
+            const questionType = getCurrentEditQuestionType();
+            const response = await fetch(`/Question/Edit${questionType}Ajax`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(questionData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                
+                // Hide modal
+                bootstrap.Modal.getInstance(document.getElementById('editQuestionModal')).hide();
+                
+                // Update question in UI
+                updateQuestionInUI(result.question);
+            } else {
+                if (result.errors) {
+                    showEditFormErrors(result.errors);
+                } else {
+                    showToast(result.message || 'Error updating question', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error updating question:', error);
+            showToast('Error updating question', 'error');
+        } finally {
+            hideLoading();
+        }
+    };
+
+    function getCurrentEditQuestionType() {
+        if (document.getElementById('editTrueFalseSection').style.display !== 'none') {
+            return 'TrueFalse';
+        } else if (document.getElementById('editMultipleChoiceSection').style.display !== 'none') {
+            return 'MultipleChoice';
+        } else if (document.getElementById('editShortAnswerSection').style.display !== 'none') {
+            return 'ShortAnswer';
+        }
+        return null;
+    }
+
+    function getQuestionDataForEdit() {
+        const formData = {
+            Id: document.getElementById('editQuestionId').value,
+            Text: document.getElementById('editQuestionText').value.trim(),
+            Points: parseInt(document.getElementById('editQuestionPoints').value) || 1
+        };
+        
+        const questionType = getCurrentEditQuestionType();
+        
+        switch (questionType) {
+            case 'TrueFalse':
+                formData.CorrectAnswer = document.getElementById('editTrueFalseCorrect').checked;
+                break;
+                
+            case 'MultipleChoice':
+                const options = Array.from(document.querySelectorAll('.edit-option-text'))
+                    .map(input => input.value.trim())
+                    .filter(value => value);
+                
+                const correctAnswers = Array.from(document.querySelectorAll('.edit-option-correct:checked'))
+                    .map(checkbox => {
+                        const index = parseInt(checkbox.dataset.optionIndex);
+                        return options[index];
+                    })
+                    .filter(value => value);
+                
+                formData.Options = options;
+                formData.CorrectAnswers = correctAnswers;
+                formData.AllowMultipleSelections = document.getElementById('editAllowMultipleSelections').checked;
+                break;
+                
+            case 'ShortAnswer':
+                formData.ExpectedAnswer = document.getElementById('editExpectedAnswer').value.trim();
+                formData.CaseSensitive = document.getElementById('editCaseSensitive').checked;
+                break;
+        }
+        
+        return formData;
+    }
+
+    function showEditFormErrors(errors) {
+        // Clear previous errors
+        const errorElements = document.querySelectorAll('#editQuestionModal .invalid-feedback');
+        errorElements.forEach(el => el.textContent = '');
+        
+        const inputElements = document.querySelectorAll('#editQuestionModal .form-control');
+        inputElements.forEach(el => el.classList.remove('is-invalid'));
+        
+        // Show new errors
+        errors.forEach(error => {
+            const fieldName = error.Field.toLowerCase();
+            let input = null;
+            
+            if (fieldName.includes('text')) {
+                input = document.getElementById('editQuestionText');
+            } else if (fieldName.includes('points')) {
+                input = document.getElementById('editQuestionPoints');
+            } else if (fieldName.includes('expectedanswer')) {
+                input = document.getElementById('editExpectedAnswer');
+            }
+            
+            if (input) {
+                input.classList.add('is-invalid');
+                const feedback = input.nextElementSibling?.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = error.Message;
+                }
+            }
+        });
+    }
+
+    function updateQuestionInUI(questionData) {
+        const questionElement = document.querySelector(`[data-question-id="${questionData.id}"]`);
+        if (questionElement) {
+            // Update question text
+            const textElement = questionElement.querySelector('.question-text');
+            if (textElement) {
+                textElement.textContent = questionData.text;
+            }
+            
+            // Update points
+            const pointsElement = questionElement.querySelector('.question-points');
+            if (pointsElement) {
+                pointsElement.innerHTML = `<i class="fas fa-star me-1"></i>${questionData.points} pts`;
+            }
+        }
+    }
+
     window.confirmDeleteQuestion = async function() {
         showLoading();
         try {
@@ -3780,6 +3985,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 if (result.success) {
                     showToast('Question deleted successfully', 'success');
+                    
+                    // Hide the modal
+                    bootstrap.Modal.getInstance(document.getElementById('deleteQuestionModal')).hide();
                     
                     // Remove the question from the UI
                     const questionElement = document.querySelector(`[data-question-id="${currentQuestionId}"]`);
@@ -4036,123 +4244,6 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
-    // Image Upload Functions
-    window.handleImageUpload = async function(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        // Generate a temporary question ID for uploads
-        const tempQuestionId = 'temp_' + Date.now();
-        
-        const uploadArea = document.getElementById('imageUploadArea');
-        const placeholder = document.getElementById('uploadPlaceholder');
-        const preview = document.getElementById('uploadPreview');
-        const progress = document.getElementById('uploadProgress');
-        const progressBar = progress.querySelector('.progress-bar');
-        const uploadStatus = progress.querySelector('.upload-status');
-
-        // Reset states
-        uploadArea.classList.remove('error', 'success');
-        uploadArea.classList.add('uploading');
-        
-        // Show progress
-        placeholder.style.display = 'none';
-        preview.style.display = 'none';
-        progress.style.display = 'block';
-        
-        progressBar.style.width = '0%';
-        uploadStatus.textContent = 'Uploading...';
-
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('questionId', tempQuestionId);
-
-            const response = await fetch('/Question/UploadQuestionImageAjax', {
-                method: 'POST',
-                body: formData
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    // Update progress to 100%
-                    progressBar.style.width = '100%';
-                    uploadStatus.textContent = 'Upload complete!';
-                    
-                    // Store the image path
-                    document.getElementById('questionImagePath').value = result.imagePath;
-                    
-                    // Show preview
-                    setTimeout(() => {
-                        document.getElementById('previewImage').src = result.imagePath;
-                        progress.style.display = 'none';
-                        preview.style.display = 'flex';
-                        uploadArea.classList.remove('uploading');
-                        uploadArea.classList.add('success');
-                    }, 500);
-                } else {
-                    throw new Error(result.message || 'Upload failed');
-                }
-            } else {
-                throw new Error('Upload failed');
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            uploadArea.classList.remove('uploading');
-            uploadArea.classList.add('error');
-            progress.style.display = 'none';
-            placeholder.style.display = 'flex';
-            
-            showToast(error.message || 'Failed to upload image', 'error');
-        }
-    };
-
-    window.changeImage = function() {
-        document.getElementById('questionImageFile').click();
-    };
-
-    window.removeImage = async function() {
-        const imagePath = document.getElementById('questionImagePath').value;
-        
-        if (imagePath) {
-            try {
-                const response = await fetch('/Question/DeleteQuestionImageAjax', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ imagePath: imagePath })
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success) {
-                        // Reset to upload state
-                        document.getElementById('questionImagePath').value = '';
-                        document.getElementById('uploadPlaceholder').style.display = 'flex';
-                        document.getElementById('uploadPreview').style.display = 'none';
-                        document.getElementById('imageUploadArea').classList.remove('success', 'error');
-                        
-                        showToast('Image removed successfully', 'success');
-                    } else {
-                        showToast(result.message || 'Failed to remove image', 'error');
-                    }
-                } else {
-                    showToast('Failed to remove image', 'error');
-                }
-            } catch (error) {
-                console.error('Error removing image:', error);
-                showToast('Failed to remove image', 'error');
-            }
-        } else {
-            // Just reset UI if no image was uploaded
-            document.getElementById('uploadPlaceholder').style.display = 'flex';
-            document.getElementById('uploadPreview').style.display = 'none';
-            document.getElementById('imageUploadArea').classList.remove('success', 'error');
-        }
-    };
 });
 </script>
 }
