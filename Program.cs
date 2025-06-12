@@ -89,6 +89,8 @@ public class Program
         // Only map Razor Pages if you're using them (e.g., Identity UI)
         // app.MapRazorPages(); 
 
+        app.Urls.Add("http://0.0.0.0:5000");
+
         app.Run();
     }
 }
