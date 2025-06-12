@@ -74,10 +74,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlRHJhZ0Ryb3AuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/albi/RiderProjects/TestPlatform3/Views/Question/CreateImageBased.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlSW1hZ2VCYXNlZC5jc2h0bWw=
-build_metadata.AdditionalFiles.CssScope = 
-
 [/home/albi/RiderProjects/TestPlatform3/Views/Question/CreateMultipleChoice.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlTXVsdGlwbGVDaG9pY2UuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 

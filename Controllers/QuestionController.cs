@@ -5,6 +5,7 @@ using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
 using TestPlatform2.Repository;
 using TestPlatform2.Models.Questions;
+using TestPlatform2.Services;
 
 namespace TestPlatform2.Controllers;
 
@@ -15,19 +16,22 @@ public class QuestionController : Controller
     private readonly ITestRepository _testRepository;
     private readonly ISubscriptionRepository _subscriptionRepository;
     private readonly ITestAttemptRepository _testAttemptRepository;
+    private readonly IImageService _imageService;
     
     public QuestionController(
         IQuestionRepository questionRepository, 
         UserManager<User> userManager, 
         ITestRepository testRepository,
         ISubscriptionRepository subscriptionRepository,
-        ITestAttemptRepository testAttemptRepository)
+        ITestAttemptRepository testAttemptRepository,
+        IImageService imageService)
     {
         _questionRepository = questionRepository;
         _userManager = userManager;
         _testRepository = testRepository;
         _subscriptionRepository = subscriptionRepository;
         _testAttemptRepository = testAttemptRepository;
+        _imageService = imageService;
     }
     
     private async Task<IActionResult> CheckQuestionLimitAsync(string userId)
@@ -389,88 +393,6 @@ public class QuestionController : Controller
         }
     }
 
-    // GET: /Question/CreateImageBased
-    [HttpGet]
-    [Authorize]
-    public async Task<IActionResult> CreateImageBased(string testId)
-    {
-        var test = await _testRepository.GetTestByIdAsync(testId);
-        if (test is null)
-            return NotFound("Test not found");
-        
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null || test.UserId != user.Id)
-            return Unauthorized();
-        
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
-
-        var model = new CreateImageBasedQuestionViewModel()
-        {
-            TestId = testId,
-            Points = 1,
-            Text = "",
-            ImageUrl = "",
-            QuestionType = ImageQuestionType.Hotspot,
-            ImageWidth = 800,
-            ImageHeight = 600,
-            HotspotsJson = "[]",
-            LabelsJson = "[]"
-        };
-        
-        return View(model);
-    }
-
-    // POST: /Question/CreateImageBased
-    [HttpPost]
-    [Authorize]
-    public async Task<IActionResult> CreateImageBased(CreateImageBasedQuestionViewModel model)
-    {
-        if (!ModelState.IsValid)
-            return View(model);
-
-        var test = await _testRepository.GetTestByIdAsync(model.TestId);
-        var user = await _userManager.GetUserAsync(User);
-        if (test is null)
-            return NotFound("Test not found");
-        if (user is null || test.UserId != user.Id)
-            return Unauthorized();
-        
-        // Check question limit
-        var limitCheck = await CheckQuestionLimitAsync(user.Id);
-        if (limitCheck != null) return limitCheck;
-
-        try
-        {
-            var question = new ImageBasedQuestion()
-            {
-                TestId = model.TestId,
-                Points = model.Points,
-                Text = model.Text,
-                Position = test.Questions.Count,
-                ImageUrl = model.ImageUrl,
-                QuestionType = model.QuestionType,
-                AltText = model.AltText,
-                ImageWidth = model.ImageWidth,
-                ImageHeight = model.ImageHeight,
-                HotspotsJson = model.HotspotsJson,
-                LabelsJson = model.LabelsJson,
-                Test = test,
-            };
-            
-            await _questionRepository.Create(question);
-            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
-
-            TempData["SuccessMessage"] = "Image-based question created successfully!";
-            return RedirectToAction("Details", "Test", new { id = test.Id });
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError("", "An error occurred while creating the question.");
-            return View(model);
-        }
-    }
 
     // ========== AJAX METHODS ==========
 
@@ -754,6 +676,131 @@ public class QuestionController : Controller
         }
     }
 
+    // GET: /Question/GetTableFormDataAjax
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetTableFormDataAjax(string testId)
+    {
+        var test = await _testRepository.GetTestByIdAsync(testId);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+        
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null || test.UserId != user.Id)
+            return Json(new { success = false, message = "Unauthorized access" });
+        
+        // Check question limit
+        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
+            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
+
+        var model = new CreateTableQuestionViewModel()
+        {
+            TestId = testId,
+            Points = 1,
+            Text = "",
+            TableTitle = "",
+            Rows = 3,
+            Columns = 3,
+            AllowMultipleSelections = false,
+            ShowRowHeaders = true,
+            ShowColumnHeaders = true,
+            ColumnHeaders = new List<string> { "Column 1", "Column 2", "Column 3" },
+            RowHeaders = new List<string> { "Row 1", "Row 2", "Row 3" },
+            Cells = new List<List<string>>
+            {
+                new List<string> { "", "", "" },
+                new List<string> { "", "", "" },
+                new List<string> { "", "", "" }
+            },
+            CorrectAnswers = new List<TableCellDto>()
+        };
+
+        return Json(new { success = true, data = model });
+    }
+
+    // POST: /Question/CreateTableAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> CreateTableAjax([FromBody] CreateTableQuestionViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { Field = x.Key, Message = x.Value.Errors.First().ErrorMessage })
+                .ToArray();
+            
+            return Json(new { success = false, errors = errors });
+        }
+
+        var test = await _testRepository.GetTestByIdAsync(model.TestId);
+        var user = await _userManager.GetUserAsync(User);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+        if (user is null || test.UserId != user.Id)
+            return Json(new { success = false, message = "Unauthorized access" });
+        
+        // Check question limit
+        if (!await _subscriptionRepository.CanCreateQuestionAsync(user.Id))
+            return Json(new { success = false, message = "You've reached your free question limit (30 questions). Upgrade to Pro for unlimited questions!" });
+
+        try
+        {
+            var question = new TableQuestion()
+            {
+                TestId = model.TestId,
+                Points = model.Points,
+                Text = model.Text,
+                Position = test.Questions.Count,
+                TableTitle = model.TableTitle,
+                AllowMultipleSelections = model.AllowMultipleSelections,
+                ShowRowHeaders = model.ShowRowHeaders,
+                ShowColumnHeaders = model.ShowColumnHeaders,
+                Test = test,
+                TableData = new TableData
+                {
+                    Rows = model.Rows,
+                    Columns = model.Columns,
+                    ColumnHeaders = model.ColumnHeaders,
+                    RowHeaders = model.RowHeaders,
+                    Cells = model.Cells
+                },
+                CorrectAnswers = model.CorrectAnswers.Select(c => new TableCell 
+                { 
+                    Row = c.Row, 
+                    Column = c.Column, 
+                    Value = c.Value 
+                }).ToList()
+            };
+            
+            await _questionRepository.Create(question);
+            await _subscriptionRepository.IncrementQuestionCountAsync(user.Id);
+
+            return Json(new { 
+                success = true, 
+                message = "Table question created successfully!",
+                questionId = question.Id,
+                question = new {
+                    id = question.Id,
+                    text = question.Text,
+                    points = question.Points,
+                    position = question.Position,
+                    type = "Table",
+                    tableTitle = question.TableTitle,
+                    allowMultipleSelections = question.AllowMultipleSelections,
+                    showRowHeaders = question.ShowRowHeaders,
+                    showColumnHeaders = question.ShowColumnHeaders,
+                    tableData = question.TableData,
+                    correctAnswers = question.CorrectAnswers
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while creating the question." });
+        }
+    }
+
     // POST: /Question/DeleteAjax
     [HttpPost]
     [Authorize]
@@ -834,6 +881,14 @@ public class QuestionController : Controller
                 ShortAnswerQuestion saq => new { 
                     expectedAnswer = saq.ExpectedAnswer,
                     caseSensitive = saq.CaseSensitive 
+                },
+                TableQuestion tq => new {
+                    tableTitle = tq.TableTitle,
+                    allowMultipleSelections = tq.AllowMultipleSelections,
+                    showRowHeaders = tq.ShowRowHeaders,
+                    showColumnHeaders = tq.ShowColumnHeaders,
+                    tableData = tq.TableData,
+                    correctAnswers = tq.CorrectAnswers
                 },
                 _ => new { }
             };
@@ -947,6 +1002,79 @@ public class QuestionController : Controller
         }
     }
 
+    // POST: /Question/UploadQuestionImageAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> UploadQuestionImageAjax(IFormFile file, string questionId)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (file == null || file.Length == 0)
+            return Json(new { success = false, message = "No file provided" });
+
+        if (!_imageService.IsValidImage(file))
+            return Json(new { success = false, message = "Invalid image file. Please upload a valid image (JPG, PNG, GIF, WEBP) under 10MB." });
+
+        try
+        {
+            var imagePath = await _imageService.UploadQuestionImageAsync(file, user.Id, questionId);
+            
+            return Json(new { 
+                success = true, 
+                message = "Image uploaded successfully!",
+                imagePath = "/" + imagePath.Replace("\\", "/"),
+                fileName = file.FileName
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while uploading the image." });
+        }
+    }
+
+    // POST: /Question/DeleteQuestionImageAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> DeleteQuestionImageAjax([FromBody] DeleteImageRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        if (string.IsNullOrEmpty(request.ImagePath))
+            return Json(new { success = false, message = "Image path not provided" });
+
+        // Verify the image belongs to the user (path should contain user ID)
+        if (!request.ImagePath.Contains($"images/questions/{user.Id}/"))
+            return Json(new { success = false, message = "Unauthorized access to image" });
+
+        try
+        {
+            var deleted = await _imageService.DeleteQuestionImageAsync(request.ImagePath);
+            
+            if (deleted)
+            {
+                return Json(new { 
+                    success = true, 
+                    message = "Image deleted successfully!"
+                });
+            }
+            else
+            {
+                return Json(new { 
+                    success = false, 
+                    message = "Image file not found or already deleted"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while deleting the image." });
+        }
+    }
+
     // ========== REQUEST DTOs FOR AJAX METHODS ==========
     
     public class DeleteQuestionRequest
@@ -957,5 +1085,10 @@ public class QuestionController : Controller
     public class BulkDeleteQuestionsRequest
     {
         public List<string> QuestionIds { get; set; }
+    }
+
+    public class DeleteImageRequest
+    {
+        public string ImagePath { get; set; } = string.Empty;
     }
 }

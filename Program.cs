@@ -50,6 +50,7 @@ public class Program
         builder.Services.AddScoped<IExportService, ExportService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<ITagRepository, TagRepository>();
+        builder.Services.AddScoped<IImageService, ImageService>();
         
         // Background services
         builder.Services.AddHostedService<SubscriptionCleanupService>();
@@ -88,6 +89,13 @@ public class Program
         // Only map Razor Pages if you're using them (e.g., Identity UI)
         // app.MapRazorPages(); 
 
+        app.Urls.Add("http://0.0.0.0:5000");
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            dbContext.Database.Migrate();
+        }
         app.Run();
     }
 }

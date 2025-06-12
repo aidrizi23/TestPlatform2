@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "e61k/hC8yIk=",
+  "dgSpecHash": "s+0DvJkX/B0=",
   "success": true,
   "projectFilePath": "/home/albi/RiderProjects/TestPlatform3/TestPlatform2.csproj",
   "expectedPackageFiles": [
@@ -149,6 +149,7 @@
     "/home/albi/.nuget/packages/nuget.projectmodel/6.11.0/nuget.projectmodel.6.11.0.nupkg.sha512",
     "/home/albi/.nuget/packages/nuget.protocol/6.11.0/nuget.protocol.6.11.0.nupkg.sha512",
     "/home/albi/.nuget/packages/nuget.versioning/6.11.0/nuget.versioning.6.11.0.nupkg.sha512",
+    "/home/albi/.nuget/packages/sixlabors.imagesharp/3.1.7/sixlabors.imagesharp.3.1.7.nupkg.sha512",
     "/home/albi/.nuget/packages/skiasharp/2.88.9/skiasharp.2.88.9.nupkg.sha512",
     "/home/albi/.nuget/packages/skiasharp.nativeassets.macos/2.88.9/skiasharp.nativeassets.macos.2.88.9.nupkg.sha512",
     "/home/albi/.nuget/packages/skiasharp.nativeassets.win32/2.88.9/skiasharp.nativeassets.win32.2.88.9.nupkg.sha512",
