@@ -50,6 +50,7 @@ public class Program
         builder.Services.AddScoped<IExportService, ExportService>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<ITagRepository, TagRepository>();
+        builder.Services.AddScoped<IImageService, ImageService>();
         
         // Background services
         builder.Services.AddHostedService<SubscriptionCleanupService>();

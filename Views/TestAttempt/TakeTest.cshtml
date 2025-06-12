@@ -7,39 +7,54 @@
 ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
 }
 
-<div class="container">
-    <!-- Test Header -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <h3 class="mb-0"><i class="fas fa-edit me-2"></i>@Model.Test.TestName</h3>
-                <div class="d-flex align-items-center">
-                    <div class="timer-display me-2">
-                        <i class="fas fa-clock me-2"></i>
-                        <span id="timer" class="badge bg-primary p-2">@($"{Model.Test.TimeLimit:00}:00")</span>
+<div class="test-taking-container">
+    <!-- Modern Test Header -->
+    <div class="test-header">
+        <div class="test-header-content">
+            <div class="test-info">
+                <h1 class="test-title">
+                    <i class="fas fa-clipboard-check me-3"></i>
+                    @Model.Test.TestName
+                </h1>
+                @if (!string.IsNullOrEmpty(Model.Test.Description))
+                {
+                    <p class="test-description">@Model.Test.Description</p>
+                }
+            </div>
+            
+            <div class="test-controls">
+                <div class="timer-widget">
+                    <div class="timer-icon">
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <div class="attempts-display">
-                        <i class="fas fa-redo me-2"></i>
-                        <span class="badge bg-info p-2">Attempts: <span id="remainingAttemptsCounter">@Model.RemainingAttempts</span></span>
+                    <div class="timer-content">
+                        <div class="timer-label">Time Remaining</div>
+                        <div id="timer" class="timer-display">@($"{Model.Test.TimeLimit:00}:00")</div>
+                    </div>
+                </div>
+                
+                <div class="attempts-widget">
+                    <div class="attempts-icon">
+                        <i class="fas fa-redo"></i>
+                    </div>
+                    <div class="attempts-content">
+                        <div class="attempts-label">Attempts Left</div>
+                        <div id="remainingAttemptsCounter" class="attempts-display">@Model.RemainingAttempts</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            @if (!string.IsNullOrEmpty(Model.Test.Description))
-            {
-            <p>@Model.Test.Description</p>
-            }
-
-            <div class="progress mb-3" style="height: 10px;">
-                <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"
-                     aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                </div>
+        
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <div class="progress-info">
+                <span class="question-counter">
+                    Question <span id="currentQuestionNumber">1</span> of <span id="totalQuestions">@Model.Questions.Count</span>
+                </span>
+                <span id="questionTypeBadge" class="question-type-badge"></span>
             </div>
-
-            <div class="d-flex justify-content-between mb-2">
-                <div><strong>Question: <span id="currentQuestionNumber">1</span>/<span id="totalQuestions">@Model.Questions.Count</span></strong></div>
-                <div id="questionTypeBadge" class="badge bg-primary"></div>
+            <div class="progress-bar-container">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
             </div>
         </div>
     </div>
@@ -52,69 +67,171 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         @if (Model.Questions != null && Model.Questions.Any())
         {
         <!-- Question Container -->
-        <div class="card mb-4">
-            <div class="card-body">
-                @for (int i = 0; i < Model.Questions.Count; i++)
-                {
-                var question = Model.Questions[i];
-                <div class="question-container" data-question-index="@i" data-question-type="@question.GetType().Name.Replace("Question", "")" style="display: none;">
-                    <div class="form-group mb-4">
-                        <h4 class="mb-4">@question.Text</h4>
+        <div class="question-widget">
+            @for (int i = 0; i < Model.Questions.Count; i++)
+            {
+            var question = Model.Questions[i];
+            <div class="question-container" data-question-index="@i" data-question-type="@question.GetType().Name.Replace("Question", "")" style="display: none;">
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-meta">
+                            <span class="question-number">Question @(i + 1)</span>
+                            <span class="question-points">@question.Points pts</span>
+                        </div>
+                        <div class="question-text">
+                            <h3>@question.Text</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="question-content">
                         <input type="hidden" name="answers[@i].QuestionId" value="@question.Id" />
 
                         @switch (question)
                         {
                         case MultipleChoiceQuestion mcq:
-                        <div class="multiple-choice-options">
-                            @for (int j = 0; j < mcq.Options.Count; j++)
-                            {
-                            <div class="form-check custom-option mb-3">
-                                <input class="form-check-input" type="@(mcq.AllowMultipleSelections ? "checkbox" : "radio")"
-                                       name="answers[@i].Response" id="option-@i-@j" value="@mcq.Options[j]"
-                                       data-question-index="@i" />
-                                <label class="form-check-label custom-option-label" for="option-@i-@j">
-                                    @mcq.Options[j]
-                                </label>
-                            </div>
-                            }
-
+                        <div class="answer-section multiple-choice-section">
                             @if (mcq.AllowMultipleSelections)
                             {
-                            <div class="form-text text-info mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                You can select multiple answers for this question.
+                            <div class="selection-hint">
+                                <i class="fas fa-check-double me-2"></i>
+                                Multiple selections allowed
                             </div>
                             }
-                        </div>
-                        break;
-
-                        case TrueFalseQuestion tfq:
-                        <div class="true-false-options d-flex gap-3">
-                            <div class="form-check custom-option">
-                                <input class="form-check-input" type="radio" name="answers[@i].Response"
-                                       id="true-@i" value="True" data-question-index="@i" />
-                                <label class="form-check-label custom-option-label" for="true-@i">
-                                    <i class="fas fa-check text-success me-2"></i>True
-                                </label>
-                            </div>
-                            <div class="form-check custom-option">
-                                <input class="form-check-input" type="radio" name="answers[@i].Response"
-                                       id="false-@i" value="False" data-question-index="@i" />
-                                <label class="form-check-label custom-option-label" for="false-@i">
-                                    <i class="fas fa-times text-danger me-2"></i>False
-                                </label>
+                            
+                            <div class="options-grid">
+                                @for (int j = 0; j < mcq.Options.Count; j++)
+                                {
+                                <div class="option-card">
+                                    <input class="option-input" type="@(mcq.AllowMultipleSelections ? "checkbox" : "radio")"
+                                           name="answers[@i].Response" id="option-@i-@j" value="@mcq.Options[j]"
+                                           data-question-index="@i" />
+                                    <label class="option-label" for="option-@i-@j">
+                                        <div class="option-indicator">
+                                            <i class="fas fa-@(mcq.AllowMultipleSelections ? "check-square" : "circle")"></i>
+                                        </div>
+                                        <div class="option-text">@mcq.Options[j]</div>
+                                    </label>
+                                </div>
+                                }
                             </div>
                         </div>
                         break;
 
-                        case ShortAnswerQuestion saq:
-                        <div class="mb-3">
-                            <input class="form-control sa-answer" type="text" name="answers[@i].Response"
-                                   placeholder="Type your answer here..." autocomplete="off"
-                                   data-question-index="@i" />
-                            <div class="form-text text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                Type your answer in the field above. Be precise and check your spelling.
+                        case TrueFalseQuestion:
+                        <div class="answer-section true-false-section">
+                            <div class="true-false-grid">
+                                <div class="tf-option tf-true">
+                                    <input class="tf-input" type="radio" name="answers[@i].Response"
+                                           id="true-@i" value="True" data-question-index="@i" />
+                                    <label class="tf-label" for="true-@i">
+                                        <div class="tf-icon">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <div class="tf-text">True</div>
+                                    </label>
+                                </div>
+                                <div class="tf-option tf-false">
+                                    <input class="tf-input" type="radio" name="answers[@i].Response"
+                                           id="false-@i" value="False" data-question-index="@i" />
+                                    <label class="tf-label" for="false-@i">
+                                        <div class="tf-icon">
+                                            <i class="fas fa-times"></i>
+                                        </div>
+                                        <div class="tf-text">False</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        break;
+
+                        case ShortAnswerQuestion:
+                        <div class="answer-section short-answer-section">
+                            <div class="answer-input-container">
+                                <div class="input-wrapper">
+                                    <i class="fas fa-pen input-icon"></i>
+                                    <input class="answer-input" type="text" name="answers[@i].Response"
+                                           placeholder="Type your answer here..." autocomplete="off"
+                                           data-question-index="@i" />
+                                </div>
+                                <div class="input-hint">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    Be precise and check your spelling carefully
+                                </div>
+                            </div>
+                        </div>
+                        break;
+
+                        case TableQuestion tq:
+                        <div class="answer-section table-section">
+                            @if (!string.IsNullOrEmpty(tq.TableTitle))
+                            {
+                            <div class="table-title">
+                                <h5>@tq.TableTitle</h5>
+                            </div>
+                            }
+                            
+                            @if (tq.AllowMultipleSelections)
+                            {
+                            <div class="selection-hint">
+                                <i class="fas fa-check-double me-2"></i>
+                                Multiple selections allowed
+                            </div>
+                            }
+                            
+                            <div class="table-container">
+                                <table class="question-table">
+                                    @if (tq.ShowColumnHeaders && tq.TableData.ColumnHeaders.Any())
+                                    {
+                                    <thead>
+                                        <tr>
+                                            @if (tq.ShowRowHeaders)
+                                            {
+                                            <th class="corner-cell"></th>
+                                            }
+                                            @for (int col = 0; col < tq.TableData.Columns; col++)
+                                            {
+                                            <th class="column-header">
+                                                @(col < tq.TableData.ColumnHeaders.Count ? tq.TableData.ColumnHeaders[col] : $"Column {col + 1}")
+                                            </th>
+                                            }
+                                        </tr>
+                                    </thead>
+                                    }
+                                    <tbody>
+                                        @for (int row = 0; row < tq.TableData.Rows; row++)
+                                        {
+                                        <tr>
+                                            @if (tq.ShowRowHeaders)
+                                            {
+                                            <th class="row-header">
+                                                @(row < tq.TableData.RowHeaders.Count ? tq.TableData.RowHeaders[row] : $"Row {row + 1}")
+                                            </th>
+                                            }
+                                            @for (int col = 0; col < tq.TableData.Columns; col++)
+                                            {
+                                            <td class="table-cell">
+                                                <div class="cell-content">
+                                                    <input type="@(tq.AllowMultipleSelections ? "checkbox" : "radio")"
+                                                           class="table-cell-input"
+                                                           name="answers[@i].Response"
+                                                           id="table-@i-@row-@col"
+                                                           value="@row,@col"
+                                                           data-question-index="@i"
+                                                           data-row="@row"
+                                                           data-col="@col" />
+                                                    <label class="cell-label" for="table-@i-@row-@col">
+                                                        <span class="cell-text">
+                                                            @(row < tq.TableData.Cells.Count && col < tq.TableData.Cells[row].Count ? 
+                                                              tq.TableData.Cells[row][col] : "")
+                                                        </span>
+                                                    </label>
+                                                </div>
+                                            </td>
+                                            }
+                                        </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         break;
@@ -161,67 +278,37 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                         </div>
                         break;
 
-                        case ImageBasedQuestion ibq:
-                        <div class="image-based-container" data-question-index="@i" data-question-type="@ibq.QuestionType.ToString()">
-                            <div class="mb-3">
-                                <div class="image-container position-relative d-inline-block">
-                                    <img src="@ibq.ImageUrl" alt="@ibq.AltText" class="img-fluid border" 
-                                         style="max-width: @ibq.ImageWidth px; max-height: @ibq.ImageHeight px; cursor: crosshair;"
-                                         id="questionImage-@i" data-question-index="@i" />
-                                    <canvas id="overlayCanvas-@i" class="position-absolute" 
-                                            style="top: 0; left: 0; pointer-events: none;"></canvas>
-                                </div>
-                            </div>
-                            
-                            @switch (ibq.QuestionType)
-                            {
-                                case ImageQuestionType.Hotspot:
-                                    <div class="form-text text-muted mb-3">
-                                        <i class="fas fa-mouse-pointer me-1"></i>
-                                        Click on the correct areas in the image above.
-                                    </div>
-                                    break;
-                                case ImageQuestionType.Labeling:
-                                    <div class="form-text text-muted mb-3">
-                                        <i class="fas fa-tag me-1"></i>
-                                        Click on the points and enter the correct labels.
-                                    </div>
-                                    <div id="labelInputs-@i" class="label-inputs"></div>
-                                    break;
-                                case ImageQuestionType.ClickSequence:
-                                    <div class="form-text text-muted mb-3">
-                                        <i class="fas fa-list-ol me-1"></i>
-                                        Click on the areas in the correct order.
-                                    </div>
-                                    break;
-                            }
-                            
-                            <input type="hidden" name="answers[@i].Response" id="imageBasedAnswer-@i" data-question-index="@i" />
-                        </div>
-                        break;
 
                         default:
-                        <p class="text-danger">Unsupported question type</p>
+                        <div class="answer-section unsupported-section">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                This question type is not supported in the current test interface.
+                            </div>
+                        </div>
                         break;
                         }
                     </div>
                 </div>
-                }
             </div>
+            }
         </div>
 
-        <!-- Navigation Buttons -->
-        <div class="d-flex justify-content-between mb-5">
-            <button type="button" id="prevBtn" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Previous
+        <!-- Navigation Controls -->
+        <div class="navigation-controls">
+            <button type="button" id="prevBtn" class="nav-btn nav-btn-prev">
+                <i class="fas fa-chevron-left"></i>
+                <span>Previous</span>
             </button>
 
-            <div class="d-flex gap-2">
-                <button type="button" id="nextBtn" class="btn btn-primary">
-                    Next<i class="fas fa-arrow-right ms-2"></i>
+            <div class="nav-actions">
+                <button type="button" id="nextBtn" class="nav-btn nav-btn-next">
+                    <span>Next</span>
+                    <i class="fas fa-chevron-right"></i>
                 </button>
-                <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">
-                    <i class="fas fa-check-circle me-2"></i>Submit Test
+                <button type="submit" id="submitBtn" class="nav-btn nav-btn-submit" style="display: none;">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    <span>Submit Test</span>
                 </button>
             </div>
         </div>
@@ -236,20 +323,35 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
     </form>
 
     <!-- Question Navigation -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-map me-2"></i>Question Navigation</h5>
-        </div>
-        <div class="card-body">
-            <div class="question-nav d-flex flex-wrap gap-2">
-                @for (int i = 0; i < Model.Questions.Count; i++)
-                {
-                <button type="button" class="btn btn-sm btn-outline-secondary question-nav-btn"
-                        data-question-index="@i" onclick="goToQuestion(@i)">
-                    @(i + 1)
-                </button>
-                }
+    <div class="question-navigation-widget">
+        <div class="nav-header">
+            <div class="nav-title">
+                <i class="fas fa-list-ol me-2"></i>
+                <span>Question Navigator</span>
             </div>
+            <div class="nav-legend">
+                <div class="legend-item">
+                    <div class="legend-dot answered"></div>
+                    <span>Answered</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot current"></div>
+                    <span>Current</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot unanswered"></div>
+                    <span>Unanswered</span>
+                </div>
+            </div>
+        </div>
+        <div class="nav-grid">
+            @for (int i = 0; i < Model.Questions.Count; i++)
+            {
+            <button type="button" class="question-nav-item"
+                    data-question-index="@i" onclick="goToQuestion(@i)">
+                <span class="nav-number">@(i + 1)</span>
+            </button>
+            }
         </div>
     </div>
 </div>
@@ -400,6 +502,710 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         z-index: 9999 !important;
         background: white !important;
         overflow-y: auto !important;
+    }
+
+    /* Modern Test Taking Styles */
+    .test-taking-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+
+    /* Test Header Styles */
+    .test-header {
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .test-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .test-info .test-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .test-info .test-description {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .test-controls {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    /* Widget Styles */
+    .timer-widget, .attempts-widget {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 180px;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .attempts-widget {
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #8b4513;
+        box-shadow: 0 8px 25px rgba(252, 182, 159, 0.3);
+    }
+
+    .timer-icon, .attempts-icon {
+        font-size: 1.5rem;
+        opacity: 0.9;
+    }
+
+    .timer-content, .attempts-content {
+        flex: 1;
+    }
+
+    .timer-label, .attempts-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .timer-display, .attempts-display {
+        font-size: 1.3rem;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Progress Section */
+    .progress-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .progress-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .question-counter {
+        font-weight: 600;
+        color: #495057;
+        font-size: 1.1rem;
+    }
+
+    .question-type-badge {
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .progress-bar-container {
+        flex: 1;
+        height: 8px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* Question Widget */
+    .question-widget {
+        margin-bottom: 2rem;
+    }
+
+    .question-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .question-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+    }
+
+    .question-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .question-number {
+        font-weight: 600;
+    }
+
+    .question-points {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-weight: 600;
+    }
+
+    .question-text h3 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .question-content {
+        padding: 2rem;
+    }
+
+    /* Answer Sections */
+    .answer-section {
+        margin-top: 1.5rem;
+    }
+
+    /* Multiple Choice Styles */
+    .selection-hint {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        color: #1976d2;
+        padding: 0.8rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .options-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: 1fr;
+    }
+
+    .option-card {
+        position: relative;
+    }
+
+    .option-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.2rem;
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .option-label:hover {
+        background: #e3f2fd;
+        border-color: #2196f3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2);
+    }
+
+    .option-input:checked + .option-label {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+        border-color: #1976d2;
+        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+    }
+
+    .option-indicator {
+        font-size: 1.2rem;
+        opacity: 0.7;
+    }
+
+    .option-input:checked + .option-label .option-indicator {
+        opacity: 1;
+    }
+
+    .option-text {
+        flex: 1;
+        font-size: 1rem;
+    }
+
+    /* True/False Styles */
+    .true-false-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .tf-option {
+        position: relative;
+    }
+
+    .tf-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .tf-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem 1rem;
+        background: #f8f9fa;
+        border: 3px solid #e9ecef;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .tf-true .tf-label:hover {
+        background: #e8f5e8;
+        border-color: #4caf50;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.2);
+    }
+
+    .tf-false .tf-label:hover {
+        background: #ffebee;
+        border-color: #f44336;
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.2);
+    }
+
+    .tf-true .tf-input:checked + .tf-label {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+        border-color: #388e3c;
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    }
+
+    .tf-false .tf-input:checked + .tf-label {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+        border-color: #d32f2f;
+        box-shadow: 0 8px 25px rgba(244, 67, 54, 0.4);
+    }
+
+    .tf-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+
+    .tf-input:checked + .tf-label .tf-icon {
+        opacity: 1;
+    }
+
+    .tf-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    /* Short Answer Styles */
+    .answer-input-container {
+        margin-top: 1rem;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 1rem;
+        z-index: 2;
+    }
+
+    .answer-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background: #f8f9fa;
+    }
+
+    .answer-input:focus {
+        outline: none;
+        border-color: #2196f3;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+    }
+
+    .input-hint {
+        color: #6c757d;
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #ffc107;
+    }
+
+    /* Navigation Controls */
+    .navigation-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2rem 0;
+        padding: 1.5rem 2rem;
+        background: #fff;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .nav-btn-prev {
+        background: #6c757d;
+        color: white;
+    }
+
+    .nav-btn-prev:hover:not(:disabled) {
+        background: #5a6268;
+        transform: translateX(-2px);
+    }
+
+    .nav-btn-prev:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .nav-btn-next {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+    }
+
+    .nav-btn-next:hover {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+        transform: translateX(2px);
+        box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+    }
+
+    .nav-btn-submit {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+    }
+
+    .nav-btn-submit:hover {
+        background: linear-gradient(135deg, #388e3c 0%, #2e7d32 100%);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    .nav-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    /* Question Navigation Widget */
+    .question-navigation-widget {
+        background: #fff;
+        border-radius: 20px;
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    .nav-title {
+        display: flex;
+        align-items: center;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .nav-legend {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .legend-dot.answered {
+        background: #4caf50;
+    }
+
+    .legend-dot.current {
+        background: #2196f3;
+    }
+
+    .legend-dot.unanswered {
+        background: #e0e0e0;
+    }
+
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+        gap: 0.8rem;
+    }
+
+    .question-nav-item {
+        aspect-ratio: 1;
+        border: 2px solid #e0e0e0;
+        background: #f8f9fa;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .question-nav-item:hover {
+        border-color: #2196f3;
+        background: #e3f2fd;
+        transform: translateY(-2px);
+    }
+
+    .question-nav-item.active {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+        border-color: #1976d2;
+    }
+
+    .question-nav-item.btn-success {
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+        border-color: #388e3c;
+    }
+
+    .nav-number {
+        font-size: 1rem;
+    }
+
+    /* Table Question Styles */
+    .table-title h5 {
+        color: #2c3e50;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .table-container {
+        margin-top: 1rem;
+        overflow-x: auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .question-table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+    }
+
+    .corner-cell {
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a3d9a 100%) !important;
+    }
+
+    .column-header, .row-header {
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .table-cell {
+        border: 2px solid #e9ecef;
+        padding: 0;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .table-cell:hover {
+        border-color: #2196f3;
+        background: #f8fafe;
+    }
+
+    .cell-content {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+
+    .table-cell-input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+    }
+
+    .cell-label {
+        display: block;
+        padding: 1rem;
+        cursor: pointer;
+        margin: 0;
+        transition: all 0.2s ease;
+        text-align: center;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table-cell-input:checked + .cell-label {
+        background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .table-cell-input:hover + .cell-label {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .table-cell-input:checked:hover + .cell-label {
+        background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+        color: white;
+    }
+
+    .cell-text {
+        font-weight: 500;
+        line-height: 1.4;
+    }
+
+    /* Responsive table */
+    @@media (max-width: 768px) {
+        .table-container {
+            font-size: 0.9rem;
+        }
+        
+        .cell-label {
+            padding: 0.8rem;
+            min-height: 50px;
+        }
+        
+        .question-table th {
+            padding: 0.8rem;
+        }
+    }
+
+    /* Unsupported Question Type */
+    .unsupported-section .alert {
+        border-radius: 12px;
+        border: none;
+        padding: 1.5rem;
+        font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .test-taking-container {
+            padding: 1rem;
+        }
+        
+        .test-header-content {
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .test-controls {
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .timer-widget, .attempts-widget {
+            min-width: auto;
+            flex: 1;
+        }
+        
+        .progress-section {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .true-false-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .navigation-controls {
+            padding: 1rem;
+        }
+        
+        .nav-legend {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .nav-grid {
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        }
     }
 </style>
 
@@ -852,9 +1658,9 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                 badgeClass = 'bg-warning';
                 icon = 'hand-rock';
                 break;
-            case 'ImageBased':
-                badgeClass = 'bg-danger';
-                icon = 'image';
+            case 'Table':
+                badgeClass = 'bg-info';
+                icon = 'table';
                 break;
         }
 
@@ -916,13 +1722,13 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
                     const saInput = container.querySelector('input[type="text"]');
                     isAnswered = saInput && saInput.value.trim() !== '';
                     break;
+                case 'Table':
+                    const tableInputs = container.querySelectorAll('.table-cell-input');
+                    isAnswered = Array.from(tableInputs).some(input => input.checked);
+                    break;
                 case 'DragDrop':
                     const ddAnswer = container.querySelector('input[type="hidden"]');
                     isAnswered = ddAnswer && ddAnswer.value.trim() !== '';
-                    break;
-                case 'ImageBased':
-                    const ibAnswer = container.querySelector('input[type="hidden"]');
-                    isAnswered = ibAnswer && ibAnswer.value.trim() !== '';
                     break;
             }
 
@@ -1319,203 +2125,8 @@ ViewData["Title"] = "Taking Test: " + Model.Test.TestName;
         answerInput.dispatchEvent(new Event('change'));
     }
 
-    // Image-Based Questions Implementation
-    function initializeImageBased() {
-        const imageContainers = document.querySelectorAll('.image-based-container');
-        
-        imageContainers.forEach(container => {
-            const questionIndex = container.dataset.questionIndex;
-            const questionType = container.dataset.questionType;
-            const image = container.querySelector(`#questionImage-${questionIndex}`);
-            const canvas = container.querySelector(`#overlayCanvas-${questionIndex}`);
-            
-            if (!image || !canvas) return;
-            
-            // Initialize canvas when image loads
-            image.onload = () => {
-                setupImageCanvas(questionIndex);
-            };
-            
-            // If image is already loaded
-            if (image.complete) {
-                setupImageCanvas(questionIndex);
-            }
-            
-            // Add click handler
-            image.addEventListener('click', (e) => {
-                handleImageClick(e, questionIndex, questionType);
-            });
-        });
-    }
-
-    function setupImageCanvas(questionIndex) {
-        const image = document.getElementById(`questionImage-${questionIndex}`);
-        const canvas = document.getElementById(`overlayCanvas-${questionIndex}`);
-        
-        if (!image || !canvas) return;
-        
-        canvas.width = image.clientWidth;
-        canvas.height = image.clientHeight;
-        
-        // Update canvas when window resizes
-        window.addEventListener('resize', () => {
-            canvas.width = image.clientWidth;
-            canvas.height = image.clientHeight;
-            redrawImageOverlay(questionIndex);
-        });
-    }
-
-    function handleImageClick(event, questionIndex, questionType) {
-        const image = event.target;
-        const rect = image.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * image.naturalWidth;
-        const y = ((event.clientY - rect.top) / rect.height) * image.naturalHeight;
-        
-        const clickPoint = { x: x, y: y, timestamp: new Date().toISOString() };
-        
-        switch (questionType) {
-            case 'Hotspot':
-                addHotspotClick(questionIndex, clickPoint);
-                break;
-            case 'Labeling':
-                addLabelPoint(questionIndex, clickPoint);
-                break;
-            case 'ClickSequence':
-                addSequenceClick(questionIndex, clickPoint);
-                break;
-        }
-    }
-
-    const imageAnswers = {};
-
-    function addHotspotClick(questionIndex, clickPoint) {
-        if (!imageAnswers[questionIndex]) {
-            imageAnswers[questionIndex] = [];
-        }
-        
-        imageAnswers[questionIndex].push(clickPoint);
-        updateImageAnswer(questionIndex);
-        redrawImageOverlay(questionIndex);
-    }
-
-    function addLabelPoint(questionIndex, clickPoint) {
-        if (!imageAnswers[questionIndex]) {
-            imageAnswers[questionIndex] = {};
-        }
-        
-        const labelId = 'label_' + Date.now();
-        
-        // Create label input
-        const labelInputs = document.getElementById(`labelInputs-${questionIndex}`);
-        const inputGroup = document.createElement('div');
-        inputGroup.className = 'input-group mb-2';
-        inputGroup.innerHTML = `
-            <span class="input-group-text">Label ${Object.keys(imageAnswers[questionIndex]).length + 1}</span>
-            <input type="text" class="form-control" placeholder="Enter label..." 
-                   onchange="updateLabelAnswer(${questionIndex}, '${labelId}', this.value)">
-            <button type="button" class="btn btn-outline-danger" onclick="removeLabelPoint('${labelId}', ${questionIndex})">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        labelInputs.appendChild(inputGroup);
-        
-        imageAnswers[questionIndex][labelId] = '';
-        redrawImageOverlay(questionIndex);
-    }
-
-    function updateLabelAnswer(questionIndex, labelId, value) {
-        if (imageAnswers[questionIndex]) {
-            imageAnswers[questionIndex][labelId] = value;
-            updateImageAnswer(questionIndex);
-        }
-    }
-
-    function removeLabelPoint(labelId, questionIndex) {
-        if (imageAnswers[questionIndex]) {
-            delete imageAnswers[questionIndex][labelId];
-            updateImageAnswer(questionIndex);
-            redrawImageOverlay(questionIndex);
-            
-            // Remove the input
-            const labelInputs = document.getElementById(`labelInputs-${questionIndex}`);
-            const inputToRemove = labelInputs.querySelector(`button[onclick*="${labelId}"]`).closest('.input-group');
-            inputToRemove.remove();
-        }
-    }
-
-    function addSequenceClick(questionIndex, clickPoint) {
-        if (!imageAnswers[questionIndex]) {
-            imageAnswers[questionIndex] = [];
-        }
-        
-        imageAnswers[questionIndex].push(clickPoint);
-        updateImageAnswer(questionIndex);
-        redrawImageOverlay(questionIndex);
-    }
-
-    function updateImageAnswer(questionIndex) {
-        const answerInput = document.getElementById(`imageBasedAnswer-${questionIndex}`);
-        answerInput.value = JSON.stringify(imageAnswers[questionIndex]);
-        
-        // Trigger change event for tracking
-        answerInput.dispatchEvent(new Event('change'));
-    }
-
-    function redrawImageOverlay(questionIndex) {
-        const canvas = document.getElementById(`overlayCanvas-${questionIndex}`);
-        const container = document.querySelector(`[data-question-index="${questionIndex}"].image-based-container`);
-        
-        if (!canvas || !container) return;
-        
-        const ctx = canvas.getContext('2d');
-        const questionType = container.dataset.questionType;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        const image = document.getElementById(`questionImage-${questionIndex}`);
-        const answers = imageAnswers[questionIndex];
-        
-        if (!answers || !image) return;
-        
-        if (questionType === 'Hotspot' || questionType === 'ClickSequence') {
-            answers.forEach((click, index) => {
-                const x = (click.x / image.naturalWidth) * canvas.width;
-                const y = (click.y / image.naturalHeight) * canvas.height;
-                
-                ctx.fillStyle = questionType === 'ClickSequence' ? '#007bff' : '#28a745';
-                ctx.beginPath();
-                ctx.arc(x, y, 8, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                if (questionType === 'ClickSequence') {
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(index + 1, x, y + 3);
-                }
-            });
-        } else if (questionType === 'Labeling') {
-            Object.keys(answers).forEach((labelId, index) => {
-                // For labeling, we'd need to store the click points too
-                // This is simplified for now
-                const x = (index * 50 + 50) % canvas.width;
-                const y = 50;
-                
-                ctx.fillStyle = '#dc3545';
-                ctx.beginPath();
-                ctx.arc(x, y, 6, 0, 2 * Math.PI);
-                ctx.fill();
-                
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 8px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(index + 1, x, y + 2);
-            });
-        }
-    }
 
     // Initialize advanced question types
     initializeDragDrop();
-    initializeImageBased();
 </script>
 }

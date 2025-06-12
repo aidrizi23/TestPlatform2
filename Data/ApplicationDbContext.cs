@@ -45,7 +45,7 @@ namespace TestPlatform2.Data
                 .HasValue<TrueFalseQuestion>(ApplicationDbContext.QuestionType.TrueFalse)
                 .HasValue<ShortAnswerQuestion>(ApplicationDbContext.QuestionType.ShortAnswer)
                 .HasValue<DragDropQuestion>(ApplicationDbContext.QuestionType.DragDrop)
-                .HasValue<ImageBasedQuestion>(ApplicationDbContext.QuestionType.ImageBased);
+                .HasValue<TableQuestion>(ApplicationDbContext.QuestionType.Table);
 
             // TestInvite relationships
             modelBuilder.Entity<TestInvite>()
@@ -114,7 +114,7 @@ namespace TestPlatform2.Data
             TrueFalse,
             ShortAnswer,
             DragDrop,
-            ImageBased
+            Table
         }
     }
 }

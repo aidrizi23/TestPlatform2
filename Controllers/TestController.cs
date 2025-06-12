@@ -991,6 +991,82 @@ public class TestController : Controller
         }
     }
 
+    // GET: /Test/GetFilteredTestsAjax
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetFilteredTestsAjax(bool showArchived = false, string categoryId = "", string tagId = "", string search = "")
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        try
+        {
+            var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
+            
+            // Filter archived tests
+            if (!showArchived)
+            {
+                tests = tests.Where(t => !t.IsArchived).ToList();
+            }
+            else
+            {
+                tests = tests.Where(t => t.IsArchived).ToList();
+            }
+
+            // Filter by category if specified
+            if (!string.IsNullOrEmpty(categoryId))
+            {
+                tests = tests.Where(t => t.CategoryId == categoryId).ToList();
+            }
+
+            // Filter by tag if specified
+            if (!string.IsNullOrEmpty(tagId))
+            {
+                tests = tests.Where(t => t.Tags.Any(tag => tag.Id == tagId)).ToList();
+            }
+
+            // Filter by search term if specified
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                tests = tests.Where(t => 
+                    t.TestName.ToLower().Contains(search) ||
+                    (t.Description != null && t.Description.ToLower().Contains(search))
+                ).ToList();
+            }
+
+            var testData = tests.Select(t => new
+            {
+                id = t.Id,
+                name = t.TestName,
+                description = t.Description,
+                isLocked = t.IsLocked,
+                isArchived = t.IsArchived,
+                createdDate = t.CreatedAt,
+                questionCount = t.Questions.Count,
+                attemptCount = t.Attempts.Count,
+                categoryId = t.CategoryId,
+                categoryName = t.Category?.Name,
+                tags = t.Tags.Select(tag => new { id = tag.Id, name = tag.Name }).ToArray(),
+                status = t.Status.ToString(),
+                averageScore = t.Attempts.Any(a => a.IsCompleted) ? 
+                    Math.Round(t.Attempts.Where(a => a.IsCompleted).Average(a => a.Score), 1) : 0
+            }).ToArray();
+
+            return Json(new { 
+                success = true, 
+                data = testData,
+                showArchived = showArchived,
+                totalCount = testData.Length
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "Error retrieving filtered tests" });
+        }
+    }
+
     // GET: /Test/GetRecentActivityAjax
     [HttpGet]
     [Authorize]

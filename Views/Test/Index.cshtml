@@ -226,11 +226,12 @@ ViewData["Title"] = "My Tests";
                     @* </div> *@
                 </div>
                 <div class="archive-toggle">
-                    <a href="@Url.Action("Index", new { showArchived = !(ViewBag.ShowArchived ?? false) })" 
-                       class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")">
+                    <button type="button" id="archiveToggle" 
+                            class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")"
+                            data-show-archived="@(ViewBag.ShowArchived ?? false)">
                         <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
-                        @(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")
-                    </a>
+                        <span id="archiveToggleText">@(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")</span>
+                    </button>
                 </div>
                 <div class="view-options">
                     <button class="view-btn active" data-view="grid" title="Grid View">
@@ -2088,26 +2089,39 @@ ViewData["Title"] = "My Tests";
             showToast('Share URL copied to clipboard!', 'success');
         }
 
-        // Enhanced search and filter functionality with performance optimizations
+        // Enhanced AJAX-based search and filter functionality
         const searchInput = document.getElementById('searchTests');
         const sortSelect = document.getElementById('sortTests');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const tagFilter = document.getElementById('tagFilter');
+        const archiveToggle = document.getElementById('archiveToggle');
+        
         let searchTimeout;
         let lastSearchTerm = '';
-        let filterCache = new Map();
+        let currentShowArchived = archiveToggle ? archiveToggle.dataset.showArchived === 'true' : false;
+
+        // Unified filter state
+        const filterState = {
+            search: '',
+            category: '',
+            tag: '',
+            showArchived: currentShowArchived,
+            sort: 'recent'
+        };
 
         if (searchInput) {
-            // Add debounced search with caching
+            // Add debounced search
             searchInput.addEventListener('input', function(e) {
                 clearTimeout(searchTimeout);
                 const term = e.target.value.trim();
                 
-                // Performance optimization: Only filter if term changed
                 if (term === lastSearchTerm) return;
                 lastSearchTerm = term;
+                filterState.search = term;
                 
                 searchTimeout = setTimeout(() => {
-                    filterAndSortTests();
-                }, 200); // Reduced debounce time for better responsiveness
+                    loadFilteredTests();
+                }, 300);
             });
             
             // Add keyboard shortcuts
@@ -2116,16 +2130,13 @@ ViewData["Title"] = "My Tests";
                     case 'Escape':
                         this.value = '';
                         lastSearchTerm = '';
-                        filterAndSortTests();
+                        filterState.search = '';
+                        loadFilteredTests();
                         this.blur();
                         break;
                     case 'Enter':
                         e.preventDefault();
-                        // Focus first visible test card
-                        const firstVisible = document.querySelector('.test-card:not([style*="display: none"])');
-                        if (firstVisible) {
-                            firstVisible.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
+                        loadFilteredTests();
                         break;
                 }
             });
@@ -2133,141 +2144,245 @@ ViewData["Title"] = "My Tests";
 
         if (sortSelect) {
             sortSelect.addEventListener('change', function() {
-                filterAndSortTests();
+                filterState.sort = this.value;
+                loadFilteredTests();
             });
         }
 
-        // Category and Tag filter listeners
-        const categoryFilter = document.getElementById('categoryFilter');
-        const tagFilter = document.getElementById('tagFilter');
-
         if (categoryFilter) {
             categoryFilter.addEventListener('change', function() {
-                filterAndSortTests();
+                filterState.category = this.value;
+                loadFilteredTests();
             });
         }
 
         if (tagFilter) {
             tagFilter.addEventListener('change', function() {
-                filterAndSortTests();
+                filterState.tag = this.value;
+                loadFilteredTests();
             });
         }
 
-        function filterAndSortTests() {
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-            const sortBy = sortSelect ? sortSelect.value : 'recent';
-            const selectedCategory = document.getElementById('categoryFilter')?.value || '';
-            const selectedTag = document.getElementById('tagFilter')?.value || '';
-            const testCards = document.querySelectorAll('.test-card');
+        if (archiveToggle) {
+            archiveToggle.addEventListener('click', function() {
+                filterState.showArchived = !filterState.showArchived;
+                updateArchiveToggleUI();
+                loadFilteredTests();
+            });
+        }
 
-            // Create cache key for performance
-            const cacheKey = `${searchTerm}-${sortBy}-${selectedCategory}-${selectedTag}`;
+        // AJAX-based filtering function
+        async function loadFilteredTests() {
+            showLoading();
             
-            // Check if we have cached result
-            if (filterCache.has(cacheKey)) {
-                applyFilteredState(filterCache.get(cacheKey));
+            try {
+                const params = new URLSearchParams({
+                    showArchived: filterState.showArchived,
+                    categoryId: filterState.category,
+                    tagId: filterState.tag,
+                    search: filterState.search
+                });
+
+                const response = await fetch(`@Url.Action("GetFilteredTestsAjax", "Test")?${params}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderFilteredTests(result.data);
+                    updateResultsCount(result.data.length, result.data.length);
+                } else {
+                    showToast(result.message || 'Error loading tests', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading filtered tests:', error);
+                showToast('Error loading tests', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderFilteredTests(tests) {
+            const container = document.getElementById('testsGrid');
+            if (!container) return;
+
+            // Sort tests based on current sort selection
+            const sortedTests = sortTests(tests, filterState.sort);
+
+            // Clear existing content
+            container.innerHTML = '';
+
+            if (sortedTests.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state col-12">
+                        <div class="empty-state-content">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h3 class="empty-state-title">No tests found</h3>
+                            <p class="empty-state-description">
+                                ${filterState.showArchived ? 
+                                    'No archived tests match your current filters.' : 
+                                    'No active tests match your current filters.'}
+                            </p>
+                        </div>
+                    </div>
+                `;
                 return;
             }
 
-            // Convert to array for sorting
-            const testArray = Array.from(testCards);
-            
-            // Performance optimization: Use requestAnimationFrame for smoother UI
-            requestAnimationFrame(() => {
-                const results = [];
-                
-                // Filter tests with enhanced matching
-                testArray.forEach(card => {
-                    const testName = card.dataset.testName.toLowerCase();
-                    const testCategory = card.dataset.categoryId || '';
-                    const testTags = (card.dataset.tags || '').split(',').filter(tag => tag.trim());
-                    
-                    // Enhanced search - match partial words and fuzzy search
-                    const matchesSearch = !searchTerm || 
-                        testName.includes(searchTerm) ||
-                        testName.split(' ').some(word => word.startsWith(searchTerm));
-                    
-                    const matchesCategory = !selectedCategory || testCategory === selectedCategory;
-                    const matchesTag = !selectedTag || testTags.some(tag => 
-                        tag.toLowerCase().includes(selectedTag.toLowerCase()));
-                    
-                    const shouldShow = matchesSearch && matchesCategory && matchesTag;
-                    
-                    results.push({
-                        card: card,
-                        visible: shouldShow,
-                        sortValue: getSortValue(card, sortBy)
-                    });
-                });
-
-                // Sort visible tests
-                const visibleResults = results.filter(r => r.visible);
-                visibleResults.sort((a, b) => {
-                    switch (sortBy) {
-                        case 'name':
-                            return a.card.dataset.testName.localeCompare(b.card.dataset.testName);
-                        case 'questions':
-                            return parseInt(b.card.dataset.questionCount || '0') - parseInt(a.card.dataset.questionCount || '0');
-                        case 'attempts':
-                            return parseInt(b.card.dataset.attemptCount || '0') - parseInt(a.card.dataset.attemptCount || '0');
-                        case 'locked':
-                            return b.card.dataset.locked.localeCompare(a.card.dataset.locked);
-                        case 'recent':
-                        default:
-                            return parseInt(b.card.dataset.created || '0') - parseInt(a.card.dataset.created || '0');
-                    }
-                });
-
-                // Cache the result
-                filterCache.set(cacheKey, {
-                    hiddenCards: results.filter(r => !r.visible).map(r => r.card),
-                    visibleCards: visibleResults.map(r => r.card)
-                });
-
-                // Apply the filtered state
-                applyFilteredState(filterCache.get(cacheKey));
-                
-                // Update results count
-                updateResultsCount(visibleResults.length, testArray.length);
-            });
-        }
-        
-        function getSortValue(card, sortBy) {
-            switch (sortBy) {
-                case 'name': return card.dataset.testName;
-                case 'questions': return parseInt(card.dataset.questionCount || '0');
-                case 'attempts': return parseInt(card.dataset.attemptCount || '0');
-                case 'locked': return card.dataset.locked;
-                default: return parseInt(card.dataset.created || '0');
-            }
-        }
-        
-        function applyFilteredState(state) {
-            const container = document.getElementById('testsGrid');
-            if (!container || !state) return;
-            
-            // Hide filtered out cards
-            state.hiddenCards.forEach(card => {
-                card.style.display = 'none';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-            });
-            
-            // Show and reorder visible cards with animation
-            state.visibleCards.forEach((card, index) => {
-                card.style.display = 'block';
-                card.style.opacity = '1';
-                card.style.transform = 'scale(1)';
-                card.style.transition = 'all 0.3s ease';
+            // Render test cards
+            sortedTests.forEach((test, index) => {
+                const card = createTestCard(test);
                 card.style.animationDelay = `${index * 50}ms`;
                 container.appendChild(card);
             });
+        }
+
+        function sortTests(tests, sortBy) {
+            return [...tests].sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'questions':
+                        return b.questionCount - a.questionCount;
+                    case 'attempts':
+                        return b.attemptCount - a.attemptCount;
+                    case 'locked':
+                        return b.isLocked - a.isLocked;
+                    case 'recent':
+                    default:
+                        return new Date(b.createdDate) - new Date(a.createdDate);
+                }
+            });
+        }
+
+        function createTestCard(test) {
+            const card = document.createElement('div');
+            card.className = 'test-card';
+            card.dataset.testId = test.id;
+            card.dataset.testName = test.name;
+            card.dataset.questionCount = test.questionCount;
+            card.dataset.attemptCount = test.attemptCount;
+            card.dataset.locked = test.isLocked;
+            card.dataset.categoryId = test.categoryId || '';
+            card.dataset.tags = test.tags.map(t => t.name).join(',');
+            card.dataset.created = new Date(test.createdDate).getTime();
+
+            const statusClass = test.isLocked ? 'status-locked' : 'status-active';
+            const statusIcon = test.isLocked ? 'fa-lock' : 'fa-unlock';
+            const statusText = test.isLocked ? 'Locked' : 'Active';
+
+            card.innerHTML = `
+                <div class="test-card-header">
+                    <div class="card-header-content">
+                        <h5 class="test-title">${escapeHtml(test.name)}</h5>
+                        <div class="test-actions">
+                            <div class="dropdown">
+                                <button class="btn btn-link btn-sm" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="@Url.Action("Details", "Test")/${test.id}">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a></li>
+                                    <li><a class="dropdown-item edit-test-btn" href="#" data-test-id="${test.id}">
+                                        <i class="fas fa-edit me-2"></i>Edit Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item clone-test-btn" href="#" data-test-id="${test.id}">
+                                        <i class="fas fa-copy me-2"></i>Clone Test
+                                    </a></li>
+                                    <li><a class="dropdown-item toggle-lock-btn" href="#" data-test-id="${test.id}" data-is-locked="${test.isLocked}">
+                                        <i class="fas ${test.isLocked ? 'fa-unlock' : 'fa-lock'} me-2"></i>${test.isLocked ? 'Unlock' : 'Lock'} Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item delete-test-btn text-danger" href="#" data-test-id="${test.id}" data-test-name="${escapeHtml(test.name)}">
+                                        <i class="fas fa-trash me-2"></i>Delete Test
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="status-badge ${statusClass}">
+                        <i class="fas ${statusIcon}"></i> ${statusText}
+                    </span>
+                </div>
+                
+                <div class="test-card-body">
+                    <p class="test-description">${escapeHtml(test.description || 'No description provided')}</p>
+                    
+                    <div class="test-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Questions</span>
+                            <span class="stat-value">${test.questionCount}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Avg Score</span>
+                            <span class="stat-value">${test.averageScore}%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Attempts</span>
+                            <span class="stat-value">${test.attemptCount}</span>
+                        </div>
+                    </div>
+                    
+                    ${test.categoryName ? `<div class="test-category">
+                        <span class="category-badge">${escapeHtml(test.categoryName)}</span>
+                    </div>` : ''}
+                    
+                    ${test.tags.length > 0 ? `<div class="test-tags">
+                        ${test.tags.map(tag => `<span class="tag-badge">${escapeHtml(tag.name)}</span>`).join('')}
+                    </div>` : ''}
+                </div>
+                
+                <div class="test-card-footer">
+                    <div class="primary-actions">
+                        <a href="@Url.Action("Details", "Test")/${test.id}" class="btn btn-primary">
+                            <i class="fas fa-eye me-2"></i>View Details
+                        </a>
+                        <a href="@Url.Action("AllAttempts", "Test")?testId=${test.id}" class="btn btn-outline-success">
+                            <i class="fas fa-chart-bar me-2"></i>View Results
+                        </a>
+                    </div>
+                    <div class="test-features">
+                        <span class="feature-tag created-date">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            ${new Date(test.createdDate).toLocaleDateString()}
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateArchiveToggleUI() {
+            if (!archiveToggle) return;
+            
+            const icon = archiveToggle.querySelector('i');
+            const text = archiveToggle.querySelector('#archiveToggleText');
+            
+            if (filterState.showArchived) {
+                archiveToggle.className = 'btn btn-outline-secondary';
+                icon.className = 'fas fa-box me-2';
+                text.textContent = 'Show Active Tests';
+            } else {
+                archiveToggle.className = 'btn btn-outline-primary';
+                icon.className = 'fas fa-archive me-2';
+                text.textContent = 'Show Archived Tests';
+            }
+            
+            archiveToggle.dataset.showArchived = filterState.showArchived;
         }
         
         function updateResultsCount(visible, total) {
             let countElement = document.getElementById('resultsCount');
             if (!countElement) {
-                // Create results count element if it doesn't exist
                 const controlsSection = document.querySelector('.controls-section .controls-content');
                 if (controlsSection) {
                     countElement = document.createElement('div');
@@ -2278,9 +2393,8 @@ ViewData["Title"] = "My Tests";
             }
             
             if (countElement) {
-                countElement.textContent = visible === total ? 
-                    `Showing all ${total} tests` : 
-                    `Showing ${visible} of ${total} tests`;
+                const archiveText = filterState.showArchived ? 'archived' : 'active';
+                countElement.textContent = `Showing ${visible} ${archiveText} test${visible !== 1 ? 's' : ''}`;
             }
         }
 
@@ -2936,11 +3050,8 @@ ViewData["Title"] = "My Tests";
                         editTestModal.hide();
                         showToast('Test updated successfully!', 'success');
 
-                        // Update the test card in the DOM
-                        updateTestCardInDOM(data);
-                        
-                        // Re-initialize event listeners for the updated card
-                        initializeEventListeners();
+                        // Refresh the filtered tests to show the updated test
+                        loadFilteredTests();
                     } else {
                         if (result.errors) {
                             showFormErrors(this, result.errors);
@@ -2995,23 +3106,8 @@ ViewData["Title"] = "My Tests";
                         deleteTestModal.hide();
                         showToast(result.message, 'success');
 
-                        // Remove the test card from the UI with animation
-                        const testCard = document.querySelector(`[data-test-id="${currentTestId}"]`);
-                        if (testCard) {
-                            testCard.style.transform = 'scale(0)';
-                            testCard.style.opacity = '0';
-                            setTimeout(() => {
-                                testCard.remove();
-
-                                // Check if no tests left and reload page to show empty state
-                                const remainingCards = document.querySelectorAll('.test-card').length;
-                                if (remainingCards === 0) {
-                                    setTimeout(() => {
-                                        window.location.reload();
-                                    }, 500);
-                                }
-                            }, 300);
-                        }
+                        // Refresh the filtered tests
+                        loadFilteredTests();
                     } else {
                         showToast(result.message || 'Error deleting test', 'error');
                     }
@@ -4021,8 +4117,138 @@ ViewData["Title"] = "My Tests";
             return `${Math.floor(diffInSeconds / 86400)}d ago`;
         }
 
+        // Event delegation for dynamically created test cards
+        function initializeEventDelegation() {
+            const testsGrid = document.getElementById('testsGrid');
+            if (!testsGrid) return;
+
+            // Use event delegation for all test card actions
+            testsGrid.addEventListener('click', function(e) {
+                const target = e.target.closest('.edit-test-btn, .delete-test-btn, .clone-test-btn, .toggle-lock-btn');
+                if (!target) return;
+
+                e.preventDefault();
+                const testId = target.dataset.testId;
+                const testName = target.dataset.testName;
+
+                if (target.classList.contains('edit-test-btn')) {
+                    openEditModal(testId);
+                } else if (target.classList.contains('delete-test-btn')) {
+                    openDeleteModal(testId, testName);
+                } else if (target.classList.contains('clone-test-btn')) {
+                    cloneTest(testId);
+                } else if (target.classList.contains('toggle-lock-btn')) {
+                    toggleTestLock(testId);
+                }
+            });
+        }
+
+        async function openEditModal(testId) {
+            try {
+                showLoading();
+                const response = await fetch(`@Url.Action("GetTestDataAjax", "Test")?id=${testId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    await loadCategoriesForEdit();
+                    
+                    // Populate form
+                    document.getElementById('editTestId').value = result.data.id;
+                    document.getElementById('editTestName').value = result.data.testName;
+                    document.getElementById('editTestDescription').value = result.data.description || '';
+                    document.getElementById('editTimeLimit').value = result.data.timeLimit;
+                    document.getElementById('editMaxAttempts').value = result.data.maxAttempts;
+                    document.getElementById('editRandomizeQuestions').checked = result.data.randomizeQuestions;
+                    document.getElementById('editIsLocked').checked = result.data.isLocked;
+                    
+                    editTestModal.show();
+                } else {
+                    showToast(result.message || 'Error loading test data', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading test data:', error);
+                showToast('Error loading test data', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function openDeleteModal(testId, testName) {
+            currentTestId = testId;
+            document.getElementById('deleteTestName').textContent = testName;
+            deleteTestModal.show();
+        }
+
+        async function cloneTest(testId) {
+            try {
+                showLoading();
+                const response = await fetch('@Url.Action("CloneTestAjax", "Test")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ Id: testId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(`Test cloned successfully with ${result.questionsCloned} questions!`, 'success');
+                    // Refresh the filtered tests to show the new cloned test
+                    loadFilteredTests();
+                } else {
+                    showToast(result.message || 'Error cloning test', 'error');
+                }
+            } catch (error) {
+                console.error('Error cloning test:', error);
+                showToast('Error cloning test', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function toggleTestLock(testId) {
+            try {
+                showLoading();
+                const response = await fetch('@Url.Action("ToggleLockAjax", "Test")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ Id: testId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    // Refresh the filtered tests to show the updated lock status
+                    loadFilteredTests();
+                } else {
+                    showToast(result.message || 'Error updating test lock status', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating test lock status:', error);
+                showToast('Error updating test lock status', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
         // Load Recent Activity for Dashboard
         loadRecentActivity();
+
+        // Initialize event delegation for dynamically created test cards
+        initializeEventDelegation();
+
+        // Initialize filter data and load filtered tests
+        loadCategories();
+        loadTags();
+        
+        // Load tests with current filter state (preserves archive state from server)
+        loadFilteredTests();
 
         // Final initialization message
         console.log('Test Index page initialized successfully');

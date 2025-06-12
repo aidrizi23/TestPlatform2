@@ -1,16 +1,37 @@
-﻿
-// 14. Implement accessibility features (screen reader support, high contrast) (do not do)
+﻿✅ COMPLETED: make the show archived test filter be ajax and also include it in other filters.
+✅ COMPLETED: make the methods to add the questions (in the test details view so that they will be ajax only) and also keep in mind to add the ajax question endpoint to the question controller to create each type of question with ajax.
+✅ COMPLETED: redesign the take test view so that it will support all question types properly - Completely redesigned with modern UI including:
+   - Modern test header with timer and attempts widgets
+   - Professional question cards with gradient headers
+   - Enhanced multiple choice options with hover effects
+   - Sophisticated True/False buttons with animations
+   - Improved short answer input with icons
+   - Modern navigation controls and question navigator
+   - Responsive design and comprehensive styling
+   - Professional question navigation widget with status indicators
 
+✅ COMPLETED: add another type of question (table-based question type) and remove the picture question - Successfully implemented:
+   - Created TableQuestion model with comprehensive JSON-based data storage
+   - Added TableQuestion view models (Create, Edit, Dto) with validation
+   - Implemented AJAX endpoints in QuestionController for table question creation
+   - Added table question UI to Test Details view with modern styling
+   - Enhanced TakeTest view with professional table question interface
+   - Added comprehensive CSS styling for interactive table cells
+   - Updated JavaScript to handle table question status tracking
+   - Removed ImageBased question from the creation interface
+   - Added table question type badge and navigation support
 
+✅ COMPLETED: add the ability to add images to questions and save the images in the wwwroot folder based on the user and the question id - Successfully implemented:
+   - Created IImageService interface with comprehensive image handling methods
+   - Implemented ImageService with validation, resizing, and user-organized storage (/wwwroot/images/questions/{userId}/)
+   - Added SixLabors.ImageSharp package for professional image processing
+   - Registered ImageService in dependency injection container  
+   - Added image upload AJAX endpoints to QuestionController (UploadQuestionImageAjax, DeleteQuestionImageAjax)
+   - Enhanced question creation modal with professional image upload component
+   - Added comprehensive CSS styling for upload area with drag/drop visual feedback
+   - Implemented JavaScript functions for file handling, preview, and progress tracking
+   - Images are automatically validated, resized, and organized by user ID and question ID
+   - Added secure file deletion with user ownership verification
 
-
-
-
-
-
-make the show archived test filter be ajax and also include it in other filters.
-also keep in mind to make the methods to add the questions (in the test details view so that they will be ajax only) and also keep in mind to add the ajax question endpoint to the question controller to create each type of question with ajax.
-also keep in mind that i want you to redesign the take test view so that it will support the new types of quesitons. 
-i would also like you to add another type of question. the one where the user can choose in a table form. and also remove the picture question. 
-add the ability to add images to questions and save the images in the wwwroot folder based on the user and the question id. 
-also remove everything for the image based question. and also make sure to make the taketest view support all types of questions.
+REMAINING TASKS:
+also remove everything for the image based question. and also make sure to make the taketest view supports all types of questions.
