@@ -260,7 +260,7 @@ ViewData["Title"] = "My Tests";
         <div class="tests-grid" id="testsGrid">
             @foreach (var test in Model)
             {
-            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" data-category-id="@test.CategoryId" data-category-name="@(test.Category?.Name ?? "")" data-tags="@string.Join(",", test.Tags.Select(t => t.Name))" >
+            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" data-archived="@test.IsArchived.ToString().ToLower()" data-category-id="@test.CategoryId" data-category-name="@(test.Category?.Name ?? "")" data-tags="@string.Join(",", test.Tags.Select(t => t.Name))" >
                 <div class="test-card-header">
                     <div class="test-status">
                         <div class="form-check">

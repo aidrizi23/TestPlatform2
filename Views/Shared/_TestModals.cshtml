@@ -369,34 +369,39 @@
 <style>
 /* Form Section Styling */
 .form-section {
-    background: #f9fafb;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid #e5e7eb;
+    background: #fafbfc;
+    border-radius: 8px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid #e1e5e9;
+    transition: border-color 0.2s ease;
+}
+
+.form-section:hover {
+    border-color: #c6cbd1;
 }
 
 .form-section-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #374151;
+    color: #495057;
     margin: 0 0 1rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #dee2e6;
 }
 
 /* Preview Section */
 .preview-section {
-    background: #f0f4ff;
-    border-radius: 12px;
-    padding: 1.5rem;
-    border: 1px solid #bfdbfe;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid #dee2e6;
 }
 
 .preview-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    color: #1e40af;
+    color: #495057;
     margin: 0 0 1rem;
 }
 
@@ -425,39 +430,39 @@
 
 /* Modal Enhancements */
 .modal-content {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
 
 .modal-header {
-    background: #f9fafb;
-    border-bottom: 1px solid #e5e7eb;
-    border-radius: 16px 16px 0 0;
-    padding: 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+    padding: 1.25rem;
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .modal-footer {
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
-    border-radius: 0 0 16px 16px;
-    padding: 1rem 1.5rem;
+    background: #ffffff;
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 8px 8px;
+    padding: 1rem 1.25rem;
 }
 
 /* Input Group Enhancements */
 .input-group-text {
-    background: #f3f4f6;
-    border-color: #d1d5db;
-    color: #6b7280;
+    background: #f8f9fa;
+    border-color: #ced4da;
+    color: #6c757d;
 }
 
 .form-control:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
 /* Warning Icon */
@@ -468,10 +473,10 @@
 
 /* Button Enhancements */
 .btn {
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    transition: all 0.2s ease;
+    padding: 0.5rem 1rem;
+    transition: all 0.15s ease;
 }
 
 .btn:hover {
@@ -479,29 +484,29 @@
 }
 
 .btn-primary {
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
 }
 
 .btn-success {
-    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+    box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);
 }
 
 .btn-info {
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 2px 4px rgba(13, 202, 240, 0.2);
 }
 
 .btn-danger {
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
 }
 
 /* Form Switch */
 .form-check-input:checked {
-    background-color: #2563eb;
-    border-color: #2563eb;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
 }
 
 .form-check-input:focus {
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
 /* Responsive Modal */
@@ -1124,22 +1129,66 @@ function handleCreateQuestionSubmit(e) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
 
-    // Simulate API call (replace with actual implementation)
-    setTimeout(() => {
-        console.log('Creating question:', questionData);
-        showToast('Question created successfully!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('createQuestionModal')).hide();
+    // Call the appropriate AJAX endpoint based on question type
+    let endpoint = '';
+    switch (type) {
+        case 'TrueFalse':
+            endpoint = '/Question/CreateTrueFalseAjax';
+            break;
+        case 'MultipleChoice':
+            endpoint = '/Question/CreateMultipleChoiceAjax';
+            break;
+        case 'ShortAnswer':
+            endpoint = '/Question/CreateShortAnswerAjax';
+            break;
+        default:
+            showToast('Invalid question type', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+    }
 
-        // Reset form and button
-        form.reset();
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+        },
+        body: JSON.stringify(questionData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Question created successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('createQuestionModal')).hide();
+            
+            // Reset form
+            form.reset();
+            
+            // Refresh the page to show the new question immediately
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        } else {
+            // Handle validation errors
+            if (data.errors && Array.isArray(data.errors)) {
+                data.errors.forEach(error => {
+                    showToast(`${error.Field}: ${error.Message}`, 'error');
+                });
+            } else {
+                showToast('Error creating question: ' + (data.message || 'Unknown error'), 'error');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error creating question:', error);
+        showToast('Error creating question. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Restore submit button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
-
-        // Refresh the page or update the questions list
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
-    }, 1500);
+    });
 }
 
 // Edit Question Modal
@@ -1169,10 +1218,37 @@ window.openDeleteQuestionModal = function(questionId) {
     `;
 
     document.getElementById('confirmDeleteBtn').onclick = function() {
-        console.log('Deleting question:', questionId);
-        showToast('Question deleted successfully!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
-        setTimeout(() => window.location.reload(), 1000);
+        const btn = this;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+        
+        fetch('/Question/DeleteAjax', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify({ id: questionId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message || 'Question deleted successfully!', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                showToast('Error deleting question: ' + (data.message || 'Unknown error'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting question:', error);
+            showToast('Error deleting question. Please try again.', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
     };
 
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));

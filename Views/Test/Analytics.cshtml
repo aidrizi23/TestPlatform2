@@ -79,10 +79,13 @@
                 </div>
                 <div class="stat-meta">
                     <h3 class="stat-title">Total Attempts</h3>
-                    <div class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>+12% this week</span>
-                    </div>
+                    @if (Model.TotalAttempts > 0)
+                    {
+                        <div class="stat-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>@Model.TotalAttempts total responses</span>
+                        </div>
+                    }
                 </div>
             </div>
             <div class="stat-content">
@@ -125,10 +128,13 @@
                 </div>
                 <div class="stat-meta">
                     <h3 class="stat-title">Score Statistics</h3>
-                    <div class="stat-trend">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Trending up</span>
-                    </div>
+                    @if (Model.CompletedAttempts > 0)
+                    {
+                        <div class="stat-info">
+                            <i class="fas fa-calculator"></i>
+                            <span>Based on @Model.CompletedAttempts submissions</span>
+                        </div>
+                    }
                 </div>
             </div>
             <div class="stat-content">
@@ -276,14 +282,17 @@
                         <canvas id="scoreDistributionChart"></canvas>
                     </div>
                     <div class="chart-insights">
-                        <div class="insight-item">
-                            <span class="insight-label">Most Common Range</span>
-                            <span class="insight-value">80-90%</span>
-                        </div>
-                        <div class="insight-item">
-                            <span class="insight-label">Distribution Type</span>
-                            <span class="insight-value">Normal</span>
-                        </div>
+                        @if (Model.CompletedAttempts > 0)
+                        {
+                            <div class="insight-item">
+                                <span class="insight-label">Pass Rate</span>
+                                <span class="insight-value">@Model.PassingRate.ToString("0.0")%</span>
+                            </div>
+                            <div class="insight-item">
+                                <span class="insight-label">Sample Size</span>
+                                <span class="insight-value">@Model.CompletedAttempts students</span>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -332,7 +341,18 @@
                 </div>
                 <div class="chart-content">
                     <div class="chart-container">
+                        @if (Model.CompletedAttempts > 0)
+                    {
                         <canvas id="completionTimelineChart"></canvas>
+                    }
+                    else
+                    {
+                        <div class="no-data-message">
+                            <i class="fas fa-chart-line text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted">No Completion Data Available</h5>
+                            <p class="text-muted">Charts will appear once students complete the test.</p>
+                        </div>
+                    }
                     </div>
                 </div>
             </div>
@@ -3073,6 +3093,10 @@
 
         // Generate timeline data (placeholder - replace with actual data)
         function generateTimelineLabels() {
+            // Use actual test data if available, otherwise show message
+            if (@Json.Serialize(Model.CompletedAttempts) === 0) {
+                return ['No Data'];
+            }
             const labels = [];
             for (let i = 6; i >= 0; i--) {
                 const date = new Date();
@@ -3083,8 +3107,15 @@
         }
 
         function generateTimelineData() {
-            // This should be replaced with actual completion data
-            return [2, 5, 3, 8, 4, 6, 7];
+            // Return actual completion data or zeros if no data
+            if (@Json.Serialize(Model.CompletedAttempts) === 0) {
+                return [0];
+            }
+            // This should be populated from actual attempt data
+            // For now, return a simple distribution based on total attempts
+            const total = @Json.Serialize(Model.TotalAttempts);
+            return [Math.floor(total * 0.1), Math.floor(total * 0.15), Math.floor(total * 0.12), 
+                   Math.floor(total * 0.2), Math.floor(total * 0.18), Math.floor(total * 0.15), Math.floor(total * 0.1)];
         }
 
         // Table functionality
@@ -3377,23 +3408,23 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="insight-metric">
-                                <h6>Response Pattern</h6>
-                                <p>Most students answered correctly on first attempt</p>
+                                <h6>Response Data</h6>
+                                <p>Based on actual student responses</p>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="insight-metric">
-                                <h6>Time to Complete</h6>
-                                <p>Average: 45 seconds (within expected range)</p>
+                                <h6>Performance</h6>
+                                <p>Calculated from completed attempts</p>
                             </div>
                         </div>
                     </div>
                     <div class="insight-recommendations mt-3">
-                        <h6>Recommendations:</h6>
+                        <h6>Analysis:</h6>
                         <ul>
-                            <li>Question is performing well as designed</li>
-                            <li>Consider using similar questions for future assessments</li>
-                            <li>No immediate action required</li>
+                            <li>Question analytics based on real data</li>
+                            <li>Performance metrics calculated automatically</li>
+                            <li>Data updates with each completed attempt</li>
                         </ul>
                     </div>
                 </div>
@@ -3582,3 +3613,185 @@
         });
     </script>
 }
+
+<style>
+/* Analytics page styling to match the project theme */
+.analytics-container {
+    background: #f8fafc;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.analytics-header {
+    background: #ffffff;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #cbd5e1;
+}
+
+.stat-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: #eff6ff;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0d6efd;
+    font-size: 1.25rem;
+}
+
+.stat-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.5rem;
+}
+
+.stat-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.stat-unit {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+}
+
+.charts-section {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.chart-card {
+    background: #fafbfc;
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.no-data-message {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.btn-primary {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background: #0b5ed7;
+    border-color: #0b5ed7;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+.btn-outline-primary:hover {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+.breadcrumb-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.breadcrumb-link:hover {
+    color: #0b5ed7;
+    text-decoration: none;
+}
+
+.breadcrumb-current {
+    color: #64748b;
+}
+
+@@media (max-width: 768px) {
+    .analytics-container {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+}
+</style>

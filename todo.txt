@@ -1,7 +1,12 @@
-﻿
-it has an error when i create the questions firstly and then i need to refresh it for the first question that i create. 
-also i want you to make the modals a little better and more professional (do not use gradients or super cringe animations)
-also i want you to deal with the index view and make it just a little better and redesign the test card completely
-add a better logic for archived tests and make the ui better for them.
-fix the ui of the test analytics and never use mock data there. and also make it with the same theme as the index view.
-also make the 
+﻿ok now make it in the details view so that when the user wants to update the question it will not allow them to update it if the tets has some attempts completed already. 
+also fix the theme of the index view and make it like the one of the home screen. and the details view. 
+also fix the analytics view so that it will show the correct data and will not be super complicated. i want it to also never use mock data.
+also update the modals in the details view. the multiple choice modal shall be better. the user can choose many options only if the toggle is triggered.
+also update the way the questions get shown in the test detals view when they get created.
+fix the question analytics view so that it shows the corerct data and is not complicated. it should also never use mock data.
+if the test does not have any attepmts disable the question analytics button.
+if the test has attempts, then the question analytics button should be enabled and show the correct data. and also the delete quesiton button shall be disabled if the test has attempts. show it but just make it unavaliable.
+also remove the square to choose multiple project cards in the index view.
+also fix the way the archived projects are handled with and give the user the option to unarchive them and to archive them in the index view. make this all with ajax.
+fix the settings dropdown in the header so that it works correctly and does not have any issues with the dropdown menu.
+try to restructure the index view to make it more us    er friendly and also more visually appealing and pleasing while also keeping it super professional.
