@@ -536,9 +536,18 @@ ViewData["Title"] = "Test Details";
                                         <i class="fas fa-chart-line"></i>
                                     </button>
                                 }
-                                <button type="button" class="btn btn-sm btn-outline-warning" title="Edit Question" onclick="openEditQuestionModal('@question.Id')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
+                                @if (hasCompletedAttempts)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-warning" disabled title="Cannot edit questions from tests with completed attempts">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-warning" title="Edit Question" onclick="openEditQuestionModal('@question.Id')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                }
                                 @if (hasCompletedAttempts)
                                 {
                                     <button type="button" class="btn btn-sm btn-outline-danger" disabled title="Cannot delete questions from tests with completed attempts">

@@ -9,12 +9,12 @@
 
 /* Hero Section */
 .hero-section {
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: #ffffff;
     border-radius: 12px;
     padding: 3rem 2rem;
     margin-bottom: 2rem;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .hero-content {
@@ -157,11 +157,6 @@
     padding: 1rem;
 }
 
-.loading-spinner {
-    text-align: center;
-    color: #6b7280;
-    font-size: 0.875rem;
-}
 
 .performance-stats {
     display: flex;
@@ -491,11 +486,11 @@
 /* Test Cards - Completely Redesigned */
 .test-card {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
     overflow: hidden;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     position: relative;
     height: 100%;
     display: flex;
@@ -503,9 +498,9 @@
 }
 
 .test-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: #cbd5e1;
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border-color: #2563eb;
 }
 
 /* Archived Test Cards */
@@ -776,6 +771,12 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.secondary-actions .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* Form Sections */
 .form-section {
     background: #f9fafb;
@@ -891,14 +892,16 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background-color: #2563eb;
     color: white;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    border: 1px solid #2563eb;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #1d4ed8, #1e40af);
-    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.25);
 }
 
 .btn-outline-primary {
@@ -931,40 +934,6 @@
     font-size: 1.125rem;
 }
 
-/* Loading States */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(4px);
-}
-
-.loading-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 16px;
-    text-align: center;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-.loading-content .spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
-.loading-content p {
-    color: #6b7280;
-    font-weight: 500;
-    margin-top: 1rem;
-    margin-bottom: 0;
-}
 
 /* Toast Notifications */
 .toast-container {

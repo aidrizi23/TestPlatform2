@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "8Y+8nxKTE1ycdNt5JuYHnPV4ANaoIG7dfKUa6OmqZ+g=",
+  "Hash": "bXumIi9UvDzQrwaMUT7QVNMlZcMsId8xfn0bDYpOiD0=",
   "Source": "TestPlatform2",
   "BasePath": "_content/TestPlatform2",
   "Mode": "Default",
@@ -1155,6 +1155,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "/home/albi/.nuget/packages/microsoft.aspnetcore.identity.ui/8.0.10/staticwebassets/V5/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/analytics.css",
+      "SourceId": "TestPlatform2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/albi/RiderProjects/TestPlatform3/wwwroot/",
+      "BasePath": "_content/TestPlatform2",
+      "RelativePath": "css/analytics.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/css/analytics.css"
     },
     {
       "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/home.css",

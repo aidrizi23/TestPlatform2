@@ -1,6 +1,10 @@
 {
   "Files": [
     {
+      "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/analytics.css",
+      "PackagePath": "staticwebassets/css/analytics.css"
+    },
+    {
       "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/home.css",
       "PackagePath": "staticwebassets/css/home.css"
     },

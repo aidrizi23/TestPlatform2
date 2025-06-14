@@ -132,7 +132,7 @@
     
     <!-- Fix Modal Interaction Issues -->
     <script>
-        // Ensure modals are interactive
+        // Ensure modals and dropdowns are interactive
         document.addEventListener('DOMContentLoaded', function() {
             // Fix modal backdrop and dialog interaction
             const fixModals = function() {
@@ -151,8 +151,53 @@
                 });
             };
             
+            // Fix dropdown functionality
+            const fixDropdowns = function() {
+                // Ensure all dropdowns are properly initialized
+                document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(dropdown => {
+                    if (!dropdown.hasAttribute('data-bs-initialized')) {
+                        new bootstrap.Dropdown(dropdown);
+                        dropdown.setAttribute('data-bs-initialized', 'true');
+                    }
+                });
+                
+                // Handle dropdown clicks properly
+                document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
+                    toggle.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Close other dropdowns
+                        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                            if (menu !== this.nextElementSibling) {
+                                menu.classList.remove('show');
+                                menu.parentElement.querySelector('.dropdown-toggle').setAttribute('aria-expanded', 'false');
+                            }
+                        });
+                        
+                        // Toggle current dropdown
+                        const menu = this.nextElementSibling;
+                        if (menu && menu.classList.contains('dropdown-menu')) {
+                            menu.classList.toggle('show');
+                            this.setAttribute('aria-expanded', menu.classList.contains('show'));
+                        }
+                    });
+                });
+                
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.dropdown')) {
+                        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+                            menu.classList.remove('show');
+                            menu.parentElement.querySelector('.dropdown-toggle').setAttribute('aria-expanded', 'false');
+                        });
+                    }
+                });
+            };
+            
             // Run on page load
             fixModals();
+            fixDropdowns();
             
             // Also run when modals are shown
             document.addEventListener('shown.bs.modal', fixModals);

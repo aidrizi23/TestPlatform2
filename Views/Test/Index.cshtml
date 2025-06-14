@@ -3,6 +3,8 @@
 ViewData["Title"] = "My Tests";
 }
 
+@Html.AntiForgeryToken()
+
 @section Styles
 {
 <link rel="stylesheet" href="~/css/test-index.css" asp-append-version="true" />
@@ -87,9 +89,7 @@ ViewData["Title"] = "My Tests";
                         </h5>
                     </div>
                     <div class="card-body" id="recentActivityContent">
-                        <div class="loading-spinner">
-                            <i class="fas fa-spinner fa-spin"></i> Loading...
-                        </div>
+                        <div class="text-muted text-center">No recent activity</div>
                     </div>
                 </div>
 
@@ -834,105 +834,7 @@ ViewData["Title"] = "My Tests";
     </div>
 </div>
 
-<!-- Bulk Delete Modal -->
-<div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title" id="bulkDeleteModalLabel">
-                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                    Confirm Bulk Delete
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            @* <div class="modal-body"> *@
-            @*     <p class="mb-3">Are you sure you want to delete <strong><span id="bulkDeleteCount"></span> selected tests</strong>?</p> *@
-            @*     <div class="alert alert-danger border-0"> *@
-            @*         <i class="fas fa-exclamation-circle me-2"></i> *@
-            @*         This action cannot be undone and will permanently delete all questions and student attempts for these tests. *@
-            @*     </div> *@
-            @* </div> *@
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-danger" id="confirmBulkDelete">
-                    <i class="fas fa-trash me-2"></i>Delete Tests
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Bulk Archive Modal -->
-<div class="modal fade" id="bulkArchiveModal" tabindex="-1" aria-labelledby="bulkArchiveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title" id="bulkArchiveModalLabel">
-                    <i class="fas fa-archive text-info me-2"></i>
-                    Confirm Bulk Archive
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-3">Are you sure you want to archive <strong><span id="bulkArchiveCount"></span> selected tests</strong>?</p>
-                <div class="alert alert-info border-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Archived tests will be hidden from the main view but can be restored at any time.
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-info" id="confirmBulkArchive">
-                    <i class="fas fa-archive me-2"></i>Archive Tests
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Unarchive Modal -->
-<div class="modal fade" id="bulkUnarchiveModal" tabindex="-1" aria-labelledby="bulkUnarchiveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title" id="bulkUnarchiveModalLabel">
-                    <i class="fas fa-box-open text-success me-2"></i>
-                    Confirm Bulk Unarchive
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="mb-3">Are you sure you want to unarchive <strong><span id="bulkUnarchiveCount"></span> selected tests</strong>?</p>
-                <div class="alert alert-success border-0">
-                    <i class="fas fa-info-circle me-2"></i>
-                    Unarchived tests will be restored to the active tests view.
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-success" id="confirmBulkUnarchive">
-                    <i class="fas fa-box-open me-2"></i>Unarchive Tests
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-3 mb-0">Processing...</p>
-    </div>
-</div>
 
 <!-- Styles moved to external CSS file -->
 @section Scripts {
@@ -940,14 +842,11 @@ ViewData["Title"] = "My Tests";
     document.addEventListener('DOMContentLoaded', function() {
         // Global variables
         let currentTestId = null;
-        let selectedTests = new Set();
-        const loadingOverlay = document.getElementById('loadingOverlay');
 
         // Initialize components
         const createTestModal = new bootstrap.Modal(document.getElementById('createTestModal'));
         const editTestModal = new bootstrap.Modal(document.getElementById('editTestModal'));
         const deleteTestModal = new bootstrap.Modal(document.getElementById('deleteTestModal'));
-        const bulkDeleteModal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
 
         // Form elements
         const createTestForm = document.getElementById('createTestForm');
@@ -966,13 +865,6 @@ ViewData["Title"] = "My Tests";
         }
 
         // Utility functions
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
-
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
 
         function clearFormErrors(form) {
             const inputs = form.querySelectorAll('.form-control');
@@ -1169,16 +1061,26 @@ ViewData["Title"] = "My Tests";
 
         if (archiveToggle) {
             archiveToggle.addEventListener('click', function() {
+                // Add loading state
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
+                this.disabled = true;
+
+                // Toggle state
                 filterState.showArchived = !filterState.showArchived;
                 updateArchiveToggleUI();
-                loadFilteredTests();
+                
+                // Load filtered tests and re-enable button
+                loadFilteredTests().finally(() => {
+                    // Re-enable button (updateArchiveToggleUI will set correct content)
+                    this.disabled = false;
+                    updateArchiveToggleUI();
+                });
             });
         }
 
         // AJAX-based filtering function
         async function loadFilteredTests() {
-            showLoading();
-            
             try {
                 const params = new URLSearchParams({
                     showArchived: filterState.showArchived,
@@ -1199,8 +1101,6 @@ ViewData["Title"] = "My Tests";
             } catch (error) {
                 console.error('Error loading filtered tests:', error);
                 showToast('Error loading tests', 'error');
-            } finally {
-                hideLoading();
             }
         }
 
@@ -1528,12 +1428,6 @@ ViewData["Title"] = "My Tests";
                     el.dataset.testName = newTestName;
                 });
 
-                // Update checkbox
-                const checkbox = newCard.querySelector('.test-checkbox');
-                if (checkbox) {
-                    checkbox.dataset.testId = newTestId;
-                    checkbox.checked = false;
-                }
 
                 // Update lock button
                 const lockButton = newCard.querySelector('.lock-test-btn');
@@ -1706,8 +1600,6 @@ ViewData["Title"] = "My Tests";
                     const testId = this.dataset.testId;
                     currentTestId = testId;
 
-                    showLoading();
-
                     try {
                         const response = await fetch(`@Url.Action("GetTestDataAjax", "Test")?id=${testId}`, {
                             headers: {
@@ -1763,8 +1655,6 @@ ViewData["Title"] = "My Tests";
                     } catch (error) {
                         console.error('Error loading test data:', error);
                         showToast('Error loading test data', 'error');
-                    } finally {
-                        hideLoading();
                     }
                 });
             });
@@ -1860,7 +1750,7 @@ ViewData["Title"] = "My Tests";
                     const submitButton = this;
                     const originalText = submitButton.innerHTML;
 
-                    showLoading();
+                    
                     submitButton.disabled = true;
                     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cloning...';
 
@@ -1888,7 +1778,7 @@ ViewData["Title"] = "My Tests";
                         console.error('Error cloning test:', error);
                         showToast('Error cloning test', 'error');
                     } finally {
-                        hideLoading();
+                        
                         submitButton.disabled = false;
                         submitButton.innerHTML = originalText;
                     }
@@ -1965,7 +1855,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this.querySelector('.btn-create-test');
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
                 clearFormErrors(this);
@@ -2012,7 +1902,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error creating test:', error);
                     showToast('An error occurred while creating the test', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
@@ -2043,7 +1933,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this.querySelector('.btn-update-test');
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
                 clearFormErrors(this);
@@ -2090,7 +1980,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error updating test:', error);
                     showToast('An error occurred while updating the test', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
@@ -2113,7 +2003,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this;
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
 
@@ -2142,7 +2032,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error deleting test:', error);
                     showToast('Error deleting test', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                     currentTestId = null;
@@ -2170,7 +2060,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this;
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
 
@@ -2199,7 +2089,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error deleting tests:', error);
                     showToast('Error deleting tests', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
@@ -2215,7 +2105,7 @@ ViewData["Title"] = "My Tests";
                 return;
             }
 
-            showLoading();
+            
 
             try {
                 const response = await fetch(`@Url.Action("BulkLockTestsAjax", "Test")`, {
@@ -2245,7 +2135,7 @@ ViewData["Title"] = "My Tests";
                 console.error('Error in bulk lock operation:', error);
                 showToast(`Error ${lock ? 'locking' : 'unlocking'} tests`, 'error');
             } finally {
-                hideLoading();
+                
             }
         }
 
@@ -2325,7 +2215,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this;
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Archiving...';
 
@@ -2354,7 +2244,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error archiving tests:', error);
                     showToast('Error archiving tests', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
@@ -2368,7 +2258,7 @@ ViewData["Title"] = "My Tests";
                 const submitButton = this;
                 const originalText = submitButton.innerHTML;
 
-                showLoading();
+                
                 submitButton.disabled = true;
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Unarchiving...';
 
@@ -2397,7 +2287,7 @@ ViewData["Title"] = "My Tests";
                     console.error('Error unarchiving tests:', error);
                     showToast('Error unarchiving tests', 'error');
                 } finally {
-                    hideLoading();
+                    
                     submitButton.disabled = false;
                     submitButton.innerHTML = originalText;
                 }
@@ -3102,7 +2992,19 @@ ViewData["Title"] = "My Tests";
             if (!container) return;
 
             try {
-                const response = await fetch('@Url.Action("GetRecentActivityAjax", "Test")');
+                const response = await fetch('@Url.Action("GetRecentActivityAjax", "Test")', {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
 
                 if (result.success && result.data && result.data.length > 0) {
@@ -3172,7 +3074,6 @@ ViewData["Title"] = "My Tests";
 
         async function openEditModal(testId) {
             try {
-                showLoading();
                 const response = await fetch(`@Url.Action("GetTestDataAjax", "Test")?id=${testId}`);
                 const result = await response.json();
 
@@ -3195,8 +3096,6 @@ ViewData["Title"] = "My Tests";
             } catch (error) {
                 console.error('Error loading test data:', error);
                 showToast('Error loading test data', 'error');
-            } finally {
-                hideLoading();
             }
         }
 
@@ -3208,7 +3107,6 @@ ViewData["Title"] = "My Tests";
 
         async function cloneTest(testId) {
             try {
-                showLoading();
                 const response = await fetch('@Url.Action("CloneTestAjax", "Test")', {
                     method: 'POST',
                     headers: {
@@ -3230,14 +3128,11 @@ ViewData["Title"] = "My Tests";
             } catch (error) {
                 console.error('Error cloning test:', error);
                 showToast('Error cloning test', 'error');
-            } finally {
-                hideLoading();
             }
         }
 
         async function toggleTestLock(testId) {
             try {
-                showLoading();
                 const response = await fetch('@Url.Action("ToggleLockAjax", "Test")', {
                     method: 'POST',
                     headers: {
@@ -3259,44 +3154,66 @@ ViewData["Title"] = "My Tests";
             } catch (error) {
                 console.error('Error updating test lock status:', error);
                 showToast('Error updating test lock status', 'error');
-            } finally {
-                hideLoading();
             }
         }
-
-        // Load Recent Activity for Dashboard
-        loadRecentActivity();
 
         // Initialize event delegation for dynamically created test cards
         initializeEventDelegation();
 
-        // Initialize filter data and load filtered tests
+        // Initialize filter data
         loadCategories();
         loadTags();
         
-        // Load tests with current filter state (preserves archive state from server)
-        loadFilteredTests();
+        // Load Recent Activity for Dashboard (async)
+        loadRecentActivity();
+        
+        // Only load filtered tests if we need to (when filters are applied or no server data)
+        const testsGrid = document.getElementById('testsGrid');
+        const hasServerRenderedTests = testsGrid && testsGrid.children.length > 0;
+        
+        if (!hasServerRenderedTests) {
+            loadFilteredTests();
+        }
 
         // Archive/Unarchive functionality
         window.toggleArchiveTest = async function(testId) {
+            const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+            const archiveBtn = testCard?.querySelector('[onclick*="toggleArchiveTest"]');
+            
+            // Store original button content
+            const originalBtnContent = archiveBtn?.innerHTML;
+            
             try {
-                showLoadingOverlay();
-                
-                const response = await fetch('/Test/ToggleArchiveTestAjax', {
+                // Add loading state to button
+                if (archiveBtn) {
+                    archiveBtn.disabled = true;
+                    archiveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+                }
+
+                // Get CSRF token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                             document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+
+                const response = await fetch('@Url.Action("ToggleArchiveTestAjax", "Test")', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('[name="__RequestVerificationToken"]').value
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-RequestVerificationToken': token
                     },
                     body: JSON.stringify({ Id: testId })
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const result = await response.json();
                 
                 if (result.success) {
                     showToast(result.message, 'success');
                     
-                    // Update the test card UI
+                    // Update the test card UI immediately
                     const testCard = document.querySelector(`[data-test-id="${testId}"]`);
                     if (testCard) {
                         // Update status badge
@@ -3308,34 +3225,43 @@ ViewData["Title"] = "My Tests";
                             statusIcon.className = 'fas fa-archive';
                             statusBadge.innerHTML = '<i class="fas fa-archive"></i> Archived';
                         } else {
-                            // Reset to original status
-                            statusBadge.className = 'status-badge status-active';
-                            statusIcon.className = 'fas fa-unlock';
-                            statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
+                            // Determine the correct active status
+                            const isLocked = testCard.getAttribute('data-locked') === 'true';
+                            if (isLocked) {
+                                statusBadge.className = 'status-badge status-locked';
+                                statusIcon.className = 'fas fa-lock';
+                                statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
+                            } else {
+                                statusBadge.className = 'status-badge status-active';
+                                statusIcon.className = 'fas fa-unlock';
+                                statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
+                            }
                         }
                         
                         // Update archive button
                         const archiveBtn = testCard.querySelector('[onclick*="toggleArchiveTest"]');
-                        const archiveBtnIcon = archiveBtn.querySelector('i');
                         
                         if (result.isArchived) {
                             archiveBtn.title = 'Unarchive Test';
-                            archiveBtnIcon.className = 'fas fa-box-open me-1';
                             archiveBtn.innerHTML = '<i class="fas fa-box-open me-1"></i>Unarchive';
                         } else {
                             archiveBtn.title = 'Archive Test';
-                            archiveBtnIcon.className = 'fas fa-archive me-1';
                             archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i>Archive';
                         }
                         
                         // Update data attributes
                         testCard.setAttribute('data-archived', result.isArchived.toString());
+                        
+                        // If we're viewing archived tests and this was unarchived, hide the card
+                        // If we're viewing active tests and this was archived, hide the card
+                        const showingArchived = filterState.showArchived;
+                        if ((showingArchived && !result.isArchived) || (!showingArchived && result.isArchived)) {
+                            testCard.style.display = 'none';
+                            // Update the results count
+                            const visibleCards = document.querySelectorAll('.test-card:not([style*="display: none"])').length;
+                            updateResultsCount(visibleCards, visibleCards);
+                        }
                     }
-                    
-                    // Reload the filtered tests to reflect changes
-                    setTimeout(() => {
-                        loadFilteredTests();
-                    }, 1000);
                     
                 } else {
                     showToast(result.message || 'Error updating archive status', 'error');
@@ -3344,7 +3270,15 @@ ViewData["Title"] = "My Tests";
                 console.error('Error toggling archive status:', error);
                 showToast('An error occurred while updating the archive status', 'error');
             } finally {
-                hideLoadingOverlay();
+                // Reset button state
+                if (archiveBtn) {
+                    archiveBtn.disabled = false;
+                    // If we successfully updated, the button content will be set by the success handler
+                    // If there was an error, restore the original content
+                    if (originalBtnContent && archiveBtn.innerHTML.includes('Processing...')) {
+                        archiveBtn.innerHTML = originalBtnContent;
+                    }
+                }
             }
         };
 

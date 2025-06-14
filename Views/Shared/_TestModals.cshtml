@@ -1040,7 +1040,14 @@ function loadQuestionTypeContent(mode, type, data = null) {
                                     <i class="fas fa-list-ul me-2"></i>Allow Multiple Correct Answers
                                 </label>
                             </div>
-                            <div class="form-text">Students can select more than one correct answer</div>
+                            <div class="form-text">
+                                <span id="${prefix}ToggleHelp">
+                                    ${data?.allowMultipleSelections ? 
+                                        '<i class="fas fa-check-square text-success me-1"></i>Students can select multiple correct answers' : 
+                                        '<i class="fas fa-dot-circle text-primary me-1"></i>Students can select only one correct answer'
+                                    }
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1129,6 +1136,14 @@ function setupMultipleChoiceToggle(prefix) {
         const allowMultiple = toggleElement.checked;
         const container = document.getElementById(prefix + 'OptionsContainer');
         const checkboxes = container.querySelectorAll('.option-correct');
+        const helpText = document.getElementById(prefix + 'ToggleHelp');
+        
+        // Update help text
+        if (helpText) {
+            helpText.innerHTML = allowMultiple ? 
+                '<i class="fas fa-check-square text-success me-1"></i>Students can select multiple correct answers' : 
+                '<i class="fas fa-dot-circle text-primary me-1"></i>Students can select only one correct answer';
+        }
         
         // Remove existing event listeners
         checkboxes.forEach(checkbox => {
@@ -1158,6 +1173,7 @@ function setupMultipleChoiceToggle(prefix) {
                     checkedCount++;
                     if (checkedCount > 1) {
                         checkbox.checked = false;
+                        checkbox.closest('.option-group').classList.remove('correct-option');
                     }
                 }
             });
