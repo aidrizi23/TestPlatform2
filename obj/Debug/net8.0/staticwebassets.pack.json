@@ -9,6 +9,14 @@
       "PackagePath": "staticwebassets/css/site.css"
     },
     {
+      "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/test-details.css",
+      "PackagePath": "staticwebassets/css/test-details.css"
+    },
+    {
+      "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/test-index.css",
+      "PackagePath": "staticwebassets/css/test-index.css"
+    },
+    {
       "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/favicon.ico",
       "PackagePath": "staticwebassets/favicon.ico"
     },
