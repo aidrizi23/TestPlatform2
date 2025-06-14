@@ -509,6 +509,107 @@
     box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
 }
 
+/* Multiple Choice Modal Enhancements */
+.correct-option {
+    background-color: #f0f9ff !important;
+    border-color: #3b82f6 !important;
+    border-width: 2px !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.correct-option .form-check-input:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.single-selection-mode .option-group {
+    position: relative;
+}
+
+.single-selection-mode .option-group::before {
+    content: '●';
+    position: absolute;
+    left: -1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.multiple-selection-mode .option-group {
+    position: relative;
+}
+
+.multiple-selection-mode .option-group::before {
+    content: '✓';
+    position: absolute;
+    left: -1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #3b82f6;
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.single-selection-mode .correct-option::before {
+    color: #3b82f6 !important;
+    opacity: 1 !important;
+    font-weight: bold;
+}
+
+.multiple-selection-mode .correct-option::before {
+    opacity: 1 !important;
+    font-weight: bold;
+}
+
+/* Toggle state visual feedback */
+.form-switch .form-check-input {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.form-switch .form-check-input:checked::after {
+    content: 'Multi';
+    position: absolute;
+    right: -3.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.form-switch .form-check-input:not(:checked)::after {
+    content: 'Single';
+    position: absolute;
+    right: -3.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Option group hover effects */
+.option-group {
+    transition: all 0.2s ease;
+}
+
+.option-group:hover {
+    background-color: #f9fafb;
+    border-radius: 6px;
+    padding: 0.25rem;
+    margin: -0.25rem;
+}
+
 /* Responsive Modal */
 @@media (max-width: 768px) {
     .modal-dialog {
@@ -523,6 +624,16 @@
 
     .form-section {
         padding: 1rem;
+    }
+    
+    .single-selection-mode .option-group::before,
+    .multiple-selection-mode .option-group::before {
+        left: -1rem;
+    }
+    
+    .form-switch .form-check-input::after {
+        right: -2.5rem;
+        font-size: 0.65rem;
     }
 }
 </style>
@@ -1004,6 +1115,102 @@ function initializeMultipleChoiceOptions(prefix, data = null) {
     if (options.length < 2) {
         addOptionToContainer(prefix, '', false, 1);
     }
+
+    // Set up toggle behavior for multiple selections
+    setupMultipleChoiceToggle(prefix);
+}
+
+function setupMultipleChoiceToggle(prefix) {
+    const toggleElement = document.getElementById(prefix + 'AllowMultiple');
+    if (!toggleElement) return;
+
+    // Function to update checkbox behavior
+    function updateCheckboxBehavior() {
+        const allowMultiple = toggleElement.checked;
+        const container = document.getElementById(prefix + 'OptionsContainer');
+        const checkboxes = container.querySelectorAll('.option-correct');
+        
+        // Remove existing event listeners
+        checkboxes.forEach(checkbox => {
+            checkbox.removeEventListener('change', handleSingleSelect);
+            checkbox.removeEventListener('change', handleMultipleSelect);
+        });
+
+        if (allowMultiple) {
+            // Multiple selection mode - any number of checkboxes can be checked
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleMultipleSelect);
+            });
+            
+            // Update UI to show multiple selection state
+            container.classList.add('multiple-selection-mode');
+            container.classList.remove('single-selection-mode');
+        } else {
+            // Single selection mode - only one checkbox can be checked
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', handleSingleSelect);
+            });
+            
+            // Ensure only one is checked
+            let checkedCount = 0;
+            checkboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    checkedCount++;
+                    if (checkedCount > 1) {
+                        checkbox.checked = false;
+                    }
+                }
+            });
+            
+            // Update UI to show single selection state
+            container.classList.add('single-selection-mode');
+            container.classList.remove('multiple-selection-mode');
+        }
+    }
+
+    // Single selection handler
+    function handleSingleSelect(event) {
+        if (event.target.checked) {
+            // Uncheck all other checkboxes
+            const container = document.getElementById(prefix + 'OptionsContainer');
+            const checkboxes = container.querySelectorAll('.option-correct');
+            checkboxes.forEach(checkbox => {
+                if (checkbox !== event.target) {
+                    checkbox.checked = false;
+                    checkbox.closest('.option-group').classList.remove('correct-option');
+                }
+            });
+            // Add visual feedback
+            event.target.closest('.option-group').classList.add('correct-option');
+        } else {
+            event.target.closest('.option-group').classList.remove('correct-option');
+        }
+    }
+
+    // Multiple selection handler
+    function handleMultipleSelect(event) {
+        // Add/remove visual feedback
+        if (event.target.checked) {
+            event.target.closest('.option-group').classList.add('correct-option');
+        } else {
+            event.target.closest('.option-group').classList.remove('correct-option');
+        }
+    }
+
+    // Set up the toggle listener
+    toggleElement.addEventListener('change', updateCheckboxBehavior);
+    
+    // Initialize with current state
+    updateCheckboxBehavior();
+    
+    // Also update behavior when new options are added
+    const originalAddOption = window.addOption;
+    window.addOption = function(prefixParam) {
+        originalAddOption(prefixParam);
+        if (prefixParam === prefix) {
+            setTimeout(() => updateCheckboxBehavior(), 100);
+        }
+    };
 }
 
 window.addOption = function(prefix) {

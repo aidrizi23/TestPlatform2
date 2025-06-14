@@ -383,8 +383,24 @@ public class TestController : Controller
         var questionAnalytics = (await _testAnalyticsRepository.GetQuestionPerformanceDataAsync(testId))
             .FirstOrDefault(q => q.QuestionId == questionId);
     
+        // If no analytics data is available (no attempts), create empty analytics
         if (questionAnalytics is null)
-            return NotFound("Could not generate analytics for this question");
+        {
+            questionAnalytics = new QuestionAnalyticsData
+            {
+                QuestionId = questionId,
+                QuestionText = question.Text,
+                QuestionType = question.GetType().Name.Replace("Question", ""),
+                Position = question.Position,
+                Points = question.Points,
+                AveragePoints = 0,
+                SuccessRate = 0,
+                CorrectAnswers = 0,
+                IncorrectAnswers = 0,
+                AverageTimeSpent = 0,
+                AnswerDistribution = new Dictionary<string, int>()
+            };
+        }
     
         var viewModel = new QuestionAnalyticsViewModel
         {
@@ -804,6 +820,44 @@ public class TestController : Controller
         catch (Exception ex)
         {
             return Json(new { success = false, message = "An error occurred while deleting tests" });
+        }
+    }
+
+    // POST: /Test/ToggleArchiveTestAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ToggleArchiveTestAjax([FromBody] ToggleArchiveRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return Json(new { success = false, message = "User not authenticated" });
+
+        var test = await _testRepository.GetTestByIdAsync(request.Id);
+        if (test is null)
+            return Json(new { success = false, message = "Test not found" });
+
+        if (test.User != user)
+            return Json(new { success = false, message = "Unauthorized access" });
+
+        try
+        {
+            test.IsArchived = !test.IsArchived;
+            test.ArchivedAt = test.IsArchived ? DateTime.UtcNow : null;
+            await _testRepository.Update(test);
+            
+            var action = test.IsArchived ? "archived" : "unarchived";
+            var message = $"Test has been {action} successfully!";
+            
+            return Json(new { 
+                success = true, 
+                message = message,
+                isArchived = test.IsArchived,
+                action = action
+            });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = "An error occurred while updating the test archive status." });
         }
     }
 
@@ -1438,6 +1492,11 @@ public class TestController : Controller
     {
         public List<string> TestIds { get; set; }
         public bool Archive { get; set; }
+    }
+
+    public class ToggleArchiveRequest
+    {
+        public string Id { get; set; }
     }
 
     public class BulkLockRequest

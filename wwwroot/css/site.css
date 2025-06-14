@@ -290,6 +290,46 @@ a:hover {
     margin: 0.25rem 0;
 }
 
+/* Settings section in dropdown */
+.dropdown-header i {
+    color: var(--accent-primary);
+    opacity: 0.8;
+}
+
+.dropdown-item-form {
+    margin: 0;
+}
+
+.dropdown-item-form .dropdown-item {
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    transition: all var(--transition-fast);
+}
+
+.dropdown-item-form .dropdown-item:hover {
+    background-color: rgba(220, 38, 38, 0.05);
+    color: var(--accent-danger);
+}
+
+/* User info in dropdown header */
+.user-info {
+    text-align: center;
+    padding: 0.25rem 0;
+}
+
+.user-info strong {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.user-info small {
+    font-size: 0.75rem;
+    margin-top: 0.125rem;
+}
+
 /* --- Cards --- */
 .card {
     background-color: var(--card-bg);

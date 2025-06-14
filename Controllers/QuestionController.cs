@@ -767,6 +767,12 @@ public class QuestionController : Controller
         if (test is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
 
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            return Json(new { success = false, message = "Cannot modify questions in a test that has completed attempts. This preserves the integrity of student submissions." });
+        }
+
         try
         {
             question.Text = model.Text;
@@ -820,6 +826,12 @@ public class QuestionController : Controller
         var test = await _testRepository.GetTestByIdAsync(question.TestId);
         if (test is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
+
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            return Json(new { success = false, message = "Cannot modify questions in a test that has completed attempts. This preserves the integrity of student submissions." });
+        }
 
         try
         {
@@ -878,6 +890,12 @@ public class QuestionController : Controller
         var test = await _testRepository.GetTestByIdAsync(question.TestId);
         if (test is null || test.UserId != user.Id)
             return Json(new { success = false, message = "Unauthorized access" });
+
+        // Check if test has completed attempts
+        if (await TestHasAttemptsAsync(question.TestId))
+        {
+            return Json(new { success = false, message = "Cannot modify questions in a test that has completed attempts. This preserves the integrity of student submissions." });
+        }
 
         try
         {

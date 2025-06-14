@@ -521,15 +521,36 @@ ViewData["Title"] = "Test Details";
 
                         <div class="question-actions">
                             <div class="action-buttons">
-                                <a asp-action="QuestionAnalytics" asp-route-questionId="@question.Id" asp-route-testId="@Model.Id" class="btn btn-sm btn-outline-info" title="View Analytics">
-                                    <i class="fas fa-chart-line"></i>
-                                </a>
+                                @{
+                                    bool hasCompletedAttempts = Model.Attempts.Any(a => a.IsCompleted);
+                                }
+                                @if (hasCompletedAttempts)
+                                {
+                                    <a asp-action="QuestionAnalytics" asp-route-questionId="@question.Id" asp-route-testId="@Model.Id" class="btn btn-sm btn-outline-info" title="View Analytics">
+                                        <i class="fas fa-chart-line"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-info" disabled title="Analytics available after students complete the test">
+                                        <i class="fas fa-chart-line"></i>
+                                    </button>
+                                }
                                 <button type="button" class="btn btn-sm btn-outline-warning" title="Edit Question" onclick="openEditQuestionModal('@question.Id')">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Question" onclick="openDeleteQuestionModal('@question.Id')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                @if (hasCompletedAttempts)
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" disabled title="Cannot delete questions from tests with completed attempts">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Question" onclick="openDeleteQuestionModal('@question.Id')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                }
                             </div>
                         </div>
                     </div>

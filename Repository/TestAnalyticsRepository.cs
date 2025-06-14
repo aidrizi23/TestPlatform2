@@ -137,6 +137,9 @@ namespace TestPlatform2.Repository
             // Get recent attempts
             analyticsViewModel.RecentAttempts = await GetRecentAttemptsAsync(testId);
 
+            // Get timeline data (daily completion counts for the last 7 days)
+            analyticsViewModel.TimelineData = await GetTimelineDataAsync(testId);
+
             return analyticsViewModel;
         }
 
@@ -333,6 +336,35 @@ namespace TestPlatform2.Repository
                 .ToListAsync();
 
             return recentAttempts;
+        }
+
+        private async Task<List<DailyCompletionData>> GetTimelineDataAsync(string testId)
+        {
+            var timelineData = new List<DailyCompletionData>();
+            
+            // Get the last 7 days
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = DateTime.Today.AddDays(-i);
+                var nextDate = date.AddDays(1);
+                
+                // Count completed attempts for this day
+                var completionCount = await _context.TestAttempts
+                    .Where(a => a.TestId == testId 
+                               && a.IsCompleted 
+                               && a.EndTime.HasValue
+                               && a.EndTime.Value.Date == date)
+                    .CountAsync();
+                    
+                timelineData.Add(new DailyCompletionData
+                {
+                    Date = date,
+                    CompletionCount = completionCount,
+                    DateLabel = date.ToString("MMM dd")
+                });
+            }
+            
+            return timelineData;
         }
     }
 }

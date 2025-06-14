@@ -3091,31 +3091,21 @@
             });
         }
 
-        // Generate timeline data (placeholder - replace with actual data)
+        // Generate timeline data using real analytics data
         function generateTimelineLabels() {
-            // Use actual test data if available, otherwise show message
-            if (@Json.Serialize(Model.CompletedAttempts) === 0) {
+            const timelineData = @Json.Serialize(Model.TimelineData);
+            if (!timelineData || timelineData.length === 0) {
                 return ['No Data'];
             }
-            const labels = [];
-            for (let i = 6; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            }
-            return labels;
+            return timelineData.map(item => item.dateLabel);
         }
 
         function generateTimelineData() {
-            // Return actual completion data or zeros if no data
-            if (@Json.Serialize(Model.CompletedAttempts) === 0) {
+            const timelineData = @Json.Serialize(Model.TimelineData);
+            if (!timelineData || timelineData.length === 0) {
                 return [0];
             }
-            // This should be populated from actual attempt data
-            // For now, return a simple distribution based on total attempts
-            const total = @Json.Serialize(Model.TotalAttempts);
-            return [Math.floor(total * 0.1), Math.floor(total * 0.15), Math.floor(total * 0.12), 
-                   Math.floor(total * 0.2), Math.floor(total * 0.18), Math.floor(total * 0.15), Math.floor(total * 0.1)];
+            return timelineData.map(item => item.completionCount);
         }
 
         // Table functionality

@@ -41,6 +41,9 @@ namespace TestPlatform2.Models
         
         // Recent Attempts
         public List<RecentAttemptData> RecentAttempts { get; set; }
+        
+        // Timeline Data (daily completion counts for the last 7 days)
+        public List<DailyCompletionData> TimelineData { get; set; }
     }
     
     public class QuestionAnalyticsData
@@ -78,6 +81,13 @@ namespace TestPlatform2.Models
         public double ScorePercentage { get; set; }
         public DateTime CompletionDate { get; set; }
         public bool IsCompleted { get; set; }
+    }
+    
+    public class DailyCompletionData
+    {
+        public DateTime Date { get; set; }
+        public int CompletionCount { get; set; }
+        public string DateLabel { get; set; }
     }
     
     public class QuestionAnalyticsViewModel
