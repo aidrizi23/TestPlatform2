@@ -82,6 +82,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvUXVlc3Rpb24vQ3JlYXRlVHJ1ZUZhbHNlLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/home/albi/RiderProjects/TestPlatform3/Views/Settings/Notifications.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2V0dGluZ3MvTm90aWZpY2F0aW9ucy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/albi/RiderProjects/TestPlatform3/Views/Settings/Privacy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2V0dGluZ3MvUHJpdmFjeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/albi/RiderProjects/TestPlatform3/Views/Settings/Profile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2V0dGluZ3MvUHJvZmlsZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [/home/albi/RiderProjects/TestPlatform3/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3MvU2hhcmVkL0Vycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 

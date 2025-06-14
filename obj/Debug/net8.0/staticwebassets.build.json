@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "bXumIi9UvDzQrwaMUT7QVNMlZcMsId8xfn0bDYpOiD0=",
+  "Hash": "FqgRkZD5LNGAY68X462clFb/vBeuq1c8PE0zhJYhbx8=",
   "Source": "TestPlatform2",
   "BasePath": "_content/TestPlatform2",
   "Mode": "Default",
@@ -1193,6 +1193,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/css/home.css"
+    },
+    {
+      "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/settings.css",
+      "SourceId": "TestPlatform2",
+      "SourceType": "Discovered",
+      "ContentRoot": "/home/albi/RiderProjects/TestPlatform3/wwwroot/",
+      "BasePath": "_content/TestPlatform2",
+      "RelativePath": "css/settings.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/css/settings.css"
     },
     {
       "Identity": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/site.css",

@@ -9,6 +9,10 @@
       "PackagePath": "staticwebassets/css/home.css"
     },
     {
+      "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/settings.css",
+      "PackagePath": "staticwebassets/css/settings.css"
+    },
+    {
       "Id": "/home/albi/RiderProjects/TestPlatform3/wwwroot/css/site.css",
       "PackagePath": "staticwebassets/css/site.css"
     },
