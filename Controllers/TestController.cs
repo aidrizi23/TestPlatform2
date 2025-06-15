@@ -51,7 +51,7 @@ public class TestController : Controller
     // GET: /Test/Index
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> Index(bool showArchived = false)
+    public async Task<IActionResult> Index()
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
@@ -60,13 +60,27 @@ public class TestController : Controller
         }
         var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
         
-        // Filter archived tests based on the parameter
-        if (!showArchived)
-        {
-            tests = tests.Where(t => !t.IsArchived).ToList();
-        }
+        // Only show non-archived tests
+        tests = tests.Where(t => !t.IsArchived).ToList();
         
-        ViewBag.ShowArchived = showArchived;
+        return View(tests);
+    }
+    
+    // GET: /Test/ArchivedTests
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> ArchivedTests()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return RedirectToAction("Login", "Account");
+        }
+        var tests = await _testRepository.GetTestsByUserIdAsync(user.Id);
+        
+        // Only show archived tests
+        tests = tests.Where(t => t.IsArchived).ToList();
+        
         return View(tests);
     }
     
@@ -1120,6 +1134,9 @@ public class TestController : Controller
                 categoryName = t.Category?.Name,
                 tags = t.Tags.Select(tag => new { id = tag.Id, name = tag.Name }).ToArray(),
                 status = t.Status.ToString(),
+                timeLimit = t.TimeLimit,
+                maxAttempts = t.MaxAttempts,
+                randomizeQuestions = t.RandomizeQuestions,
                 averageScore = t.Attempts.Any(a => a.IsCompleted) ? 
                     Math.Round(t.Attempts.Where(a => a.IsCompleted).Average(a => a.Score), 1) : 0
             }).ToArray();

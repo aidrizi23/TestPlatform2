@@ -1391,7 +1391,7 @@ function handleCreateQuestionSubmit(e) {
             // Refresh the page to show the new question immediately
             setTimeout(() => {
                 window.location.reload();
-            }, 500);
+            }, 100);
         } else {
             // Handle validation errors
             if (data.errors && Array.isArray(data.errors)) {

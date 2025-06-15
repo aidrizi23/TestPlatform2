@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TestPlatform2.Data;
 using TestPlatform2.Data.Questions;
@@ -445,32 +446,154 @@ public class TestAttemptController : Controller
         return View(viewModel);
     }   
     
+    
     // method to delete test attempt.
+    [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Delete(string id)
     {
-        // take the attempt by id
-        var attempt = await _attemptRepository.GetAttemptUntrackedByIdAsync(id);
-        if (attempt is null) return NotFound();
-        
-        // get the current user
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null) return RedirectToAction("Login", "Account");
-        
-        
-        
-        // check if the attempt has finished or not
-        if (attempt.EndTime is null || !attempt.IsCompleted) return BadRequest("Can not delete an ongoing attempt");
-        
-        // now delete all the answers of the attempt. to do this we need to get the answers
-        var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
-        // now let's bulk delete the answers
+        try
+        {
+            // take the attempt by id
+            var attempt = await _attemptRepository.GetAttemptUntrackedByIdAsync(id);
+            if (attempt is null) return NotFound();
+            
+            // get the current user
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null) return RedirectToAction("Login", "Account");
+            
+            // Get the test associated with this attempt to verify ownership
+            var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+            if (test is null) return NotFound("Test not found");
+            
+            // Verify that the current user owns the test
+            if (test.UserId != user.Id)
+            {
+                return Forbid("You are not authorized to delete this test attempt");
+            }
+            
+            // check if the attempt has finished or not
+            if (attempt.EndTime is null || !attempt.IsCompleted) 
+            {
+                return BadRequest("Cannot delete an ongoing attempt");
+            }
+            
+            // now delete all the answers of the attempt. to do this we need to get the answers
+            var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
+            
+            // now let's bulk delete the answers (only if there are answers)
+            if (answers != null && answers.Any())
+            {
+                await _answerRepository.BulkDelete(answers);
+            }
+            
+            // now we need to delete the attempt itself.
+            await _attemptRepository.Delete(attempt);
 
-        await _answerRepository.BulkDelete(answers);
-        
-        // now we need to delete the attempt itself.
-        await _attemptRepository.Delete(attempt);
+            TempData["SuccessMessage"] = "Test attempt deleted successfully.";
+            return RedirectToAction("AllAttempts", "Test", new { testId = attempt.TestId });
+        }
+        catch (Exception ex)
+        {
+            // Log the exception if you have logging configured
+            TempData["ErrorMessage"] = "An error occurred while deleting the test attempt.";
+            return RedirectToAction("Index", "Test");
+        }
+    }
 
-        return RedirectToAction("AllAttempts", "Test", new { testId = attempt.TestId });
+    // Download report for a specific test attempt
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> DownloadReport(string id)
+    {
+        try
+        {
+            // Get the attempt
+            var attempt = await _attemptRepository.GetAttemptByIdAsync(id);
+            if (attempt is null) return NotFound("Test attempt not found");
+            
+            // Get the current user
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null) return RedirectToAction("Login", "Account");
+            
+            // Get the test associated with this attempt to verify ownership
+            var test = await _testRepository.GetTestByIdAsync(attempt.TestId);
+            if (test is null) return NotFound("Test not found");
+            
+            // Verify that the current user owns the test
+            if (test.UserId != user.Id)
+            {
+                return Forbid("You are not authorized to download this report");
+            }
+            
+            // Get answers for this attempt
+            var answers = await _answerRepository.GetAnswersByAttemptIdAsync(id);
+            
+            // Generate CSV report
+            var csv = GenerateAttemptReportCsv(attempt, test, answers);
+            var fileName = $"TestAttempt_{test.TestName}_{attempt.FirstName}_{attempt.LastName}_{DateTime.Now:yyyyMMdd}.csv";
+            
+            // Clean filename for download
+            fileName = string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));
+            
+            return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", fileName);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception if you have logging configured
+            TempData["ErrorMessage"] = "An error occurred while generating the report.";
+            return RedirectToAction("AllAttempts", "Test");
+        }
+    }
+    
+    private string GenerateAttemptReportCsv(TestAttempt attempt, Test test, IEnumerable<Answer> answers)
+    {
+        var csv = new System.Text.StringBuilder();
+        
+        // Header information
+        csv.AppendLine("Test Attempt Report");
+        csv.AppendLine($"Test Name,{test.TestName}");
+        csv.AppendLine($"Student Name,{attempt.FirstName} {attempt.LastName}");
+        csv.AppendLine($"Email,{attempt.StudentEmail}");
+        csv.AppendLine($"Start Time,{attempt.StartTime:yyyy-MM-dd HH:mm:ss}");
+        csv.AppendLine($"End Time,{attempt.EndTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "Not completed"}");
+        csv.AppendLine($"Score,{attempt.Score}%");
+        csv.AppendLine($"Is Completed,{(attempt.IsCompleted ? "Yes" : "No")}");
+        csv.AppendLine();
+        
+        // Questions and answers header
+        csv.AppendLine("Question,Answer,Points Earned,Max Points");
+        
+        // Add each answer
+        foreach (var answer in answers ?? Enumerable.Empty<Answer>())
+        {
+            var questionText = answer.Question?.Text ?? "Question not found";
+            var answerText = answer.Response ?? "No answer";
+            
+            // Clean CSV data
+            questionText = CleanCsvField(questionText);
+            answerText = CleanCsvField(answerText);
+            
+            csv.AppendLine($"{questionText},{answerText},{answer.PointsAwarded},{answer.Question?.Points ?? 0}");
+        }
+        
+        return csv.ToString();
+    }
+    
+    private string CleanCsvField(string field)
+    {
+        if (string.IsNullOrEmpty(field)) return "";
+        
+        // Replace newlines and escape quotes
+        field = field.Replace("\r\n", " ").Replace("\n", " ").Replace("\r", " ");
+        
+        // If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
+        if (field.Contains(",") || field.Contains("\"") || field.Contains("\n"))
+        {
+            field = "\"" + field.Replace("\"", "\"\"") + "\"";
+        }
+        
+        return field;
     }
     
     [HttpPost]

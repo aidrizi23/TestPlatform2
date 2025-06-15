@@ -1,0 +1,49 @@
+TODO: Time Zone Issue Documentation and Solutions
+
+## ISSUE: Time Zone Difference
+The application currently has a time zone inconsistency issue. Here's what's happening:
+
+### Problem:
+1. All DateTime values are stored in UTC using DateTime.UtcNow in the backend
+2. When displaying dates to users, the application shows UTC times without conversion
+3. Users see times that don't match their local time zone
+
+### Where the issue occurs:
+- Test creation dates (Test.CreatedAt)
+- Test scheduling dates (ScheduledStartDate, ScheduledEndDate) 
+- Test attempt times (StartTime, EndTime)
+- Invite sent dates (InviteSentDate)
+- Archive dates (ArchivedAt)
+
+### Current code examples showing the issue:
+- In Views/Test/Details.cshtml line 233: @Model.ScheduledStartDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")
+- In Views/Test/Index.cshtml line 347: @test.ScheduledStartDate.Value.ToString("MMM dd, HH:mm")
+- In Controllers: DateTime.UtcNow is used everywhere for storing times
+
+### SOLUTIONS (in order of recommendation):
+
+## Solution 1: Client-side conversion (RECOMMENDED)
+- Keep storing UTC in database (good practice)
+- Convert UTC to local time in JavaScript on the client side
+- Use JavaScript's Date.toLocaleString() or similar methods
+- This automatically handles user's browser time zone
+
+## Solution 2: Server-side conversion with user preference
+- Add TimeZone field to User model
+- Convert UTC to user's preferred timezone on server before sending to view
+- Requires user to set their timezone preference
+
+## Solution 3: Display UTC with clear indication
+- Continue showing UTC times but add "(UTC)" suffix
+- Simple but not user-friendly for global users
+
+## Solution 4: Mixed approach
+- Use client-side conversion for most dates
+- Keep UTC for scheduled dates with clear timezone indication
+- Best user experience but requires more implementation work
+
+### Technical Implementation Notes:
+- Database storage is correct (UTC) - don't change this
+- Frontend JavaScript can handle timezone conversion automatically
+- Consider using data attributes to pass UTC timestamps to JavaScript
+- Use Intl.DateTimeFormat for proper internationalization

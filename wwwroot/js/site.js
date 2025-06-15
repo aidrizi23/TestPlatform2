@@ -528,6 +528,71 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // ===== UTC Time to Local Time Conversion =====
+    // Convert all UTC times to local time automatically
+    function convertUtcTimesToLocal() {
+        const utcTimeElements = document.querySelectorAll('.utc-time');
+        
+        utcTimeElements.forEach(element => {
+            const utcDateString = element.getAttribute('data-utc');
+            
+            if (utcDateString) {
+                try {
+                    // Parse the UTC date
+                    const utcDate = new Date(utcDateString);
+                    
+                    // Format to local time using user's locale and timezone
+                    const localTimeString = utcDate.toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    
+                    // Update the displayed text
+                    element.textContent = localTimeString;
+                    
+                    // Add a title with timezone info for clarity
+                    const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    element.title = `UTC: ${utcDate.toISOString()} | Local (${timezoneName}): ${localTimeString}`;
+                    
+                } catch (error) {
+                    console.warn('Error converting UTC time:', error);
+                    // Keep the original time if conversion fails
+                }
+            }
+        });
+    }
+    
+    // Convert times on page load
+    convertUtcTimesToLocal();
+    
+    // Also convert times when new content is dynamically added
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) { // Element node
+                    const utcElements = node.querySelectorAll ? node.querySelectorAll('.utc-time') : [];
+                    if (utcElements.length > 0) {
+                        convertUtcTimesToLocal();
+                    }
+                    // Also check if the node itself has the utc-time class
+                    if (node.classList && node.classList.contains('utc-time')) {
+                        convertUtcTimesToLocal();
+                    }
+                }
+            });
+        });
+    });
+    
+    // Start observing
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
     // ===== Performance Optimization =====
     // Debounce resize events
     let resizeTimeout;

@@ -99,14 +99,6 @@ ViewData["Title"] = "My Tests";
                         </a>
                     </div>
                 </div>
-                <div class="archive-toggle">
-                    <button type="button" id="archiveToggle" 
-                            class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")"
-                            data-show-archived="@(ViewBag.ShowArchived ?? false)">
-                        <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
-                        <span id="archiveToggleText">@(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")</span>
-                    </button>
-                </div>
                 <div class="sort-options">
                     <select class="form-select sort-select" id="sortTests">
                         <option value="recent">Recently Created</option>
@@ -251,19 +243,48 @@ ViewData["Title"] = "My Tests";
         <div class="tests-grid" id="testsGrid">
             @foreach (var test in Model)
             {
-            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" data-archived="@test.IsArchived.ToString().ToLower()" data-category-id="@test.CategoryId" data-category-name="@(test.Category?.Name ?? "")" data-tags="@string.Join(",", test.Tags.Select(t => t.Name))" >
+            <div class="test-card" data-test-id="@test.Id" data-test-name="@test.TestName" data-question-count="@test.Questions?.Count" data-attempt-count="@test.Attempts.Count" data-locked="@test.IsLocked.ToString().ToLower()" data-category-id="@test.CategoryId" data-category-name="@(test.Category?.Name ?? "")" data-tags="@string.Join(",", test.Tags.Select(t => t.Name))" >
                 <div class="test-card-header">
-                    <div class="test-status">
-                        <span class="status-badge @(test.IsArchived ? "status-archived" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "status-scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "status-closed" : (test.IsLocked ? "status-locked" : "status-active"))))">
-                            <i class="fas @(test.IsArchived ? "fa-archive" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "fa-calendar-alt" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "fa-times-circle" : (test.IsLocked ? "fa-lock" : "fa-unlock"))))"></i>
-                            @(test.IsArchived ? "Archived" : (test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "Scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "Closed" : (test.IsLocked ? "Locked" : "Active"))))
-                        </span>
+                    <div class="card-header-content">
+                        <h5 class="test-title">@test.TestName</h5>
+                        <div class="test-actions">
+                            <div class="dropdown">
+                                <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More actions">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="@Url.Action("Details", "Test", new { id = test.Id })">
+                                        <i class="fas fa-eye me-2"></i>View Details
+                                    </a></li>
+                                    <li><a class="dropdown-item edit-test-btn" href="#" data-test-id="@test.Id">
+                                        <i class="fas fa-edit me-2"></i>Edit Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item clone-test-btn" href="#" data-test-id="@test.Id">
+                                        <i class="fas fa-copy me-2"></i>Clone Test
+                                    </a></li>
+                                    <li><a class="dropdown-item toggle-lock-btn" href="#" data-test-id="@test.Id" data-is-locked="@test.IsLocked.ToString().ToLower()">
+                                        <i class="fas @(test.IsLocked ? "fa-unlock" : "fa-lock") me-2"></i>@(test.IsLocked ? "Unlock" : "Lock") Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item delete-test-btn text-danger" href="#" data-test-id="@test.Id" data-test-name="@test.TestName">
+                                        <i class="fas fa-trash me-2"></i>Delete Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item archive-test-btn" href="#" data-test-id="@test.Id" data-is-archived="false">
+                                        <i class="fas fa-archive me-2"></i>Archive Test
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                   
+                    <span class="status-badge @(test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "status-scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "status-closed" : (test.IsLocked ? "status-locked" : "status-active")))">
+                        <i class="fas @(test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "fa-calendar-alt" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "fa-times-circle" : (test.IsLocked ? "fa-lock" : "fa-unlock")))"></i>
+                        @(test.Status == TestPlatform2.Data.TestStatus.Scheduled ? "Scheduled" : (test.Status == TestPlatform2.Data.TestStatus.Closed ? "Closed" : (test.IsLocked ? "Locked" : "Active")))
+                    </span>
                 </div>
 
                 <div class="test-card-body">
-                    <h3 class="test-title" title="@test.TestName">@test.TestName</h3>
                     <p class="test-description">
                         @if (string.IsNullOrEmpty(test.Description))
                         {
@@ -344,11 +365,11 @@ ViewData["Title"] = "My Tests";
                                 <i class="fas fa-calendar-alt"></i>
                                 @if (test.ScheduledStartDate.HasValue)
                                 {
-                                    <span>Starts: @test.ScheduledStartDate.Value.ToString("MMM dd, HH:mm")</span>
+                                    <span>Starts: <span class="utc-time" data-utc="@test.ScheduledStartDate.Value.ToString("o")">@test.ScheduledStartDate.Value.ToString("MMM dd, HH:mm")</span></span>
                                 }
                                 @if (test.ScheduledEndDate.HasValue)
                                 {
-                                    <span>Ends: @test.ScheduledEndDate.Value.ToString("MMM dd, HH:mm")</span>
+                                    <span>Ends: <span class="utc-time" data-utc="@test.ScheduledEndDate.Value.ToString("o")">@test.ScheduledEndDate.Value.ToString("MMM dd, HH:mm")</span></span>
                                 }
                             </span>
                         }
@@ -364,12 +385,6 @@ ViewData["Title"] = "My Tests";
                             <i class="fas fa-chart-bar me-1"></i>
                             Results
                         </a>
-                    </div>
-                    <div class="secondary-actions">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleArchiveTest('@test.Id')" title="@(test.IsArchived ? "Unarchive Test" : "Archive Test")">
-                            <i class="fas @(test.IsArchived ? "fa-box-open" : "fa-archive") me-1"></i>
-                            @(test.IsArchived ? "Unarchive" : "Archive")
-                        </button>
                     </div>
                 </div>
             </div>
@@ -823,7 +838,7 @@ ViewData["Title"] = "My Tests";
 
 <!-- Styles moved to external CSS file -->
 @section Scripts {
-<script>
+    <script>
     // Archive/Unarchive functionality - defined globally for onclick handlers
     window.toggleArchiveTest = async function(testId) {
         // Debug logging
@@ -1085,18 +1100,15 @@ ViewData["Title"] = "My Tests";
         const sortSelect = document.getElementById('sortTests');
         const categoryFilter = document.getElementById('categoryFilter');
         const tagFilter = document.getElementById('tagFilter');
-        const archiveToggle = document.getElementById('archiveToggle');
         
         let searchTimeout;
         let lastSearchTerm = '';
-        let currentShowArchived = archiveToggle ? archiveToggle.dataset.showArchived === 'true' : false;
 
         // Unified filter state
         window.filterState = {
             search: '',
             category: '',
             tag: '',
-            showArchived: currentShowArchived,
             sort: 'recent'
         };
 
@@ -1302,13 +1314,15 @@ ViewData["Title"] = "My Tests";
             card.dataset.questionCount = test.questionCount;
             card.dataset.attemptCount = test.attemptCount;
             card.dataset.locked = test.isLocked;
+            card.dataset.archived = test.isArchived || false;
             card.dataset.categoryId = test.categoryId || '';
+            card.dataset.categoryName = test.categoryName || '';
             card.dataset.tags = test.tags.map(t => t.name).join(',');
             card.dataset.created = new Date(test.createdDate).getTime();
 
-            const statusClass = test.isLocked ? 'status-locked' : 'status-active';
-            const statusIcon = test.isLocked ? 'fa-lock' : 'fa-unlock';
-            const statusText = test.isLocked ? 'Locked' : 'Active';
+            const statusClass = test.isArchived ? 'status-archived' : (test.isLocked ? 'status-locked' : 'status-active');
+            const statusIcon = test.isArchived ? 'fa-archive' : (test.isLocked ? 'fa-lock' : 'fa-unlock');
+            const statusText = test.isArchived ? 'Archived' : (test.isLocked ? 'Locked' : 'Active');
 
             card.innerHTML = `
                 <div class="test-card-header">
@@ -1316,11 +1330,11 @@ ViewData["Title"] = "My Tests";
                         <h5 class="test-title">${escapeHtml(test.name)}</h5>
                         <div class="test-actions">
                             <div class="dropdown">
-                                <button class="btn btn-link btn-sm" type="button" data-bs-toggle="dropdown">
+                                <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="More actions">
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="@Url.Action("Details", "Test")/${test.id}">
+                                    <li><a class="dropdown-item" href="/Test/Details/${test.id}">
                                         <i class="fas fa-eye me-2"></i>View Details
                                     </a></li>
                                     <li><a class="dropdown-item edit-test-btn" href="#" data-test-id="${test.id}">
@@ -1336,6 +1350,10 @@ ViewData["Title"] = "My Tests";
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item delete-test-btn text-danger" href="#" data-test-id="${test.id}" data-test-name="${escapeHtml(test.name)}">
                                         <i class="fas fa-trash me-2"></i>Delete Test
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item archive-test-btn" href="#" data-test-id="${test.id}" data-is-archived="${test.isArchived || false}">
+                                        <i class="fas ${test.isArchived ? 'fa-box-open' : 'fa-archive'} me-2"></i>${test.isArchived ? 'Unarchive' : 'Archive'} Test
                                     </a></li>
                                 </ul>
                             </div>
@@ -1375,17 +1393,17 @@ ViewData["Title"] = "My Tests";
                 
                 <div class="test-card-footer">
                     <div class="primary-actions">
-                        <a href="@Url.Action("Details", "Test")/${test.id}" class="btn btn-primary">
+                        <a href="/Test/Details/${test.id}" class="btn btn-primary">
                             <i class="fas fa-eye me-2"></i>View Details
                         </a>
-                        <a href="@Url.Action("AllAttempts", "Test")?testId=${test.id}" class="btn btn-outline-success">
+                        <a href="/Test/AllAttempts?testId=${test.id}" class="btn btn-outline-success">
                             <i class="fas fa-chart-bar me-2"></i>View Results
                         </a>
                     </div>
                     <div class="test-features">
                         <span class="feature-tag created-date">
                             <i class="fas fa-calendar-alt me-1"></i>
-                            ${new Date(test.createdDate).toLocaleDateString()}
+                            <span class="utc-time" data-utc="${new Date(test.createdDate).toISOString()}">${new Date(test.createdDate).toLocaleDateString()}</span>
                         </span>
                     </div>
                 </div>
@@ -1647,6 +1665,57 @@ ViewData["Title"] = "My Tests";
             }
         }
 
+        // Optimized AJAX utility function
+        async function makeAjaxRequest(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            };
+
+            // Add CSRF token for POST requests
+            if (options.method === 'POST') {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                             document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+                if (token) {
+                    defaultOptions.headers['RequestVerificationToken'] = token;
+                }
+            }
+
+            const finalOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...options.headers
+                }
+            };
+
+            try {
+                const response = await fetch(url, finalOptions);
+                
+                if (!response.ok) {
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                    } catch (e) {
+                        // Could not parse error response as JSON
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('AJAX request failed:', error);
+                showToast(error.message || 'An error occurred while processing your request', 'error');
+                throw error;
+            }
+        }
+
         // Initialize event listeners for existing elements
         function initializeEventListeners() {
             initializeCheckboxes();
@@ -1655,6 +1724,7 @@ ViewData["Title"] = "My Tests";
             initializeDeleteButtons();
             initializeLockButtons();
             initializeCloneButtons();
+            initializeArchiveButtons();
             initializeShareButtons();
         }
 
@@ -1819,7 +1889,7 @@ ViewData["Title"] = "My Tests";
 
         // Lock/Unlock Test functionality
         function initializeLockButtons() {
-            const lockTestButtons = document.querySelectorAll('.lock-test-btn');
+            const lockTestButtons = document.querySelectorAll('.toggle-lock-btn');
             lockTestButtons.forEach(btn => {
                 // Remove existing listeners to prevent duplicates
                 const newBtn = btn.cloneNode(true);
@@ -1829,16 +1899,10 @@ ViewData["Title"] = "My Tests";
                     const testId = this.dataset.testId;
 
                     try {
-                        const response = await fetch(`@Url.Action("LockTestAjax", "Test")`, {
+                        const result = await makeAjaxRequest(`@Url.Action("LockTestAjax", "Test")`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
                             body: JSON.stringify({ Id: testId })
                         });
-
-                        const result = await response.json();
 
                         if (result.success) {
                             showToast(result.message, 'success');
@@ -1892,16 +1956,10 @@ ViewData["Title"] = "My Tests";
                     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Cloning...';
 
                     try {
-                        const response = await fetch(`@Url.Action("CloneTestAjax", "Test")`, {
+                        const result = await makeAjaxRequest(`@Url.Action("CloneTestAjax", "Test")`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
                             body: JSON.stringify({ Id: testId })
                         });
-
-                        const result = await response.json();
 
                         if (result.success) {
                             showToast(`${result.message}!`, 'success');
@@ -1914,6 +1972,67 @@ ViewData["Title"] = "My Tests";
                     } catch (error) {
                         console.error('Error cloning test:', error);
                         showToast('Error cloning test', 'error');
+                    } finally {
+                        
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalText;
+                    }
+                });
+            });
+        }
+
+        // Archive/Unarchive Test functionality
+        function initializeArchiveButtons() {
+            const archiveTestButtons = document.querySelectorAll('.archive-test-btn');
+            archiveTestButtons.forEach(btn => {
+                // Remove existing listeners to prevent duplicates
+                const newBtn = btn.cloneNode(true);
+                btn.parentNode.replaceChild(newBtn, btn);
+                
+                newBtn.addEventListener('click', async function() {
+                    const testId = this.dataset.testId;
+                    const isArchived = this.dataset.isArchived === 'true';
+                    const action = isArchived ? 'unarchive' : 'archive';
+                    const actionCapitalized = isArchived ? 'Unarchive' : 'Archive';
+
+                    const submitButton = this;
+                    const originalText = submitButton.innerHTML;
+
+                    
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${actionCapitalized}ing...`;
+
+                    try {
+                        const result = await makeAjaxRequest(`@Url.Action("ToggleArchiveTestAjax", "Test")`, {
+                            method: 'POST',
+                            body: JSON.stringify({ Id: testId })
+                        });
+
+                        if (result.success) {
+                            showToast(result.message, 'success');
+
+                            // Update the UI
+                            const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+                            const dropdownButton = this;
+
+                            if (result.isArchived) {
+                                dropdownButton.innerHTML = '<i class="fas fa-box-open me-2"></i>Unarchive Test';
+                                dropdownButton.dataset.isArchived = 'true';
+                                testCard.dataset.archived = 'true';
+                            } else {
+                                dropdownButton.innerHTML = '<i class="fas fa-archive me-2"></i>Archive Test';
+                                dropdownButton.dataset.isArchived = 'false';
+                                testCard.dataset.archived = 'false';
+                            }
+
+                            // Refresh the filtered tests to show updated status
+                            loadFilteredTests();
+                        } else {
+                            showToast(result.message || 'Error updating test archive status', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating test archive status:', error);
+                        showToast('Error updating test archive status', 'error');
                     } finally {
                         
                         submitButton.disabled = false;
@@ -2145,16 +2264,10 @@ ViewData["Title"] = "My Tests";
                 submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
 
                 try {
-                    const response = await fetch(`@Url.Action("DeleteAjax", "Test")`, {
+                    const result = await makeAjaxRequest(`@Url.Action("DeleteAjax", "Test")`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
                         body: JSON.stringify({ Id: currentTestId })
                     });
-
-                    const result = await response.json();
 
                     if (result.success) {
                         deleteTestModal.hide();
@@ -3190,21 +3303,44 @@ ViewData["Title"] = "My Tests";
 
             // Use event delegation for all test card actions
             testsGrid.addEventListener('click', function(e) {
-                const target = e.target.closest('.edit-test-btn, .delete-test-btn, .clone-test-btn, .toggle-lock-btn');
+                const target = e.target.closest('.edit-test-btn, .delete-test-btn, .clone-test-btn, .toggle-lock-btn, .archive-test-btn');
                 if (!target) return;
 
                 e.preventDefault();
+                e.stopPropagation();
+                
                 const testId = target.dataset.testId;
                 const testName = target.dataset.testName;
 
+                // Close dropdown after action
+                const dropdown = target.closest('.dropdown');
+                if (dropdown) {
+                    const dropdownToggle = dropdown.querySelector('[data-bs-toggle="dropdown"]');
+                    if (dropdownToggle) {
+                        const bsDropdown = bootstrap.Dropdown.getInstance(dropdownToggle);
+                        if (bsDropdown) {
+                            bsDropdown.hide();
+                        }
+                    }
+                }
+
+                // Handle different actions
                 if (target.classList.contains('edit-test-btn')) {
+                    console.log('Edit button clicked for test:', testId);
                     openEditModal(testId);
                 } else if (target.classList.contains('delete-test-btn')) {
+                    console.log('Delete button clicked for test:', testId, testName);
                     openDeleteModal(testId, testName);
                 } else if (target.classList.contains('clone-test-btn')) {
+                    console.log('Clone button clicked for test:', testId);
                     cloneTest(testId);
                 } else if (target.classList.contains('toggle-lock-btn')) {
+                    console.log('Lock toggle button clicked for test:', testId);
                     toggleTestLock(testId);
+                } else if (target.classList.contains('archive-test-btn')) {
+                    const isArchived = target.dataset.isArchived === 'true';
+                    console.log('Archive button clicked for test:', testId, 'isArchived:', isArchived);
+                    toggleTestArchive(testId, isArchived);
                 }
             });
         }
@@ -3270,16 +3406,10 @@ ViewData["Title"] = "My Tests";
 
         async function toggleTestLock(testId) {
             try {
-                const response = await fetch('@Url.Action("ToggleLockAjax", "Test")', {
+                const result = await makeAjaxRequest('@Url.Action("LockTestAjax", "Test")', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
                     body: JSON.stringify({ Id: testId })
                 });
-
-                const result = await response.json();
 
                 if (result.success) {
                     showToast(result.message, 'success');
@@ -3291,6 +3421,26 @@ ViewData["Title"] = "My Tests";
             } catch (error) {
                 console.error('Error updating test lock status:', error);
                 showToast('Error updating test lock status', 'error');
+            }
+        }
+
+        async function toggleTestArchive(testId, isArchived) {
+            try {
+                const result = await makeAjaxRequest('@Url.Action("ToggleArchiveTestAjax", "Test")', {
+                    method: 'POST',
+                    body: JSON.stringify({ Id: testId })
+                });
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    // Refresh the filtered tests to show the updated archive status
+                    loadFilteredTests();
+                } else {
+                    showToast(result.message || 'Error updating test archive status', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating test archive status:', error);
+                showToast('Error updating test archive status', 'error');
             }
         }
 
@@ -3318,99 +3468,97 @@ ViewData["Title"] = "My Tests";
     });
 </script>
 
-<!-- Share Test Modal -->
-<div class="modal fade" id="shareTestModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Share Test: <span id="shareTestNameDisplay"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="shareTestForm">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" id="shareTestId" name="TestId">
-                    
-                    <div class="mb-3">
-                        <label for="shareEmail" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="shareEmail" name="Email" required
-                               placeholder="Enter teacher's email address">
-                        <div class="invalid-feedback"></div>
-                        <div class="form-text">Enter the email address of the teacher you want to share this test with.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="sharePermission" class="form-label">Permission Level</label>
-                        <select class="form-select" id="sharePermission" name="Permission" required>
-                            <option value="0">View Only - Can view test and questions but not edit</option>
-                            <option value="1">View & Copy - Can view and create a copy of the test</option>
-                            <option value="2">Edit - Can view and edit the original test</option>
-                        </select>
-                        <div class="invalid-feedback"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="shareMessage" class="form-label">Message (Optional)</label>
-                        <textarea class="form-control" id="shareMessage" name="Message" rows="3"
-                                  placeholder="Add a personal message..."></textarea>
-                        <div class="invalid-feedback"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="shareExpiresAt" class="form-label">Expiration Date (Optional)</label>
-                        <input type="datetime-local" class="form-control" id="shareExpiresAt" name="ExpiresAt">
-                        <div class="invalid-feedback"></div>
-                        <div class="form-text">Leave empty for permanent access.</div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="shareTest()">
-                    <i class="fas fa-share-alt me-2"></i>Share Test
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Share Success Modal -->
-<div class="modal fade" id="shareSuccessModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check-circle me-2"></i>Test Shared Successfully!
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p id="shareSuccessMessage" class="mb-3"></p>
-                
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    The recipient can access the shared test using the URL below:
+    <!-- Share Test Modal -->
+    <div class="modal fade" id="shareTestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Share Test: <span id="shareTestNameDisplay"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="shareUrl" readonly>
-                    <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
-                        <i class="fas fa-copy me-2"></i>Copy URL
+                <div class="modal-body">
+                    <form id="shareTestForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" id="shareTestId" name="TestId">
+
+                        <div class="mb-3">
+                            <label for="shareEmail" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="shareEmail" name="Email" required
+                                   placeholder="Enter teacher's email address">
+                            <div class="invalid-feedback"></div>
+                            <div class="form-text">Enter the email address of the teacher you want to share this test with.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sharePermission" class="form-label">Permission Level</label>
+                            <select class="form-select" id="sharePermission" name="Permission" required>
+                                <option value="0">View Only - Can view test and questions but not edit</option>
+                                <option value="1">View & Copy - Can view and create a copy of the test</option>
+                                <option value="2">Edit - Can view and edit the original test</option>
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="shareMessage" class="form-label">Message (Optional)</label>
+                            <textarea class="form-control" id="shareMessage" name="Message" rows="3"
+                                  placeholder="Add a personal message..."></textarea>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="shareExpiresAt" class="form-label">Expiration Date (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="shareExpiresAt" name="ExpiresAt">
+                            <div class="invalid-feedback"></div>
+                            <div class="form-text">Leave empty for permanent access.</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="shareTest()">
+                        <i class="fas fa-share-alt me-2"></i>Share Test
                     </button>
                 </div>
-                
-                <div class="form-text">
-                    You can copy this URL and send it via email, or the recipient will receive a notification if they're registered.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
-                    <i class="fas fa-check me-2"></i>Done
-                </button>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- Share Success Modal -->
+    <div class="modal fade" id="shareSuccessModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle me-2"></i>Test Shared Successfully!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="shareSuccessMessage" class="mb-3"></p>
 
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        The recipient can access the shared test using the URL below:
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="shareUrl" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
+                            <i class="fas fa-copy me-2"></i>Copy URL
+                        </button>
+                    </div>
+
+                    <div class="form-text">
+                        You can copy this URL and send it via email, or the recipient will receive a notification if they're registered.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        <i class="fas fa-check me-2"></i>Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 }

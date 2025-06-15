@@ -394,7 +394,7 @@
 
                     <div class="detail-row">
                         <span class="detail-label">Date</span>
-                        <span class="detail-value">@DateTime.Now.ToString("MMMM dd, yyyy 'at' HH:mm")</span>
+                        <span class="detail-value utc-time" data-utc="@DateTime.UtcNow.ToString("o")">@DateTime.Now.ToString("MMMM dd, yyyy 'at' HH:mm")</span>
                     </div>
                 </div>
             }

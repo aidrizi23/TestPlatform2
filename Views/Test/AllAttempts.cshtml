@@ -881,7 +881,7 @@
                                 <div class="info-content">
                                     <div class="info-label">Started</div>
                                     <div class="info-value">@attempt.StartTime.ToString("MMM dd, yyyy")</div>
-                                    <div class="info-secondary">@attempt.StartTime.ToString("HH:mm")</div>
+                                    <div class="info-secondary utc-time" data-utc="@attempt.StartTime.ToString("o")">@attempt.StartTime.ToString("HH:mm")</div>
                                 </div>
                             </div>
 
@@ -894,7 +894,7 @@
                                     <div class="info-content">
                                         <div class="info-label">Finished</div>
                                         <div class="info-value">@attempt.EndTime.Value.ToString("MMM dd, yyyy")</div>
-                                        <div class="info-secondary">@attempt.EndTime.Value.ToString("HH:mm")</div>
+                                        <div class="info-secondary utc-time" data-utc="@attempt.EndTime.Value.ToString("o")">@attempt.EndTime.Value.ToString("HH:mm")</div>
                                     </div>
                                 </div>
                             }

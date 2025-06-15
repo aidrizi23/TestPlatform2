@@ -598,3 +598,4 @@
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.pdb
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/TestPlatform2.genruntimeconfig.cache
 /home/albi/RiderProjects/TestPlatform3/obj/Debug/net8.0/ref/TestPlatform2.dll
+/home/albi/RiderProjects/TestPlatform3/bin/Debug/net8.0/appsettings.Production.json

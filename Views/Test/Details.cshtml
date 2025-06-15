@@ -5,6 +5,8 @@
 ViewData["Title"] = "Test Details";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="test-details-container">
     <!-- Enhanced Header Section -->
     <div class="modern-header">
@@ -228,7 +230,7 @@ ViewData["Title"] = "Test Details";
                                 {
                                     <small class="d-block text-muted mt-1">
                                         <i class="fas fa-play me-1"></i>
-                                        Opens: @Model.ScheduledStartDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")
+                                        Opens: <span class="utc-time" data-utc="@Model.ScheduledStartDate.Value.ToString("o")">@Model.ScheduledStartDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")</span>
                                     </small>
                                 }
                                 break;
@@ -240,7 +242,7 @@ ViewData["Title"] = "Test Details";
                                 {
                                     <small class="d-block text-muted mt-1">
                                         <i class="fas fa-stop me-1"></i>
-                                        Closes: @Model.ScheduledEndDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")
+                                        Closes: <span class="utc-time" data-utc="@Model.ScheduledEndDate.Value.ToString("o")">@Model.ScheduledEndDate.Value.ToString("MMM dd, yyyy 'at' HH:mm")</span>
                                     </small>
                                 }
                                 break;
@@ -3042,6 +3044,42 @@ ViewData["Title"] = "Test Details";
         }
     }
 
+    /* Disabled Question Cards */
+    .question-type-card.disabled {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+        border-color: #d1d5db !important;
+    }
+
+    .question-card-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        z-index: 10;
+    }
+
+    .disabled-message {
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .disabled-message i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #ef4444;
+        display: block;
+    }
+
     /* Animation Classes */
     .pulse {
         animation: pulse 2s infinite;
@@ -3518,25 +3556,232 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Modal functions
-    window.openEditTestModal = function(testId) {
-        // This would open the edit test modal
-        showToast('Edit functionality to be implemented', 'info');
+    window.openEditTestModal = async function(testId) {
+        try {
+            showLoading();
+            
+            // Fetch test data
+            const response = await fetch(`/Test/GetTestDataAjax?id=${testId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                const testData = result.data;
+                
+                // Populate the edit form
+                document.getElementById('editTestId').value = testData.id;
+                document.getElementById('editTestName').value = testData.testName || '';
+                document.getElementById('editTestDescription').value = testData.description || '';
+                document.getElementById('editTimeLimit').value = testData.timeLimit || 60;
+                document.getElementById('editMaxAttempts').value = testData.maxAttempts || 1;
+                document.getElementById('editRandomizeQuestions').checked = testData.randomizeQuestions || false;
+                document.getElementById('editIsLocked').checked = testData.isLocked || false;
+                
+                // Populate scheduling fields
+                document.getElementById('editIsScheduled').checked = testData.isScheduled || false;
+                if (testData.scheduledStartDate) {
+                    document.getElementById('editScheduledStartDate').value = testData.scheduledStartDate;
+                }
+                if (testData.scheduledEndDate) {
+                    document.getElementById('editScheduledEndDate').value = testData.scheduledEndDate;
+                }
+                document.getElementById('editAutoPublish').checked = testData.autoPublish || false;
+                document.getElementById('editAutoClose').checked = testData.autoClose || false;
+                
+                // Show/hide scheduling fields based on isScheduled
+                toggleSchedulingFields();
+                
+                // Show the modal
+                const modalElement = document.getElementById('editTestModal');
+                if (!modalElement) {
+                    showToast('Error: Edit modal not found', 'error');
+                    return;
+                }
+                const editModal = new bootstrap.Modal(modalElement);
+                editModal.show();
+            } else {
+                showToast(result.message || 'Failed to load test data', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading test data:', error);
+            showToast('Error loading test data', 'error');
+        } finally {
+            hideLoading();
+        }
+    };
+
+    // Save test changes function
+    window.saveTestChanges = async function() {
+        try {
+            showLoading();
+            
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                         document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+            
+            // Collect form data
+            const formData = {
+                Id: document.getElementById('editTestId').value,
+                TestName: document.getElementById('editTestName').value.trim(),
+                Description: document.getElementById('editTestDescription').value.trim(),
+                TimeLimit: parseInt(document.getElementById('editTimeLimit').value) || 60,
+                MaxAttempts: parseInt(document.getElementById('editMaxAttempts').value) || 1,
+                RandomizeQuestions: document.getElementById('editRandomizeQuestions').checked,
+                IsLocked: document.getElementById('editIsLocked').checked,
+                IsScheduled: document.getElementById('editIsScheduled').checked,
+                AutoPublish: document.getElementById('editAutoPublish').checked,
+                AutoClose: document.getElementById('editAutoClose').checked
+            };
+            
+            // Add scheduled dates if scheduling is enabled
+            if (formData.IsScheduled) {
+                const startDate = document.getElementById('editScheduledStartDate').value;
+                const endDate = document.getElementById('editScheduledEndDate').value;
+                
+                if (startDate) {
+                    formData.ScheduledStartDate = new Date(startDate).toISOString();
+                }
+                if (endDate) {
+                    formData.ScheduledEndDate = new Date(endDate).toISOString();
+                }
+            }
+            
+            // Validate required fields
+            if (!formData.TestName) {
+                showToast('Test name is required', 'error');
+                document.getElementById('editTestName').focus();
+                return;
+            }
+            
+            if (formData.TimeLimit < 1 || formData.TimeLimit > 300) {
+                showToast('Time limit must be between 1 and 300 minutes', 'error');
+                document.getElementById('editTimeLimit').focus();
+                return;
+            }
+            
+            if (formData.MaxAttempts < 1 || formData.MaxAttempts > 10) {
+                showToast('Max attempts must be between 1 and 10', 'error');
+                document.getElementById('editMaxAttempts').focus();
+                return;
+            }
+            
+            // Submit the form
+            const response = await fetch('/Test/EditAjax', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-RequestVerificationToken': token
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message || 'Test updated successfully!', 'success');
+                
+                // Hide the modal
+                bootstrap.Modal.getInstance(document.getElementById('editTestModal')).hide();
+                
+                // Update UI elements
+                document.querySelector('.test-title-modern').textContent = formData.TestName;
+                if (formData.Description) {
+                    const descElement = document.querySelector('.test-description-modern');
+                    if (descElement) {
+                        descElement.textContent = formData.Description;
+                    }
+                }
+                
+                // Update lock status in UI
+                const lockButton = document.getElementById('lockTestButton');
+                const lockIcon = document.getElementById('lockIcon');
+                const lockButtonText = document.getElementById('lockButtonText');
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusIcon = document.getElementById('statusIcon');
+                const statusText = document.getElementById('statusText');
+                
+                if (lockButton && lockIcon && lockButtonText) {
+                    lockButton.className = formData.IsLocked ? 'btn btn-success' : 'btn btn-warning';
+                    lockIcon.className = formData.IsLocked ? 'fas fa-lock-open me-1' : 'fas fa-lock me-1';
+                    lockButtonText.textContent = formData.IsLocked ? 'Unlock' : 'Lock';
+                }
+                
+                if (statusIndicator && statusIcon && statusText) {
+                    statusIndicator.className = formData.IsLocked ? 'status-badge status-locked ms-3' : 'status-badge status-active ms-3';
+                    statusIcon.className = formData.IsLocked ? 'fas fa-lock me-1' : 'fas fa-check-circle me-1';
+                    statusText.textContent = formData.IsLocked ? 'Locked' : 'Active';
+                }
+                
+                // Update time limit display
+                const timeLimitElement = document.querySelector('.quick-stat-item:last-child .fw-semibold');
+                if (timeLimitElement) {
+                    timeLimitElement.textContent = formData.TimeLimit;
+                }
+            } else {
+                if (result.errors) {
+                    // Show form validation errors
+                    result.errors.forEach(error => {
+                        showToast(`${error.Field}: ${error.Message}`, 'error');
+                    });
+                } else {
+                    showToast(result.message || 'Failed to update test', 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving test changes:', error);
+            showToast('Error saving test changes', 'error');
+        } finally {
+            hideLoading();
+        }
+    };
+
+    // Toggle scheduling fields visibility
+    window.toggleSchedulingFields = function() {
+        const isScheduled = document.getElementById('editIsScheduled').checked;
+        const schedulingFields = document.getElementById('schedulingFields');
+        
+        if (schedulingFields) {
+            schedulingFields.style.display = isScheduled ? 'block' : 'none';
+        }
     };
 
     window.openDeleteTestModal = function(testId) {
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteTestModal'));
-        currentQuestionId = testId;
-        deleteModal.show();
+        const modalElement = document.getElementById('deleteTestModal');
+        if (modalElement) {
+            const deleteModal = new bootstrap.Modal(modalElement);
+            currentTestId = testId;
+            deleteModal.show();
+        } else {
+            console.error('Delete test modal not found');
+            showToast('Error: Modal not found', 'error');
+        }
     };
 
     window.openCloneTestModal = function(testId) {
-        const cloneModal = new bootstrap.Modal(document.getElementById('cloneTestModal'));
-        currentQuestionId = testId;
-        cloneModal.show();
+        const modalElement = document.getElementById('cloneTestModal');
+        if (modalElement) {
+            const cloneModal = new bootstrap.Modal(modalElement);
+            currentTestId = testId;
+            cloneModal.show();
+        } else {
+            console.error('Clone test modal not found');
+            showToast('Error: Modal not found', 'error');
+        }
     };
 
     window.openCreateQuestionModal = async function(questionType, testId) {
-        
+        // Check if test has completed attempts
+        const completedAttempts = @Model.Attempts.Count(a => a.IsCompleted);
+        if (completedAttempts > 0) {
+            showToast(`Cannot add questions to a test with ${completedAttempts} completed attempt${completedAttempts > 1 ? 's' : ''}. This would affect the integrity of existing results.`, 'warning');
+            return;
+        }
         
         currentQuestionType = questionType;
         currentTestId = testId;
@@ -3558,7 +3803,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const modalTitle = document.getElementById('createQuestionModalLabel');
                 modalTitle.textContent = `Create ${getQuestionTypeDisplay(questionType)} Question`;
                 
-                const modal = new bootstrap.Modal(document.getElementById('createQuestionModal'));
+                const modalElement = document.getElementById('createQuestionModal');
+                if (!modalElement) {
+                    showToast('Error: Create question modal not found', 'error');
+                    return;
+                }
+                const modal = new bootstrap.Modal(modalElement);
                 modal.show();
             } else {
                 showToast(result.message || 'Error loading question form', 'error');
@@ -3877,13 +4127,18 @@ document.addEventListener('DOMContentLoaded', function() {
     window.confirmDeleteTest = async function() {
         showLoading();
         try {
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                         document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+            
             const response = await fetch('/Test/DeleteAjax', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-RequestVerificationToken': token
                 },
-                body: JSON.stringify({ TestId: currentTestId })
+                body: JSON.stringify({ Id: currentTestId })
             });
 
             if (response.ok) {
@@ -3911,13 +4166,17 @@ document.addEventListener('DOMContentLoaded', function() {
     window.confirmCloneTest = async function() {
         showLoading();
         try {
-            const response = await fetch('/Test/Clone', {
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                         document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+            
+            const response = await fetch('/Test/CloneTestAjax', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: JSON.stringify({ id: currentTestId })
+                body: JSON.stringify({ Id: currentTestId })
             });
 
             if (response.ok) {
@@ -3945,7 +4204,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Question management functions
     window.openDeleteQuestionModal = function(questionId) {
         currentQuestionId = questionId;
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
+        const modalElement = document.getElementById('deleteQuestionModal');
+        if (!modalElement) {
+            showToast('Error: Delete question modal not found', 'error');
+            return;
+        }
+        const deleteModal = new bootstrap.Modal(modalElement);
         deleteModal.show();
     };
 
@@ -3968,7 +4232,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 populateEditQuestionForm(questionData, typeSpecific);
                 
                 // Show modal
-                const modal = new bootstrap.Modal(document.getElementById('editQuestionModal'));
+                const modalElement = document.getElementById('editQuestionModal');
+                if (!modalElement) {
+                    showToast('Error: Edit question modal not found', 'error');
+                    return;
+                }
+                const modal = new bootstrap.Modal(modalElement);
                 modal.show();
             } else {
                 showToast(result.message || 'Error loading question data', 'error');
@@ -4509,6 +4778,31 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Check if test has completed attempts and disable question creation
+    const completedAttempts = @Model.Attempts.Count(a => a.IsCompleted);
+    if (completedAttempts > 0) {
+        // Disable all question creation cards
+        const questionCards = document.querySelectorAll('.question-type-card');
+        questionCards.forEach(card => {
+            card.classList.add('disabled');
+            card.style.opacity = '0.5';
+            card.style.cursor = 'not-allowed';
+            card.style.pointerEvents = 'none';
+            
+            // Add a disabled overlay with explanation
+            const overlay = document.createElement('div');
+            overlay.className = 'question-card-overlay';
+            overlay.innerHTML = `
+                <div class="disabled-message">
+                    <i class="fas fa-lock"></i>
+                    <span>Cannot add questions<br>Test has ${completedAttempts} completed attempt${completedAttempts > 1 ? 's' : ''}</span>
+                </div>
+            `;
+            card.style.position = 'relative';
+            card.appendChild(overlay);
+        });
+    }
 });
 </script>
 }
