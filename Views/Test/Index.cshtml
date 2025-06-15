@@ -69,6 +69,65 @@ ViewData["Title"] = "My Tests";
     </div>
     }
 
+    <!-- Filter and Sort Options - Always Show -->
+    <div class="controls-section">
+        <div class="controls-content">
+            <h2 class="section-title">Your Tests</h2>
+            <div class="controls-actions">
+                <div class="search-box">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchTests" class="form-control" placeholder="Search tests...">
+                    </div>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="categoryFilter" class="filter-label">Category:</label>
+                        <select class="form-select filter-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="tagFilter" class="filter-label">Tag:</label>
+                        <select class="form-select filter-select" id="tagFilter">
+                            <option value="">All Tags</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <a href="@Url.Action("Index", "Category")" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-tags me-1"></i>Manage Categories & Tags
+                        </a>
+                    </div>
+                </div>
+                <div class="archive-toggle">
+                    <button type="button" id="archiveToggle" 
+                            class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")"
+                            data-show-archived="@(ViewBag.ShowArchived ?? false)">
+                        <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
+                        <span id="archiveToggleText">@(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")</span>
+                    </button>
+                </div>
+                <div class="view-options">
+                    <button class="view-btn active" data-view="grid" title="Grid View">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-btn" data-view="list" title="List View">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+                <div class="sort-options">
+                    <select class="form-select sort-select" id="sortTests">
+                        <option value="recent">Recently Created</option>
+                        <option value="name">Name A-Z</option>
+                        <option value="questions">Most Questions</option>
+                        <option value="attempts">Most Attempts</option>
+                        <option value="locked">Locked First</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if (Model.Any())
     {
     <!-- Dashboard Insights Section -->
@@ -194,74 +253,8 @@ ViewData["Title"] = "My Tests";
         </div>
     </div>
     }
-    else
-    {
-    <!-- Filter and Sort Options -->
-    <div class="controls-section">
-        <div class="controls-content">
-            <h2 class="section-title">Your Tests</h2>
-            <div class="controls-actions">
-                <div class="search-box">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" id="searchTests" class="form-control" placeholder="Search tests...">
-                    </div>
-                </div>
-                <div class="filter-controls">
-                    <div class="filter-group">
-                        <label for="categoryFilter" class="filter-label">Category:</label>
-                        <select class="form-select filter-select" id="categoryFilter">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="tagFilter" class="filter-label">Tag:</label>
-                        <select class="form-select filter-select" id="tagFilter">
-                            <option value="">All Tags</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <a href="@Url.Action("Index", "Category")" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-tags me-1"></i>Manage Categories & Tags
-                        </a>
-                    </div>
-                    @* <div class="filter-group"> *@
-                    @*     <a href="@Url.Action("SharedTests", "Test")" class="btn btn-outline-info btn-sm"> *@
-                    @*         <i class="fas fa-share-alt me-1"></i>Shared Tests *@
-                    @*     </a> *@
-                    @* </div> *@
-                </div>
-                <div class="archive-toggle">
-                    <button type="button" id="archiveToggle" 
-                            class="btn @(ViewBag.ShowArchived == true ? "btn-outline-secondary" : "btn-outline-primary")"
-                            data-show-archived="@(ViewBag.ShowArchived ?? false)">
-                        <i class="fas @(ViewBag.ShowArchived == true ? "fa-box" : "fa-archive") me-2"></i>
-                        <span id="archiveToggleText">@(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")</span>
-                    </button>
-                </div>
-                <div class="view-options">
-                    <button class="view-btn active" data-view="grid" title="Grid View">
-                        <i class="fas fa-th-large"></i>
-                    </button>
-                    <button class="view-btn" data-view="list" title="List View">
-                        <i class="fas fa-list"></i>
-                    </button>
-                </div>
-                <div class="sort-options">
-                    <select class="form-select sort-select" id="sortTests">
-                        <option value="recent">Recently Created</option>
-                        <option value="name">Name A-Z</option>
-                        <option value="questions">Most Questions</option>
-                        <option value="attempts">Most Attempts</option>
-                        <option value="locked">Locked First</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
 
-
-  <!-- Tests Grid/List Container -->
+    <!-- Tests Grid/List Container - Always Show -->
     <div class="tests-container" id="testsContainer">
         <div class="tests-grid" id="testsGrid">
             @foreach (var test in Model)
@@ -884,30 +877,25 @@ ViewData["Title"] = "My Tests";
             const result = await response.json();
             
             if (result.success) {
-                // Use a simple alert instead of complex toast to avoid modal conflicts
-                alert(result.message || 'Archive status updated successfully');
+                console.log('Archive operation successful:', result.message);
                 
                 // Update the test card UI immediately
                 const testCard = document.querySelector(`[data-test-id="${testId}"]`);
                 if (testCard) {
                     // Update status badge
                     const statusBadge = testCard.querySelector('.status-badge');
-                    const statusIcon = statusBadge.querySelector('i');
                     
                     if (result.isArchived) {
                         statusBadge.className = 'status-badge status-archived';
-                        statusIcon.className = 'fas fa-archive';
                         statusBadge.innerHTML = '<i class="fas fa-archive"></i> Archived';
                     } else {
                         // Determine the correct active status
                         const isLocked = testCard.getAttribute('data-locked') === 'true';
                         if (isLocked) {
                             statusBadge.className = 'status-badge status-locked';
-                            statusIcon.className = 'fas fa-lock';
                             statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
                         } else {
                             statusBadge.className = 'status-badge status-active';
-                            statusIcon.className = 'fas fa-unlock';
                             statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
                         }
                     }
@@ -926,15 +914,20 @@ ViewData["Title"] = "My Tests";
                     // Update data attributes
                     testCard.setAttribute('data-archived', result.isArchived.toString());
                     
-                    // If we're viewing archived tests and this was unarchived, hide the card
-                    // If we're viewing active tests and this was archived, hide the card
+                    // Immediately hide the card with animation if it doesn't match current view
                     const showingArchived = window.filterState?.showArchived || false;
                     if ((showingArchived && !result.isArchived) || (!showingArchived && result.isArchived)) {
-                        testCard.style.display = 'none';
+                        testCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        testCard.style.opacity = '0';
+                        testCard.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            testCard.style.display = 'none';
+                        }, 300);
                     }
                 }
                 
             } else {
+                console.error('Archive operation failed:', result.message);
                 alert(result.message || 'Error updating archive status');
             }
         } catch (error) {
@@ -1192,6 +1185,13 @@ ViewData["Title"] = "My Tests";
         // AJAX-based filtering function
         async function loadFilteredTests() {
             try {
+                // Add loading indicator
+                const container = document.getElementById('testsGrid');
+                if (container) {
+                    container.style.opacity = '0.6';
+                    container.style.pointerEvents = 'none';
+                }
+
                 const params = new URLSearchParams({
                     showArchived: filterState.showArchived,
                     categoryId: filterState.category,
@@ -1199,18 +1199,51 @@ ViewData["Title"] = "My Tests";
                     search: filterState.search
                 });
 
-                const response = await fetch(`@Url.Action("GetFilteredTestsAjax", "Test")?${params}`);
+                const response = await fetch(`@Url.Action("GetFilteredTestsAjax", "Test")?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     renderFilteredTests(result.data);
                     updateResultsCount(result.data.length, result.data.length);
+                    console.log(`Loaded ${result.data.length} tests successfully`);
                 } else {
-                    showToast(result.message || 'Error loading tests', 'error');
+                    console.error('Failed to load tests:', result.message);
+                    // Show simple error without complex toasts
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-warning text-center';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i>${result.message || 'Error loading tests'}`;
+                    container.innerHTML = '';
+                    container.appendChild(errorDiv);
                 }
             } catch (error) {
                 console.error('Error loading filtered tests:', error);
-                showToast('Error loading tests', 'error');
+                // Show simple error without complex toasts
+                const container = document.getElementById('testsGrid');
+                if (container) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'alert alert-danger text-center';
+                    errorDiv.innerHTML = '<i class="fas fa-times-circle me-2"></i>Failed to load tests. Please refresh the page.';
+                    container.innerHTML = '';
+                    container.appendChild(errorDiv);
+                }
+            } finally {
+                // Remove loading indicator
+                const container = document.getElementById('testsGrid');
+                if (container) {
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = 'auto';
+                }
             }
         }
 
