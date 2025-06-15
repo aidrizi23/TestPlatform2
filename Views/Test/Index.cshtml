@@ -839,6 +839,116 @@ ViewData["Title"] = "My Tests";
 <!-- Styles moved to external CSS file -->
 @section Scripts {
 <script>
+    // Archive/Unarchive functionality - defined globally for onclick handlers
+    window.toggleArchiveTest = async function(testId) {
+        // Debug logging
+        console.log('toggleArchiveTest called with ID:', testId);
+        
+        if (!testId) {
+            console.error('Test ID is null or undefined');
+            showToast('Error: Test ID not provided', 'error');
+            return;
+        }
+        
+        const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+        const archiveBtn = testCard?.querySelector('[onclick*="toggleArchiveTest"]');
+        
+        // Store original button content
+        const originalBtnContent = archiveBtn?.innerHTML;
+        
+        try {
+            // Add loading state to button
+            if (archiveBtn) {
+                archiveBtn.disabled = true;
+                archiveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            }
+
+            // Get CSRF token
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                         document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
+
+            const response = await fetch('@Url.Action("ToggleArchiveTestAjax", "Test")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-RequestVerificationToken': token
+                },
+                body: JSON.stringify({ Id: testId })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Use a simple alert instead of complex toast to avoid modal conflicts
+                alert(result.message || 'Archive status updated successfully');
+                
+                // Update the test card UI immediately
+                const testCard = document.querySelector(`[data-test-id="${testId}"]`);
+                if (testCard) {
+                    // Update status badge
+                    const statusBadge = testCard.querySelector('.status-badge');
+                    const statusIcon = statusBadge.querySelector('i');
+                    
+                    if (result.isArchived) {
+                        statusBadge.className = 'status-badge status-archived';
+                        statusIcon.className = 'fas fa-archive';
+                        statusBadge.innerHTML = '<i class="fas fa-archive"></i> Archived';
+                    } else {
+                        // Determine the correct active status
+                        const isLocked = testCard.getAttribute('data-locked') === 'true';
+                        if (isLocked) {
+                            statusBadge.className = 'status-badge status-locked';
+                            statusIcon.className = 'fas fa-lock';
+                            statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
+                        } else {
+                            statusBadge.className = 'status-badge status-active';
+                            statusIcon.className = 'fas fa-unlock';
+                            statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
+                        }
+                    }
+                    
+                    // Update archive button
+                    const archiveBtn = testCard.querySelector('[onclick*="toggleArchiveTest"]');
+                    
+                    if (result.isArchived) {
+                        archiveBtn.title = 'Unarchive Test';
+                        archiveBtn.innerHTML = '<i class="fas fa-box-open me-1"></i>Unarchive';
+                    } else {
+                        archiveBtn.title = 'Archive Test';
+                        archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i>Archive';
+                    }
+                    
+                    // Update data attributes
+                    testCard.setAttribute('data-archived', result.isArchived.toString());
+                    
+                    // If we're viewing archived tests and this was unarchived, hide the card
+                    // If we're viewing active tests and this was archived, hide the card
+                    const showingArchived = window.filterState?.showArchived || false;
+                    if ((showingArchived && !result.isArchived) || (!showingArchived && result.isArchived)) {
+                        testCard.style.display = 'none';
+                    }
+                }
+                
+            } else {
+                alert(result.message || 'Error updating archive status');
+            }
+        } catch (error) {
+            console.error('Error toggling archive status:', error);
+            alert('An error occurred while updating the archive status');
+        } finally {
+            // Reset button state
+            if (archiveBtn) {
+                archiveBtn.disabled = false;
+                archiveBtn.innerHTML = originalBtnContent;
+            }
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         // Global variables
         let currentTestId = null;
@@ -3175,112 +3285,6 @@ ViewData["Title"] = "My Tests";
             loadFilteredTests();
         }
 
-        // Archive/Unarchive functionality
-        window.toggleArchiveTest = async function(testId) {
-            const testCard = document.querySelector(`[data-test-id="${testId}"]`);
-            const archiveBtn = testCard?.querySelector('[onclick*="toggleArchiveTest"]');
-            
-            // Store original button content
-            const originalBtnContent = archiveBtn?.innerHTML;
-            
-            try {
-                // Add loading state to button
-                if (archiveBtn) {
-                    archiveBtn.disabled = true;
-                    archiveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
-                }
-
-                // Get CSRF token
-                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
-                             document.querySelector('meta[name="__RequestVerificationToken"]')?.getAttribute('content');
-
-                const response = await fetch('@Url.Action("ToggleArchiveTestAjax", "Test")', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-RequestVerificationToken': token
-                    },
-                    body: JSON.stringify({ Id: testId })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast(result.message, 'success');
-                    
-                    // Update the test card UI immediately
-                    const testCard = document.querySelector(`[data-test-id="${testId}"]`);
-                    if (testCard) {
-                        // Update status badge
-                        const statusBadge = testCard.querySelector('.status-badge');
-                        const statusIcon = statusBadge.querySelector('i');
-                        
-                        if (result.isArchived) {
-                            statusBadge.className = 'status-badge status-archived';
-                            statusIcon.className = 'fas fa-archive';
-                            statusBadge.innerHTML = '<i class="fas fa-archive"></i> Archived';
-                        } else {
-                            // Determine the correct active status
-                            const isLocked = testCard.getAttribute('data-locked') === 'true';
-                            if (isLocked) {
-                                statusBadge.className = 'status-badge status-locked';
-                                statusIcon.className = 'fas fa-lock';
-                                statusBadge.innerHTML = '<i class="fas fa-lock"></i> Locked';
-                            } else {
-                                statusBadge.className = 'status-badge status-active';
-                                statusIcon.className = 'fas fa-unlock';
-                                statusBadge.innerHTML = '<i class="fas fa-unlock"></i> Active';
-                            }
-                        }
-                        
-                        // Update archive button
-                        const archiveBtn = testCard.querySelector('[onclick*="toggleArchiveTest"]');
-                        
-                        if (result.isArchived) {
-                            archiveBtn.title = 'Unarchive Test';
-                            archiveBtn.innerHTML = '<i class="fas fa-box-open me-1"></i>Unarchive';
-                        } else {
-                            archiveBtn.title = 'Archive Test';
-                            archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i>Archive';
-                        }
-                        
-                        // Update data attributes
-                        testCard.setAttribute('data-archived', result.isArchived.toString());
-                        
-                        // If we're viewing archived tests and this was unarchived, hide the card
-                        // If we're viewing active tests and this was archived, hide the card
-                        const showingArchived = filterState.showArchived;
-                        if ((showingArchived && !result.isArchived) || (!showingArchived && result.isArchived)) {
-                            testCard.style.display = 'none';
-                            // Update the results count
-                            const visibleCards = document.querySelectorAll('.test-card:not([style*="display: none"])').length;
-                            updateResultsCount(visibleCards, visibleCards);
-                        }
-                    }
-                    
-                } else {
-                    showToast(result.message || 'Error updating archive status', 'error');
-                }
-            } catch (error) {
-                console.error('Error toggling archive status:', error);
-                showToast('An error occurred while updating the archive status', 'error');
-            } finally {
-                // Reset button state
-                if (archiveBtn) {
-                    archiveBtn.disabled = false;
-                    // If we successfully updated, the button content will be set by the success handler
-                    // If there was an error, restore the original content
-                    if (originalBtnContent && archiveBtn.innerHTML.includes('Processing...')) {
-                        archiveBtn.innerHTML = originalBtnContent;
-                    }
-                }
-            }
-        };
 
         // Final initialization message
         console.log('Test Index page initialized successfully');
