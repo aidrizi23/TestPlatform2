@@ -1,0 +1,362 @@
+/* Settings Pages - Clean Blue & White Theme */
+
+.settings-container {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.settings-subtitle {
+    color: #64748b;
+    margin: 0;
+    font-size: 1rem;
+}
+
+.settings-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #f1f5f9;
+}
+
+.form-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    background: white;
+}
+
+.form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    outline: none;
+}
+
+.form-control[readonly] {
+    background-color: #f8fafc;
+    color: #64748b;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    color: #64748b;
+}
+
+/* Notification Options */
+.notification-option {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.notification-option:last-child {
+    margin-bottom: 0;
+}
+
+.form-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.form-check-input {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.form-check-label {
+    flex: 1;
+    cursor: pointer;
+}
+
+.form-check-label strong {
+    display: block;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.form-check-label small {
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Privacy Options */
+.privacy-option {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.privacy-option:last-child {
+    margin-bottom: 0;
+}
+
+/* Data Management */
+.data-action {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.data-action:last-child {
+    margin-bottom: 0;
+}
+
+.data-action h5 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.data-action p {
+    margin: 0 0 1rem 0;
+    font-size: 0.875rem;
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+    color: white;
+}
+
+.btn-outline-primary {
+    background-color: transparent;
+    color: #2563eb;
+    border-color: #2563eb;
+}
+
+.btn-outline-primary:hover {
+    background-color: #2563eb;
+    color: white;
+}
+
+.btn-outline-secondary {
+    background-color: transparent;
+    color: #64748b;
+    border-color: #e2e8f0;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #64748b;
+    color: white;
+    border-color: #64748b;
+}
+
+.btn-outline-danger {
+    background-color: transparent;
+    color: #dc2626;
+    border-color: #dc2626;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Switch Styles */
+.form-switch .form-check-input {
+    width: 2.5rem;
+    height: 1.25rem;
+    border-radius: 1.25rem;
+    background-color: #e2e8f0;
+    border: none;
+    cursor: pointer;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #2563eb;
+}
+
+.form-switch .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Radio Styles */
+.form-check-input[type="radio"] {
+    border-radius: 50%;
+    border: 1px solid #d1d5db;
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.form-check-input[type="radio"]:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 1px solid transparent;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.alert-info {
+    background: #eff6ff;
+    color: #1e40af;
+    border-color: #dbeafe;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.alert-link {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.alert-link:hover {
+    text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1.5rem;
+        margin: 1rem 0;
+    }
+    
+    .settings-title {
+        font-size: 1.75rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-check {
+        align-items: flex-start;
+    }
+    
+    .notification-option,
+    .privacy-option,
+    .data-action {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-container {
+        padding: 1rem;
+    }
+    
+    .form-section {
+        padding: 1rem;
+    }
+    
+    .settings-title {
+        font-size: 1.5rem;
+    }
+}

@@ -1,0 +1,244 @@
+@model TestPlatform2.Controllers.ProfileSettingsViewModel
+@{
+    ViewData["Title"] = "Profile Settings";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h1 class="settings-title">
+                        <i class="fas fa-user-edit me-3"></i>
+                        Profile Settings
+                    </h1>
+                    <p class="settings-subtitle">Manage your personal information and account details</p>
+                </div>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <div class="settings-content">
+                    <form asp-action="Profile" method="post" class="settings-form">
+                        <div asp-validation-summary="All" class="alert alert-danger"></div>
+
+                        <div class="form-section">
+                            <h3 class="form-section-title">
+                                <i class="fas fa-user me-2"></i>
+                                Personal Information
+                            </h3>
+                            
+                            <div class="form-group">
+                                <label asp-for="FirstName" class="form-label">First Name</label>
+                                <input asp-for="FirstName" class="form-control" placeholder="Enter your first name" />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="LastName" class="form-label">Last Name</label>
+                                <input asp-for="LastName" class="form-control" placeholder="Enter your last name" />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Email" class="form-label">Email Address</label>
+                                <input asp-for="Email" class="form-control" readonly placeholder="Your email address" />
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Email address cannot be changed. Contact support if needed.
+                                </small>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number (optional)" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                Save Changes
+                            </button>
+                            <a asp-controller="Test" asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Tests
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .settings-container {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-header {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .settings-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .settings-subtitle {
+            color: #64748b;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .settings-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid #f1f5f9;
+        }
+
+        .form-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 1.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control[readonly] {
+            background-color: #f8fafc;
+            color: #64748b;
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+            border: 1px solid #2563eb;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            color: white;
+        }
+
+        .btn-outline-secondary {
+            background-color: transparent;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #64748b;
+            color: white;
+            border-color: #64748b;
+        }
+
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        @@media (max-width: 768px) {
+            .settings-container {
+                padding: 1.5rem;
+                margin: 1rem 0;
+            }
+            
+            .settings-title {
+                font-size: 1.75rem;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

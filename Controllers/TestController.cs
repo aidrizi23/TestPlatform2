@@ -269,7 +269,7 @@ public class TestController : Controller
         }
     }
     
-    // POST: /Test/Delete (Traditional MVC)
+        // POST: /Test/Delete (Traditional MVC)
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Delete(string id)
@@ -655,6 +655,7 @@ public class TestController : Controller
     // POST: /Test/DeleteAjax
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteAjax([FromBody] DeleteTestRequest request)
     {
         var user = await _userManager.GetUserAsync(User);
@@ -662,8 +663,19 @@ public class TestController : Controller
         {
             return Json(new { success = false, message = "User not authenticated" });
         }
+
+        // Debug: Check if request and Id are null
+        if (request == null)
+        {
+            return Json(new { success = false, message = "Request is null" });
+        }
+
+        if (string.IsNullOrEmpty(request.Id))
+        {
+            return Json(new { success = false, message = "Test ID is null or empty" });
+        }
         
-        Test? test = await _testRepository.GetTestByIdAsync(request.Id);
+        var test = await _testRepository.GetTestByIdAsync(request.Id);
 
         if (test is null)
         {
@@ -1498,6 +1510,61 @@ public class TestController : Controller
     {
         public string Id { get; set; }
     }
+    
+    // POST: /Test/ExportAnalyticsAjax
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> ExportAnalyticsAjax([FromBody] AnalyticsExportRequest request)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user is null)
+            return BadRequest("User not authenticated");
+
+        var test = await _testRepository.GetTestByIdAsync(request.TestId);
+        if (test is null)
+            return NotFound("Test not found");
+
+        if (test.User != user)
+            return Forbid("Unauthorized access");
+
+        try
+        {
+            var analyticsData = await _testAnalyticsRepository.GetTestAnalyticsAsync(request.TestId);
+            if (analyticsData == null)
+                return NotFound("Analytics data not found");
+
+            byte[] fileBytes;
+            string fileName;
+            string contentType;
+
+            switch (request.Format.ToLower())
+            {
+                case "pdf":
+                    fileBytes = await _exportService.ExportAnalyticsToPdfAsync(analyticsData, request);
+                    fileName = $"Analytics_{test.TestName}_{DateTime.Now:yyyyMMdd}.pdf";
+                    contentType = "application/pdf";
+                    break;
+                case "excel":
+                    fileBytes = await _exportService.ExportAnalyticsToExcelAsync(analyticsData, request);
+                    fileName = $"Analytics_{test.TestName}_{DateTime.Now:yyyyMMdd}.xlsx";
+                    contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+                    break;
+                case "csv":
+                    fileBytes = await _exportService.ExportAnalyticsToCsvAsync(analyticsData, request);
+                    fileName = $"Analytics_{test.TestName}_{DateTime.Now:yyyyMMdd}.csv";
+                    contentType = "text/csv";
+                    break;
+                default:
+                    return BadRequest("Unsupported export format");
+            }
+
+            return File(fileBytes, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Error exporting analytics: {ex.Message}");
+        }
+    }
 
     public class BulkLockRequest
     {
@@ -1509,6 +1576,15 @@ public class TestController : Controller
     {
         public string TestId { get; set; }
         public string Format { get; set; } // "pdf" or "excel"
+    }
+
+    public class AnalyticsExportRequest
+    {
+        public string TestId { get; set; }
+        public string Format { get; set; } // "pdf", "excel", or "csv"
+        public bool IncludeCharts { get; set; }
+        public bool IncludeInsights { get; set; }
+        public bool IncludeStudentData { get; set; }
     }
 
 }

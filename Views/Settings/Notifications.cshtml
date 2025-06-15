@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Notification Settings";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h1 class="settings-title">
+                        <i class="fas fa-bell me-3"></i>
+                        Notification Settings
+                    </h1>
+                    <p class="settings-subtitle">Control how and when you receive notifications</p>
+                </div>
+
+                <div class="settings-content">
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-envelope me-2"></i>
+                            Email Notifications
+                        </h3>
+                        
+                        <div class="notification-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="testResults" checked>
+                                <label class="form-check-label" for="testResults">
+                                    <strong>Test Results</strong>
+                                    <small class="d-block text-muted">Get notified when students complete your tests</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="notification-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="weeklyReport" checked>
+                                <label class="form-check-label" for="weeklyReport">
+                                    <strong>Weekly Reports</strong>
+                                    <small class="d-block text-muted">Receive weekly summaries of test performance</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="notification-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="systemUpdates">
+                                <label class="form-check-label" for="systemUpdates">
+                                    <strong>System Updates</strong>
+                                    <small class="d-block text-muted">Important platform updates and announcements</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            Browser Notifications
+                        </h3>
+                        
+                        <div class="notification-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="browserNotifications">
+                                <label class="form-check-label" for="browserNotifications">
+                                    <strong>Browser Notifications</strong>
+                                    <small class="d-block text-muted">Show notifications in your browser when the app is open</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Coming Soon:</strong> Full notification preferences will be available in a future update.
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="saveNotificationSettings()">
+                            <i class="fas fa-save me-2"></i>
+                            Save Preferences
+                        </button>
+                        <a asp-controller="Test" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Tests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script>
+        function saveNotificationSettings() {
+            // Placeholder for saving notification settings
+            showToast('Notification preferences saved!', 'success');
+        }
+    </script>
+}

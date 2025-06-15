@@ -1,3239 +1,438 @@
 @model TestPlatform2.Models.QuestionAnalyticsViewModel
 @using TestPlatform2.Data.Questions
 @{
-ViewData["Title"] = "Question Analytics";
-
-// Determine question type for specific rendering
-bool isMultipleChoice = Model.Question is MultipleChoiceQuestion;
-bool isTrueFalse = Model.Question is TrueFalseQuestion;
-bool isShortAnswer = Model.Question is ShortAnswerQuestion;
-
-// Cast to specific type if needed
-MultipleChoiceQuestion mcQuestion = isMultipleChoice ? (MultipleChoiceQuestion)Model.Question : null;
-TrueFalseQuestion tfQuestion = isTrueFalse ? (TrueFalseQuestion)Model.Question : null;
-ShortAnswerQuestion saQuestion = isShortAnswer ? (ShortAnswerQuestion)Model.Question : null;
+    ViewData["Title"] = "Question Analytics";
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/analytics.css" />
 }
 
-<div class="question-analytics-wrapper">
-    <!-- Enhanced Hero Section -->
-    <section class="analytics-hero">
-        <div class="hero-background">
-            <div class="hero-gradient"></div>
-            <div class="floating-elements">
-                <div class="float-element element-1"></div>
-                <div class="float-element element-2"></div>
-                <div class="float-element element-3"></div>
-            </div>
-        </div>
-
-        <div class="hero-content">
-            <nav class="breadcrumb-modern">
-                <a href="@Url.Action("Analytics", "Test", new { id = Model.TestId })" class="breadcrumb-item">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Test Analytics</span>
+<div class="analytics-container">
+    <!-- Header -->
+    <div class="analytics-header">
+        <div class="header-content">
+            <nav class="breadcrumb-nav mb-3">
+                <a asp-action="Analytics" asp-route-id="@Model.TestId" class="breadcrumb-link">
+                    <i class="fas fa-arrow-left me-2"></i>Test Analytics
                 </a>
-                <i class="fas fa-chevron-right breadcrumb-separator"></i>
+                <span class="breadcrumb-separator">/</span>
                 <span class="breadcrumb-current">Question Analysis</span>
             </nav>
 
-            <div class="hero-main">
-                <div class="hero-text">
-                    <h1 class="hero-title">
-                        <span class="title-icon">
-                            <i class="fas fa-microscope"></i>
-                        </span>
-                        Question Deep Dive
-                    </h1>
-                    <p class="hero-subtitle">Comprehensive analysis and insights for question performance</p>
-                    <div class="test-meta">
-                        <span class="meta-item">
-                            <i class="fas fa-folder-open"></i>
-                            <span>@Model.TestName</span>
-                        </span>
-                        <span class="meta-divider">•</span>
-                        <span class="meta-item">
-                            <i class="fas fa-hash"></i>
-                            <span>Question @(Model.Question.Position + 1)</span>
-                        </span>
-                    </div>
+            <div class="title-section">
+                <h1 class="page-title">
+                    <i class="fas fa-question-circle me-3"></i>
+                    Question Analytics
+                </h1>
+                <div class="test-info">
+                    <div class="test-name">@Model.TestName</div>
+                    <div class="question-meta">Question @(Model.Question.Position + 1) of @Model.Question.Test.Questions.Count</div>
                 </div>
+            </div>
 
-                <div class="hero-actions">
-                    <button type="button" class="action-btn primary" onclick="showQuestionPreview()">
-                        <i class="fas fa-eye"></i>
-                        <span>Preview Question</span>
-                    </button>
-                    <button type="button" class="action-btn secondary" onclick="showExportModal()">
-                        <i class="fas fa-download"></i>
-                        <span>Export Data</span>
-                    </button>
-                    <button type="button" class="action-btn secondary" onclick="showShareModal()">
-                        <i class="fas fa-share"></i>
-                        <span>Share</span>
-                    </button>
-                </div>
+            <div class="header-actions">
+                <a asp-action="Analytics" asp-route-id="@Model.TestId" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Test Analytics
+                </a>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Performance Dashboard -->
-    <section class="performance-dashboard">
-        <div class="dashboard-grid">
-            <!-- Primary Metrics -->
-            <div class="metric-card-advanced primary-metric">
-                <div class="metric-background">
-                    <div class="metric-pattern"></div>
-                    <div class="metric-glow"></div>
-                </div>
-                <div class="metric-content">
-                    <div class="metric-header">
-                        <div class="metric-icon success">
-                            <i class="fas fa-target"></i>
-                        </div>
-                        <div class="metric-trend">
-                            @{
-                            var trendClass = Model.Analytics.SuccessRate >= 70 ? "trend-up" : Model.Analytics.SuccessRate >= 40 ? "trend-stable" : "trend-down";
-                            var trendIcon = Model.Analytics.SuccessRate >= 70 ? "fa-arrow-up" : Model.Analytics.SuccessRate >= 40 ? "fa-minus" : "fa-arrow-down";
-                            }
-                            <i class="fas @trendIcon @trendClass"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-section">
-                        <div class="metric-value @(Model.Analytics.SuccessRate >= 70 ? "excellent" : Model.Analytics.SuccessRate >= 40 ? "good" : "poor")">
-                            @Model.Analytics.SuccessRate.ToString("0.0")%
-                        </div>
-                        <div class="metric-label">Success Rate</div>
-                        <div class="metric-description">Students who answered correctly</div>
-                    </div>
-                    <div class="metric-visual">
-                        <div class="circular-progress" data-percentage="@Model.Analytics.SuccessRate">
-                            <svg class="progress-ring" width="60" height="60">
-                                <circle class="progress-ring-track" cx="30" cy="30" r="25" fill="transparent" stroke="rgba(255,255,255,0.2)" stroke-width="4"/>
-                                <circle class="progress-ring-fill" cx="30" cy="30" r="25" fill="transparent" stroke="white" stroke-width="4" stroke-linecap="round"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Secondary Metrics -->
-            <div class="metric-card-advanced">
-                <div class="metric-icon-modern blue">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="metric-data">
-                    <div class="metric-number">@(Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers)</div>
-                    <div class="metric-title">Total Responses</div>
-                    <div class="metric-breakdown">
-                        <span class="breakdown-item success">
-                            <i class="fas fa-check"></i>
-                            @Model.Analytics.CorrectAnswers correct
-                        </span>
-                        <span class="breakdown-item error">
-                            <i class="fas fa-times"></i>
-                            @Model.Analytics.IncorrectAnswers incorrect
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card-advanced">
-                <div class="metric-icon-modern purple">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="metric-data">
-                    <div class="metric-number">@Model.Analytics.AveragePoints.ToString("0.00")</div>
-                    <div class="metric-title">Average Points</div>
-                    <div class="metric-subtitle">out of @Model.Question.Points total</div>
-                    <div class="progress-bar-modern">
-                        <div class="progress-fill" style="width: @((Model.Analytics.AveragePoints / Model.Question.Points * 100).ToString("0"))%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="metric-card-advanced">
-                <div class="metric-icon-modern orange">
-                    <i class="fas fa-gauge-high"></i>
-                </div>
-                <div class="metric-data">
-                    <div class="difficulty-indicator">
-                        @if (Model.Analytics.SuccessRate >= 85)
-                        {
-                        <span class="difficulty-badge easy">Easy</span>
-                        }
-                        else if (Model.Analytics.SuccessRate >= 70)
-                        {
-                        <span class="difficulty-badge moderate">Moderate</span>
-                        }
-                        else if (Model.Analytics.SuccessRate >= 50)
-                        {
-                        <span class="difficulty-badge challenging">Challenging</span>
-                        }
-                        else
-                        {
-                        <span class="difficulty-badge difficult">Difficult</span>
-                        }
-                    </div>
-                    <div class="metric-title">Difficulty Level</div>
-                    <div class="metric-subtitle">Based on response patterns</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Question Details Section -->
-    <section class="question-details-section">
-        <div class="section-header-modern">
-            <div class="header-content">
-                <h2 class="section-title">
-                    <i class="fas fa-clipboard-question"></i>
-                    Question Details
-                </h2>
-                <div class="section-actions">
-                    <button type="button" class="btn-icon" onclick="editQuestion()" title="Edit Question">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn-icon" onclick="duplicateQuestion()" title="Duplicate Question">
-                        <i class="fas fa-copy"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="question-card-modern">
+    <!-- Question Display -->
+    <div class="question-display-section">
+        <div class="question-card">
             <div class="question-header">
-                <div class="question-meta-tags">
-                    <span class="meta-tag type-tag @(Model.Analytics.QuestionType.ToLower().Replace(" ", "-"))">
-                        @switch (Model.Analytics.QuestionType)
-                        {
-                        case "MultipleChoice":
-                        <i class="fas fa-list-ul"></i>
-                                <span>Multiple Choice</span>
-                        break;
-                        case "TrueFalse":
-                        <i class="fas fa-check-circle"></i>
-                                <span>True/False</span>
-                        break;
-                        case "ShortAnswer":
-                        <i class="fas fa-pen"></i>
-                                <span>Short Answer</span>
-                        break;
-                        }
-                    </span>
-                    <span class="meta-tag position-tag">
-                        Position @(Model.Question.Position + 1)
-                    </span>
-                    <span class="meta-tag points-tag">
-                        @Model.Question.Points pts
-                    </span>
+                <div class="question-type-badge">
+                    @switch (Model.Question)
+                    {
+                        case MultipleChoiceQuestion:
+                            <i class="fas fa-list-ul me-1"></i><text>Multiple Choice</text>
+                            break;
+                        case TrueFalseQuestion:
+                            <i class="fas fa-check-circle me-1"></i><text>True/False</text>
+                            break;
+                        case ShortAnswerQuestion:
+                            <i class="fas fa-pen me-1"></i><text>Short Answer</text>
+                            break;
+                    }
+                </div>
+                <div class="question-points">
+                    <i class="fas fa-star me-1"></i>@Model.Question.Points points
                 </div>
             </div>
+            
+            <div class="question-text">
+                @Model.Question.Text
+            </div>
 
-            <div class="question-content">
-                <div class="question-text">
-                    <h3>@Model.Question.Text</h3>
-                </div>
-
-                @if (isMultipleChoice)
-                {
-                <div class="answer-options">
-                    <h4>Answer Options</h4>
-                    <div class="options-grid">
-                        @foreach (var option in mcQuestion.Options.Select((opt, index) => new { Option = opt, Index = index }))
+            @switch (Model.Question)
+            {
+                case MultipleChoiceQuestion mcq:
+                    <div class="question-options">
+                        <h6>Answer Options:</h6>
+                        @foreach (var option in mcq.Options)
                         {
-                        var isCorrect = mcQuestion.CorrectAnswers.Contains(option.Option);
-                        var responseCount = Model.Analytics.AnswerDistribution?.GetValueOrDefault(option.Option, 0) ?? 0;
-                        var responsePercentage = (Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers) > 0
-                        ? (double)responseCount / (Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers) * 100
-                        : 0;
-
-                        <div class="option-card @(isCorrect ? "correct-option" : "")">
-                            <div class="option-header">
-                                <div class="option-letter">@(((char)('A' + option.Index)).ToString())</div>
-                                <div class="option-status">
-                                    @if (isCorrect)
-                                    {
-                                    <i class="fas fa-check-circle text-success"></i>
-                                    }
-                                </div>
-                            </div>
-                            <div class="option-text">@option.Option</div>
-                            <div class="option-stats">
-                                <div class="stat-bar">
-                                    <div class="stat-fill @(isCorrect ? "correct" : "incorrect")"
-                                         style="width: @responsePercentage.ToString("0.0")%"></div>
-                                </div>
-                                <div class="stat-text">
-                                    @responseCount responses (@responsePercentage.ToString("0.0")%)
-                                </div>
-                            </div>
-                        </div>
-                        }
-                    </div>
-                </div>
-                }
-                else if (isTrueFalse)
-                {
-                <div class="tf-analysis">
-                    <h4>Answer Distribution</h4>
-                    <div class="tf-options-modern">
-                        @{
-                        var trueCount = Model.Analytics.AnswerDistribution?.GetValueOrDefault("True", 0) ?? 0;
-                        var falseCount = Model.Analytics.AnswerDistribution?.GetValueOrDefault("False", 0) ?? 0;
-                        var totalResponses = trueCount + falseCount;
-                        var truePercentage = totalResponses > 0 ? (double)trueCount / totalResponses * 100 : 0;
-                        var falsePercentage = totalResponses > 0 ? (double)falseCount / totalResponses * 100 : 0;
-                        }
-
-                        <div class="tf-option @(tfQuestion.CorrectAnswer ? "correct-option" : "")">
-                            <div class="tf-header">
-                                <div class="tf-icon">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <div class="tf-label">True</div>
-                                @if (tfQuestion.CorrectAnswer)
+                            <div class="option-item @(mcq.CorrectAnswers.Contains(option) ? "correct-option" : "")">
+                                @if (mcq.CorrectAnswers.Contains(option))
                                 {
-                                <div class="correct-badge">
-                                    <i class="fas fa-star"></i>
-                                </div>
+                                    <i class="fas fa-check-circle text-success me-2"></i>
                                 }
+                                @option
                             </div>
-                            <div class="tf-stats">
-                                <div class="stat-number">@trueCount</div>
-                                <div class="stat-percentage">@truePercentage.ToString("0.0")%</div>
-                                <div class="stat-bar">
-                                    <div class="stat-fill @(tfQuestion.CorrectAnswer ? "correct" : "incorrect")"
-                                         style="width: @truePercentage.ToString("0.0")%"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="tf-option @(!tfQuestion.CorrectAnswer ? "correct-option" : "")">
-                            <div class="tf-header">
-                                <div class="tf-icon">
-                                    <i class="fas fa-times"></i>
-                                </div>
-                                <div class="tf-label">False</div>
-                                @if (!tfQuestion.CorrectAnswer)
-                                {
-                                <div class="correct-badge">
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                }
-                            </div>
-                            <div class="tf-stats">
-                                <div class="stat-number">@falseCount</div>
-                                <div class="stat-percentage">@falsePercentage.ToString("0.0")%</div>
-                                <div class="stat-bar">
-                                    <div class="stat-fill @(!tfQuestion.CorrectAnswer ? "correct" : "incorrect")"
-                                         style="width: @falsePercentage.ToString("0.0")%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                }
-                else if (isShortAnswer)
-                {
-                <div class="sa-analysis">
-                    <h4>Expected Answer</h4>
-                    <div class="expected-answer-card">
-                        <div class="answer-content">
-                            <div class="answer-text">
-                                <i class="fas fa-quote-left"></i>
-                                <span>@saQuestion.ExpectedAnswer</span>
-                                <i class="fas fa-quote-right"></i>
-                            </div>
-                            <div class="answer-properties">
-                                    <span class="property-tag @(saQuestion.CaseSensitive ? "case-sensitive" : "case-insensitive")">
-                                        <i class="fas fa-text-height"></i>
-                                        @(saQuestion.CaseSensitive ? "Case Sensitive" : "Case Insensitive")
-                                    </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                }
-            </div>
-        </div>
-    </section>
-
-    <!-- Visual Analytics Section -->
-    <section class="visual-analytics-section">
-        <div class="analytics-grid">
-            <!-- Response Distribution Chart -->
-            @if (isMultipleChoice || isTrueFalse)
-            {
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Response Distribution</h3>
-                    <p>How students responded to this question</p>
-                    <div class="chart-controls">
-                        <button type="button" class="chart-control active" data-chart="bar">
-                            <i class="fas fa-chart-bar"></i>
-                        </button>
-                        <button type="button" class="chart-control" data-chart="pie">
-                            <i class="fas fa-chart-pie"></i>
-                        </button>
-                        <button type="button" class="chart-control" data-chart="doughnut">
-                            <i class="fas fa-circle-notch"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <canvas id="responseChart"></canvas>
-                </div>
-                <div class="chart-insights">
-                    <div class="insight-item">
-                        <i class="fas fa-lightbulb"></i>
-                        <span>Most popular incorrect answer reveals common misconception</span>
-                    </div>
-                </div>
-            </div>
-            }
-
-            <!-- Performance Trends -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Performance Comparison</h3>
-                    <p>This question vs test average</p>
-                </div>
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Time Analysis -->
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3>Response Time Analysis</h3>
-                    <p>How long students spent on this question</p>
-                </div>
-                <div class="chart-container">
-                    <canvas id="timeChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Insights and Recommendations -->
-    <section class="insights-section">
-        <div class="section-header-modern">
-            <h2 class="section-title">
-                <i class="fas fa-brain"></i>
-                AI-Powered Insights
-            </h2>
-        </div>
-
-        <div class="insights-grid">
-            @if (Model.Analytics.SuccessRate < 40)
-            {
-            <div class="insight-card critical">
-                <div class="insight-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Critical Performance Issue</h4>
-                    <p>Only @Model.Analytics.SuccessRate.ToString("0.0")% of students answered correctly. This indicates a significant learning gap.</p>
-                    <div class="recommendations">
-                        <h5>Recommended Actions:</h5>
-                        <ul>
-                            <li>Review instructional materials for this topic</li>
-                            <li>Consider providing additional examples</li>
-                            <li>Offer remedial sessions for struggling students</li>
-                            <li>Examine question clarity and wording</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            }
-            else if (Model.Analytics.SuccessRate > 90)
-            {
-            <div class="insight-card success">
-                <div class="insight-icon">
-                    <i class="fas fa-trophy"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Excellent Performance</h4>
-                    <p>@Model.Analytics.SuccessRate.ToString("0.0")% success rate indicates students have mastered this concept.</p>
-                    <div class="recommendations">
-                        <h5>Consider:</h5>
-                        <ul>
-                            <li>Using this as a model question for similar topics</li>
-                            <li>Adding complexity for advanced learners</li>
-                            <li>Moving to more challenging applications</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            }
-            else
-            {
-            <div class="insight-card balanced">
-                <div class="insight-icon">
-                    <i class="fas fa-balance-scale"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Well-Balanced Question</h4>
-                    <p>@Model.Analytics.SuccessRate.ToString("0.0")% success rate shows good discrimination between high and low performers.</p>
-                    <div class="recommendations">
-                        <h5>This question effectively:</h5>
-                        <ul>
-                            <li>Differentiates between skill levels</li>
-                            <li>Provides meaningful assessment data</li>
-                            <li>Aligns with learning objectives</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            }
-
-            @if (isMultipleChoice && Model.Analytics.AnswerDistribution != null)
-            {
-            var mostSelectedIncorrect = Model.Analytics.AnswerDistribution
-            .Where(kvp => !mcQuestion.CorrectAnswers.Contains(kvp.Key))
-            .OrderByDescending(kvp => kvp.Value)
-            .FirstOrDefault();
-
-            if (mostSelectedIncorrect.Key != null && mostSelectedIncorrect.Value > 0)
-            {
-            <div class="insight-card warning">
-                <div class="insight-icon">
-                    <i class="fas fa-search-minus"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Common Misconception Detected</h4>
-                    <p>@mostSelectedIncorrect.Value students chose "@mostSelectedIncorrect.Key" - this reveals a pattern worth addressing.</p>
-                    <div class="recommendations">
-                        <h5>Teaching Opportunity:</h5>
-                        <ul>
-                            <li>Address this specific misconception in class</li>
-                            <li>Create targeted practice materials</li>
-                            <li>Use peer teaching to correct understanding</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            }
-            }
-
-            <div class="insight-card improvement">
-                <div class="insight-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="insight-content">
-                    <h4>Optimization Suggestions</h4>
-                    <div class="suggestions-list">
-                        @if (Model.Analytics.SuccessRate < 70)
-                        {
-                        <div class="suggestion-item">
-                            <i class="fas fa-edit"></i>
-                            <span>Consider rephrasing for clarity</span>
-                        </div>
                         }
-                        <div class="suggestion-item">
-                            <i class="fas fa-copy"></i>
-                            <span>Create variations for practice</span>
-                        </div>
-                        <div class="suggestion-item">
-                            <i class="fas fa-tags"></i>
-                            <span>Tag with learning objectives</span>
-                        </div>
-                        <div class="suggestion-item">
-                            <i class="fas fa-clock"></i>
-                            <span>Monitor time allocation</span>
+                    </div>
+                    break;
+                    
+                case TrueFalseQuestion tfq:
+                    <div class="question-options">
+                        <h6>Correct Answer:</h6>
+                        <div class="tf-answer">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            @(tfq.CorrectAnswer ? "True" : "False")
                         </div>
                     </div>
-                </div>
+                    break;
+                    
+                case ShortAnswerQuestion saq:
+                    <div class="question-options">
+                        <h6>Expected Answer:</h6>
+                        <div class="expected-answer">@saq.ExpectedAnswer</div>
+                        @if (!saq.CaseSensitive)
+                        {
+                            <small class="text-muted">Case insensitive</small>
+                        }
+                    </div>
+                    break;
+            }
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-target"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.Analytics.SuccessRate.ToString("0.0")%</div>
+                <div class="stat-label">Success Rate</div>
             </div>
         </div>
-    </section>
 
-    <!-- Action Center -->
-    <section class="action-center">
-        <div class="action-header">
-            <h3>Quick Actions</h3>
-            <p>Manage and optimize this question</p>
-        </div>
-        <div class="action-buttons">
-            <button type="button" class="action-btn-large primary" onclick="editQuestion()">
-                <i class="fas fa-edit"></i>
-                <span>Edit Question</span>
-            </button>
-            <button type="button" class="action-btn-large secondary" onclick="duplicateQuestion()">
-                <i class="fas fa-copy"></i>
-                <span>Duplicate</span>
-            </button>
-            <button type="button" class="action-btn-large secondary" onclick="showStudentResponses()">
+        <div class="stat-card">
+            <div class="stat-icon">
                 <i class="fas fa-users"></i>
-                <span>View Responses</span>
-            </button>
-            <button type="button" class="action-btn-large secondary" onclick="generateReport()">
-                <i class="fas fa-file-alt"></i>
-                <span>Generate Report</span>
-            </button>
-        </div>
-    </section>
-</div>
-
-<!-- Modals -->
-<!-- Question Preview Modal -->
-<div class="modal fade" id="questionPreviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-eye"></i>
-                    Question Preview
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="question-preview">
-                    <div class="preview-header">
-                        <span class="question-number">Question @(Model.Question.Position + 1)</span>
-                        <span class="question-points">@Model.Question.Points points</span>
-                    </div>
-                    <div class="preview-content">
-                        <h4>@Model.Question.Text</h4>
-                        <!-- Question options will be loaded here -->
-                    </div>
+            <div class="stat-content">
+                <div class="stat-number">@(Model.Analytics.CorrectAnswers + Model.Analytics.IncorrectAnswers)</div>
+                <div class="stat-label">Total Responses</div>
+                <div class="stat-meta">
+                    @Model.Analytics.CorrectAnswers correct, @Model.Analytics.IncorrectAnswers incorrect
                 </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Export Modal -->
-<div class="modal fade" id="exportModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-download"></i>
-                    Export Analytics
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-star"></i>
             </div>
-            <div class="modal-body">
-                <div class="export-options">
-                    <div class="export-option" onclick="exportData('pdf')">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>PDF Report</span>
-                    </div>
-                    <div class="export-option" onclick="exportData('excel')">
-                        <i class="fas fa-file-excel"></i>
-                        <span>Excel Data</span>
-                    </div>
-                    <div class="export-option" onclick="exportData('image')">
-                        <i class="fas fa-image"></i>
-                        <span>Chart Images</span>
-                    </div>
+            <div class="stat-content">
+                <div class="stat-number">@Model.Analytics.AveragePoints.ToString("0.00")</div>
+                <div class="stat-label">Average Points</div>
+                <div class="stat-meta">out of @Model.Question.Points total</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-gauge-high"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">
+                    @if (Model.Analytics.SuccessRate >= 85)
+                    {
+                        <span class="difficulty-easy">Easy</span>
+                    }
+                    else if (Model.Analytics.SuccessRate >= 70)
+                    {
+                        <span class="difficulty-moderate">Moderate</span>
+                    }
+                    else if (Model.Analytics.SuccessRate >= 50)
+                    {
+                        <span class="difficulty-challenging">Challenging</span>
+                    }
+                    else
+                    {
+                        <span class="difficulty-difficult">Difficult</span>
+                    }
                 </div>
+                <div class="stat-label">Difficulty Level</div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Share Modal -->
-<div class="modal fade" id="shareModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-share"></i>
-                    Share Analytics
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="share-options">
-                    <button type="button" class="share-option" onclick="shareEmail()">
-                        <i class="fas fa-envelope"></i>
-                        <span>Email</span>
-                    </button>
-                    <button type="button" class="share-option" onclick="copyLink()">
-                        <i class="fas fa-link"></i>
-                        <span>Copy Link</span>
-                    </button>
-                    <button type="button" class="share-option" onclick="generateQRCode()">
-                        <i class="fas fa-qrcode"></i>
-                        <span>QR Code</span>
-                    </button>
-                </div>
+    @if (Model.Question is MultipleChoiceQuestion mcQuestion && Model.Analytics.AnswerDistribution?.Any() == true)
+    {
+        <!-- Answer Distribution for Multiple Choice -->
+        <div class="answer-distribution-section">
+            <h3 class="section-title">
+                <i class="fas fa-chart-pie me-2"></i>Answer Distribution
+            </h3>
+            <div class="answer-chart">
+                @{
+                    var answerList = Model.Analytics.AnswerDistribution.ToList();
+                    var totalResponses = answerList.Sum(a => a.Value);
+                }
+                @foreach (var answer in answerList.OrderByDescending(a => a.Value))
+                {
+                    var percentage = totalResponses > 0 ? (double)answer.Value / totalResponses * 100 : 0;
+                    var isCorrect = mcQuestion.CorrectAnswers.Contains(answer.Key);
+                    
+                    <div class="answer-bar @(isCorrect ? "correct" : "incorrect")">
+                        <div class="answer-label">
+                            @if (isCorrect)
+                            {
+                                <i class="fas fa-check-circle text-success me-1"></i>
+                            }
+                            @answer.Key
+                        </div>
+                        <div class="answer-progress">
+                            <div class="progress-fill" style="width: @percentage.ToString("0.0")%"></div>
+                        </div>
+                        <div class="answer-stats">
+                            <span class="answer-count">@answer.Value</span>
+                            <span class="answer-percentage">(@percentage.ToString("0.0")%)</span>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
-    </div>
-</div>
+    }
 
-<!-- Student Responses Modal -->
-<div class="modal fade" id="studentResponsesModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content modern-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-users"></i>
-                    Student Responses
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="responses-container">
-                    <!-- Student responses will be loaded here -->
-                    <div class="loading-state">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>Loading responses...</span>
+    <!-- Performance Insights -->
+    <div class="insights-section">
+        <h3 class="section-title">
+            <i class="fas fa-lightbulb me-2"></i>Performance Insights
+        </h3>
+        <div class="insights-grid">
+            @if (Model.Analytics.SuccessRate < 50)
+            {
+                <div class="insight-card warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div class="insight-content">
+                        <h6>Low Success Rate</h6>
+                        <p>This question has a success rate below 50%. Consider reviewing the question difficulty or providing additional guidance.</p>
                     </div>
                 </div>
-            </div>
+            }
+            
+            @if (Model.Analytics.SuccessRate > 90)
+            {
+                <div class="insight-card success">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="insight-content">
+                        <h6>High Performance</h6>
+                        <p>Students are performing very well on this question. The content appears to be well understood.</p>
+                    </div>
+                </div>
+            }
+            
+            @if (Model.Question is MultipleChoiceQuestion && Model.Analytics.AnswerDistribution?.Any() == true)
+            {
+                var mostCommonWrong = Model.Analytics.AnswerDistribution
+                    .Where(a => !((MultipleChoiceQuestion)Model.Question).CorrectAnswers.Contains(a.Key))
+                    .OrderByDescending(a => a.Value)
+                    .FirstOrDefault();
+                    
+                if (mostCommonWrong.Value > 2)
+                {
+                    <div class="insight-card info">
+                        <i class="fas fa-info-circle"></i>
+                        <div class="insight-content">
+                            <h6>Common Misconception</h6>
+                            <p>Many students chose "@mostCommonWrong.Key" (@mostCommonWrong.Value responses). This may indicate a common misconception that needs addressing.</p>
+                        </div>
+                    </div>
+                }
+            }
         </div>
     </div>
 </div>
-
-<!-- Toast Container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
 
 <style>
-    /* Modern Question Analytics Styles */
-    * {
-        box-sizing: border-box;
-    }
-
-    .question-analytics-wrapper {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-        padding-bottom: 2rem;
-    }
-
-    /* Hero Section */
-    .analytics-hero {
-        position: relative;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
-        color: white;
-        overflow: hidden;
-        margin-bottom: 2rem;
-    }
-
-    .hero-background {
-        position: absolute;
-        inset: 0;
-    }
-
-    .hero-gradient {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(45deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-    }
-
-    .floating-elements {
-        position: absolute;
-        inset: 0;
-        overflow: hidden;
-    }
-
-    .float-element {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.1);
-        animation: float 8s ease-in-out infinite;
-    }
-
-    .element-1 {
-        width: 100px;
-        height: 100px;
-        top: 20%;
-        left: 10%;
-        animation-delay: 0s;
-    }
-
-    .element-2 {
-        width: 60px;
-        height: 60px;
-        top: 60%;
-        right: 20%;
-        animation-delay: 2s;
-    }
-
-    .element-3 {
-        width: 80px;
-        height: 80px;
-        bottom: 30%;
-        left: 60%;
-        animation-delay: 4s;
-    }
-
-    @@keyframes float {
-        0%, 100% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-20px) rotate(180deg); }
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 3rem 2rem;
-    }
-
-    .breadcrumb-modern {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        font-size: 0.875rem;
-    }
-
-    .breadcrumb-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: rgba(255, 255, 255, 0.8);
-        text-decoration: none;
-        padding: 0.5rem 1rem;
-        border-radius: 25px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .breadcrumb-item:hover {
-        color: white;
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    .breadcrumb-separator {
-        color: rgba(255, 255, 255, 0.6);
-    }
-
-    .breadcrumb-current {
-        color: rgba(255, 255, 255, 0.9);
-        font-weight: 600;
-    }
-
-    .hero-main {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 2rem;
-    }
-
-    .hero-title {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        font-size: 3rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        line-height: 1.2;
-    }
-
-    .title-icon {
-        width: 72px;
-        height: 72px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .hero-subtitle {
-        font-size: 1.25rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 2rem;
-        font-weight: 400;
-    }
-
-    .test-meta {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .meta-divider {
-        color: rgba(255, 255, 255, 0.5);
-    }
-
-    .hero-actions {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .action-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 1.5rem;
-        border-radius: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        cursor: pointer;
-    }
-
-    .action-btn.primary {
-        background: rgba(59, 130, 246, 0.8);
-        border-color: rgba(59, 130, 246, 0.6);
-    }
-
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .action-btn.primary:hover {
-        background: rgba(59, 130, 246, 1);
-        color: white;
-    }
-
-    /* Performance Dashboard */
-    .performance-dashboard {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem 2rem;
-    }
-
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .metric-card-advanced {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(59, 130, 246, 0.1);
-        transition: all 0.4s ease;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .metric-card-advanced:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .primary-metric {
-        grid-column: span 1;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        color: white;
-    }
-
-    .metric-background {
-        position: absolute;
-        inset: 0;
-    }
-
-    .metric-pattern {
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 2px, transparent 2px);
-        background-size: 30px 30px;
-        opacity: 0.6;
-    }
-
-    .metric-glow {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-        animation: pulse 3s ease-in-out infinite;
-    }
-
-    @@keyframes pulse {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
-    }
-
-    .metric-content {
-        position: relative;
-        z-index: 2;
-    }
-
-    .metric-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .metric-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-    }
-
-    .metric-icon.success {
-        background: rgba(34, 197, 94, 0.2);
-        color: #22c55e;
-    }
-
-    .metric-trend {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .trend-up {
-        color: #22c55e;
-    }
-
-    .trend-down {
-        color: #ef4444;
-    }
-
-    .trend-stable {
-        color: #f59e0b;
-    }
-
-    .metric-value-section {
-        text-align: left;
-        margin-bottom: 1.5rem;
-    }
-
-    .metric-value {
-        font-size: 3rem;
-        font-weight: 700;
-        line-height: 1;
-        margin-bottom: 0.5rem;
-    }
-
-    .metric-value.excellent {
-        color: #22c55e;
-    }
-
-    .metric-value.good {
-        color: #f59e0b;
-    }
-
-    .metric-value.poor {
-        color: #ef4444;
-    }
-
-    .primary-metric .metric-value {
-        color: white;
-    }
-
-    .metric-label {
-        font-size: 1.125rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-    }
-
-    .metric-description {
-        font-size: 0.875rem;
-        opacity: 0.8;
-    }
-
-    .metric-visual {
-        display: flex;
-        justify-content: center;
-    }
-
-    .circular-progress {
-        position: relative;
-    }
-
-    .progress-ring {
-        transform: rotate(-90deg);
-    }
-
-    .progress-ring-track {
-        stroke-dasharray: 157;
-        stroke-dashoffset: 0;
-    }
-
-    .progress-ring-fill {
-        stroke-dasharray: 157;
-        stroke-dashoffset: 157;
-        transition: stroke-dashoffset 1s ease-in-out;
-    }
-
-    .metric-icon-modern {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        color: white;
-        margin-bottom: 1.5rem;
-    }
-
-    .metric-icon-modern.blue {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    }
-
-    .metric-icon-modern.purple {
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    }
-
-    .metric-icon-modern.orange {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-    }
-
-    .metric-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 0.5rem;
-        line-height: 1;
-    }
-
-    .metric-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #6b7280;
-        margin-bottom: 0.5rem;
-    }
-
-    .metric-subtitle {
-        font-size: 0.875rem;
-        color: #9ca3af;
-        margin-bottom: 1rem;
-    }
-
-    .metric-breakdown {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-
-    .breakdown-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .breakdown-item.success {
-        color: #059669;
-    }
-
-    .breakdown-item.error {
-        color: #dc2626;
-    }
-
-    .progress-bar-modern {
-        height: 6px;
-        background: #e5e7eb;
-        border-radius: 3px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-        border-radius: 3px;
-        transition: width 1s ease-in-out;
-    }
-
-    .difficulty-indicator {
-        margin-bottom: 1rem;
-    }
-
-    .difficulty-badge {
-        padding: 0.75rem 1.25rem;
-        border-radius: 20px;
-        font-size: 1.125rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .difficulty-badge.easy {
-        background: rgba(34, 197, 94, 0.1);
-        color: #059669;
-        border: 2px solid #22c55e;
-    }
-
-    .difficulty-badge.moderate {
-        background: rgba(59, 130, 246, 0.1);
-        color: #1d4ed8;
-        border: 2px solid #3b82f6;
-    }
-
-    .difficulty-badge.challenging {
-        background: rgba(245, 158, 11, 0.1);
-        color: #d97706;
-        border: 2px solid #f59e0b;
-    }
-
-    .difficulty-badge.difficult {
-        background: rgba(239, 68, 68, 0.1);
-        color: #dc2626;
-        border: 2px solid #ef4444;
-    }
-
-    /* Question Details Section */
-    .question-details-section {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem 2rem;
-    }
-
-    .section-header-modern {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .section-title {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
-    }
-
-    .section-title i {
-        color: #3b82f6;
-    }
-
-    .section-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6b7280;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .btn-icon:hover {
-        background: #3b82f6;
-        color: white;
-        border-color: #3b82f6;
-        transform: translateY(-2px);
-    }
-
-    .question-card-modern {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(59, 130, 246, 0.1);
-    }
-
-    .question-header {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 2rem;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-    }
-
-    .question-meta-tags {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .meta-tag {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        border-radius: 25px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .type-tag.multiplechoice {
-        background: rgba(59, 130, 246, 0.1);
-        color: #1d4ed8;
-        border: 2px solid #3b82f6;
-    }
-
-    .type-tag.truefalse {
-        background: rgba(16, 185, 129, 0.1);
-        color: #059669;
-        border: 2px solid #10b981;
-    }
-
-    .type-tag.shortanswer {
-        background: rgba(14, 165, 233, 0.1);
-        color: #0284c7;
-        border: 2px solid #0ea5e9;
-    }
-
-    .position-tag {
-        background: rgba(245, 158, 11, 0.1);
-        color: #d97706;
-        border: 2px solid #f59e0b;
-    }
-
-    .points-tag {
-        background: rgba(139, 92, 246, 0.1);
-        color: #7c3aed;
-        border: 2px solid #8b5cf6;
-    }
-
-    .question-content {
-        padding: 2rem;
-    }
-
-    .question-text h3 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #1f2937;
-        line-height: 1.6;
-        margin-bottom: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-radius: 16px;
-        border-left: 5px solid #3b82f6;
-    }
-
-    /* Answer Options Styles */
-    .answer-options h4,
-    .tf-analysis h4,
-    .sa-analysis h4 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .options-grid {
-        display: grid;
-        gap: 1rem;
-    }
-
-    .option-card {
-        background: #f8fafc;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .option-card.correct-option {
-        background: rgba(34, 197, 94, 0.05);
-        border-color: #22c55e;
-    }
-
-    .option-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .option-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .option-letter {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: #3b82f6;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.875rem;
-    }
-
-    .option-text {
-        font-size: 1rem;
-        color: #1f2937;
-        margin-bottom: 1rem;
-        line-height: 1.5;
-    }
-
-    .option-stats {
-        margin-top: 1rem;
-    }
-
-    .stat-bar {
-        height: 8px;
-        background: #e5e7eb;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-fill {
-        height: 100%;
-        border-radius: 4px;
-        transition: width 1s ease-in-out;
-    }
-
-    .stat-fill.correct {
-        background: linear-gradient(90deg, #22c55e, #16a34a);
-    }
-
-    .stat-fill.incorrect {
-        background: linear-gradient(90deg, #ef4444, #dc2626);
-    }
-
-    .stat-text {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
-    }
-
-    /* True/False Styles */
-    .tf-options-modern {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .tf-option {
-        background: #f8fafc;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 2rem;
-        text-align: center;
-        transition: all 0.3s ease;
-    }
-
-    .tf-option.correct-option {
-        background: rgba(34, 197, 94, 0.05);
-        border-color: #22c55e;
-    }
-
-    .tf-option:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-
-    .tf-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .tf-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #3b82f6;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .tf-label {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .correct-badge {
-        background: #22c55e;
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .tf-stats {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1f2937;
-    }
-
-    .stat-percentage {
-        font-size: 1rem;
-        color: #6b7280;
-        font-weight: 600;
-    }
-
-    /* Short Answer Styles */
-    .expected-answer-card {
-        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-        border: 2px solid #0ea5e9;
-        border-radius: 16px;
-        padding: 2rem;
-        text-align: center;
-    }
-
-    .answer-content {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .answer-text {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: #0c4a6e;
-    }
-
-    .answer-text i {
-        color: #0ea5e9;
-    }
-
-    .answer-properties {
-        display: flex;
-        justify-content: center;
-    }
-
-    .property-tag {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.25rem;
-        border-radius: 25px;
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-    .property-tag.case-sensitive {
-        background: rgba(245, 158, 11, 0.1);
-        color: #d97706;
-        border: 2px solid #f59e0b;
-    }
-
-    .property-tag.case-insensitive {
-        background: rgba(34, 197, 94, 0.1);
-        color: #059669;
-        border: 2px solid #10b981;
-    }
-
-    /* Visual Analytics Section */
-    .visual-analytics-section {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem 2rem;
-    }
-
-    .analytics-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 2rem;
-    }
-
-    .chart-card {
-        background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(59, 130, 246, 0.1);
-    }
-
-    .chart-header {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        padding: 1.5rem 2rem;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .chart-header h3 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0 0 0.25rem 0;
-    }
-
-    .chart-header p {
-        font-size: 0.875rem;
-        color: #6b7280;
-        margin: 0;
-    }
-
-    .chart-controls {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .chart-control {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        border: 1px solid #e5e7eb;
-        background: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6b7280;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .chart-control:hover,
-    .chart-control.active {
-        background: #3b82f6;
-        color: white;
-        border-color: #3b82f6;
-    }
-
-    .chart-container {
-        padding: 2rem;
-        height: 300px;
-        position: relative;
-    }
-
-    .chart-insights {
-        padding: 1rem 2rem;
-        background: rgba(59, 130, 246, 0.05);
-        border-top: 1px solid rgba(59, 130, 246, 0.1);
-    }
-
-    .insight-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 0.875rem;
-        color: #374151;
-    }
-
-    .insight-item i {
-        color: #f59e0b;
-    }
-
-    /* Insights Section */
-    .insights-section {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem 2rem;
-    }
-
-    .insights-grid {
-        display: grid;
-        gap: 1.5rem;
-    }
-
-    .insight-card {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-        border-left: 5px solid;
-        transition: all 0.3s ease;
-    }
-
-    .insight-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-    }
-
-    .insight-card.critical {
-        border-left-color: #ef4444;
-        background: linear-gradient(135deg, #fef2f2 0%, white 50%);
-    }
-
-    .insight-card.success {
-        border-left-color: #22c55e;
-        background: linear-gradient(135deg, #f0fdf4 0%, white 50%);
-    }
-
-    .insight-card.balanced {
-        border-left-color: #3b82f6;
-        background: linear-gradient(135deg, #eff6ff 0%, white 50%);
-    }
-
-    .insight-card.warning {
-        border-left-color: #f59e0b;
-        background: linear-gradient(135deg, #fffbeb 0%, white 50%);
-    }
-
-    .insight-card.improvement {
-        border-left-color: #8b5cf6;
-        background: linear-gradient(135deg, #faf5ff 0%, white 50%);
-    }
-
-    .insight-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .critical .insight-icon {
-        background: rgba(239, 68, 68, 0.1);
-        color: #dc2626;
-    }
-
-    .success .insight-icon {
-        background: rgba(34, 197, 94, 0.1);
-        color: #059669;
-    }
-
-    .balanced .insight-icon {
-        background: rgba(59, 130, 246, 0.1);
-        color: #1d4ed8;
-    }
-
-    .warning .insight-icon {
-        background: rgba(245, 158, 11, 0.1);
-        color: #d97706;
-    }
-
-    .improvement .insight-icon {
-        background: rgba(139, 92, 246, 0.1);
-        color: #7c3aed;
-    }
-
-    .insight-content h4 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 1rem;
-    }
-
-    .insight-content p {
-        color: #6b7280;
-        line-height: 1.6;
-        margin-bottom: 1.5rem;
-    }
-
-    .recommendations h5 {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 1rem;
-    }
-
-    .recommendations ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .recommendations li {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        padding: 0.5rem 0;
-        color: #6b7280;
-        line-height: 1.5;
-    }
-
-    .recommendations li::before {
-        content: '•';
-        color: #3b82f6;
-        font-weight: bold;
-        font-size: 1.2rem;
-    }
-
-    .suggestions-list {
-        display: grid;
-        gap: 0.75rem;
-    }
-
-    .suggestion-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 1rem;
-        background: rgba(139, 92, 246, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(139, 92, 246, 0.1);
-        color: #6b7280;
-        transition: all 0.3s ease;
-    }
-
-    .suggestion-item:hover {
-        background: rgba(139, 92, 246, 0.1);
-        transform: translateX(4px);
-    }
-
-    .suggestion-item i {
-        color: #8b5cf6;
-    }
-
-    /* Action Center */
-    .action-center {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 0 2rem 2rem;
-        text-align: center;
-    }
-
-    .action-header {
-        margin-bottom: 2rem;
-    }
-
-    .action-header h3 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin-bottom: 0.5rem;
-    }
-
-    .action-header p {
-        color: #6b7280;
-        font-size: 1rem;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .action-btn-large {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 2rem 1.5rem;
-        border-radius: 20px;
-        min-width: 160px;
-        transition: all 0.4s ease;
-        text-decoration: none;
-        border: 2px solid transparent;
-        cursor: pointer;
-    }
-
-    .action-btn-large.primary {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        color: white;
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-    }
-
-    .action-btn-large.secondary {
-        background: white;
-        color: #6b7280;
-        border-color: #e5e7eb;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    }
-
-    .action-btn-large:hover {
-        transform: translateY(-8px);
-    }
-
-    .action-btn-large.primary:hover {
-        background: linear-gradient(135deg, #1d4ed8, #1e40af);
-        box-shadow: 0 16px 32px rgba(59, 130, 246, 0.4);
-        color: white;
-    }
-
-    .action-btn-large.secondary:hover {
-        background: #f8fafc;
-        color: #3b82f6;
-        border-color: #3b82f6;
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
-    }
-
-    .action-btn-large i {
-        font-size: 1.5rem;
-    }
-
-    .action-btn-large span {
-        font-weight: 600;
-        font-size: 0.875rem;
-    }
-
-    /* Modal Styles */
-    .modern-modal {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-    }
-
-    .modal-header {
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        border-bottom: 1px solid rgba(59, 130, 246, 0.1);
-        padding: 2rem;
-    }
-
-    .modal-title {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
-    }
-
-    .modal-title i {
-        color: #3b82f6;
-    }
-
-    .question-preview {
-        padding: 1rem;
-    }
-
-    .preview-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .question-number {
-        background: #3b82f6;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: 600;
-    }
-
-    .question-points {
-        color: #6b7280;
-        font-weight: 600;
-    }
-
-    .preview-content h4 {
-        font-size: 1.25rem;
-        color: #1f2937;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-    }
-
-    .export-options,
-    .share-options {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        padding: 1rem;
-    }
-
-    .export-option,
-    .share-option {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 2rem 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        background: white;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        text-decoration: none;
-        color: #6b7280;
-    }
-
-    .export-option:hover,
-    .share-option:hover {
-        border-color: #3b82f6;
-        background: rgba(59, 130, 246, 0.05);
-        color: #3b82f6;
-        transform: translateY(-4px);
-    }
-
-    .export-option i,
-    .share-option i {
-        font-size: 2rem;
-    }
-
-    .export-option span,
-    .share-option span {
-        font-weight: 600;
-    }
-
-    .loading-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 3rem;
-        color: #6b7280;
-    }
-
-    .loading-state i {
-        font-size: 2rem;
-        color: #3b82f6;
-    }
-
-    /* Responsive Design */
-    @@media (max-width: 1200px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .analytics-grid {
-        grid-template-columns: 1fr;
-    }
-    }
-
-    @@media (max-width: 768px) {
-    .hero-content {
-        padding: 2rem 1rem;
-    }
-
-    .hero-main {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 2rem;
-    }
-
-    .hero-title {
-        font-size: 2.5rem;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .performance-dashboard,
-    .question-details-section,
-    .visual-analytics-section,
-    .insights-section,
-    .action-center {
-        padding: 0 1rem 2rem;
-    }
-
-    .tf-options-modern {
-        grid-template-columns: 1fr;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .export-options,
-    .share-options {
-        grid-template-columns: 1fr;
-    }
-    }
-
-    @@media (max-width: 480px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-
-    .title-icon {
-        width: 56px;
-        height: 56px;
-        font-size: 1.5rem;
-    }
-
-    .metric-card-advanced {
-        padding: 1.5rem;
-    }
-
-    .question-header,
-    .question-content {
-        padding: 1.5rem;
-    }
-
-    .chart-container {
-        height: 250px;
-        padding: 1rem;
-    }
-
-    .insight-card {
-        padding: 1.5rem;
-    }
-
-    .action-btn-large {
-        min-width: 140px;
-        padding: 1.5rem 1rem;
-    }
-    }
-
-    /* Animation Classes */
-    .fade-in {
-        animation: fadeIn 0.6s ease-out;
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .slide-up {
-        animation: slideUp 0.4s ease-out;
-    }
-
-    @@keyframes slideUp {
-        from { opacity: 0; transform: translateY(30px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .scale-in {
-        animation: scaleIn 0.4s ease-out;
-    }
-
-    @@keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
-    /* Focus and Accessibility */
-    .action-btn:focus-visible,
-    .btn-icon:focus-visible,
-    .chart-control:focus-visible,
-    .action-btn-large:focus-visible {
-        outline: 2px solid #3b82f6;
-        outline-offset: 2px;
-    }
-
-    /* Print Styles */
-    @@media print {
-        .hero-actions,
-        .section-actions,
-        .action-center {
-            display: none;
-        }
-
-        .question-analytics-wrapper {
-            background: white;
-        }
-
-        .metric-card-advanced,
-        .chart-card,
-        .insight-card {
-            break-inside: avoid;
-            box-shadow: none;
-            border: 1px solid #ccc;
-        }
-    }
-</style>
-
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Enhanced color palette
-        const colors = {
-            primary: '#3b82f6',
-            primaryDark: '#1d4ed8',
-            success: '#22c55e',
-            successDark: '#16a34a',
-            danger: '#ef4444',
-            dangerDark: '#dc2626',
-            warning: '#f59e0b',
-            warningDark: '#d97706',
-            purple: '#8b5cf6',
-            purpleDark: '#7c3aed'
-        };
-
-        // Initialize progress ring
-        initializeProgressRing();
-
-        // Initialize charts
-        initializeCharts();
-
-        // Add entrance animations
-        addEntranceAnimations();
-
-        // Initialize interactivity
-        initializeInteractivity();
-
-        function initializeProgressRing() {
-            const progressRing = document.querySelector('.progress-ring-fill');
-            if (progressRing) {
-                const percentage = document.querySelector('.circular-progress').dataset.percentage;
-                const circumference = 2 * Math.PI * 25; // radius = 25
-                const offset = circumference - (percentage / 100) * circumference;
-
-                progressRing.style.strokeDasharray = circumference;
-                progressRing.style.strokeDashoffset = circumference;
-
-                setTimeout(() => {
-                    progressRing.style.strokeDashoffset = offset;
-                }, 500);
-            }
-        }
-
-        function initializeCharts() {
-            // Chart.js default configuration
-            Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, sans-serif";
-            Chart.defaults.color = '#6b7280';
-            Chart.defaults.plugins.legend.display = false;
-            Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-            Chart.defaults.plugins.tooltip.titleColor = '#fff';
-            Chart.defaults.plugins.tooltip.bodyColor = '#fff';
-            Chart.defaults.plugins.tooltip.cornerRadius = 8;
-            Chart.defaults.animation.duration = 1000;
-            Chart.defaults.animation.easing = 'easeOutQuart';
-
-            @if (isMultipleChoice || isTrueFalse)
-            {
-            <text>
-            // Response Distribution Chart
-            initializeResponseChart();
-            </text>
-            }
-
-            // Performance Comparison Chart
-            initializePerformanceChart();
-
-            // Time Analysis Chart
-            initializeTimeChart();
-        }
-
-        @if (isMultipleChoice || isTrueFalse)
-        {
-        <text>
-        function initializeResponseChart() {
-            const ctx = document.getElementById('responseChart');
-            if (!ctx) return;
-
-            const answerDistribution = @Html.Raw(Json.Serialize(Model.Analytics.AnswerDistribution));
-            let labels = [];
-            let data = [];
-            let backgroundColors = [];
-            let borderColors = [];
-
-            @if (isMultipleChoice)
-            {
-            <text>
-            // Multiple choice data
-            @foreach (var option in mcQuestion.Options.Select((opt, index) => new { Option = opt, Index = index }))
-            {
-            <text>
-            labels.push('@(((char)('A' + option.Index)).ToString()). @Html.Raw(Json.Serialize(option.Option))');
-            const count = answerDistribution['@Html.Raw(Json.Serialize(option.Option))'] || 0;
-            data.push(count);
-
-            const isCorrect = @Html.Raw(Json.Serialize(mcQuestion.CorrectAnswers.Contains(option.Option)));
-            if (isCorrect) {
-                backgroundColors.push(colors.success);
-                borderColors.push(colors.successDark);
-            } else {
-                backgroundColors.push(colors.danger);
-                borderColors.push(colors.dangerDark);
-            }
-            </text>
-            }
-            </text>
-            }
-            else
-            {
-            <text>
-            // True/False data
-            labels = ['True', 'False'];
-            data = [
-                answerDistribution['True'] || 0,
-                answerDistribution['False'] || 0
-            ];
-
-            const correctAnswer = @Html.Raw(Json.Serialize(tfQuestion.CorrectAnswer));
-            backgroundColors = [
-                correctAnswer ? colors.success : colors.danger,
-                !correctAnswer ? colors.success : colors.danger
-            ];
-            borderColors = [
-                correctAnswer ? colors.successDark : colors.dangerDark,
-                !correctAnswer ? colors.successDark : colors.dangerDark
-            ];
-            </text>
-            }
-
-            let chartType = 'bar';
-            let chartConfig = {
-                type: chartType,
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Responses',
-                        data: data,
-                        backgroundColor: backgroundColors,
-                        borderColor: borderColors,
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                font: { size: 12 }
-                            },
-                            grid: {
-                                color: '#f3f4f6'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: { size: 11, weight: '500' },
-                                maxRotation: 45
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
-                                    return `${context.parsed.y} responses (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        intersect: false,
-                        mode: 'index'
-                    }
-                }
-            };
-
-            const responseChart = new Chart(ctx, chartConfig);
-
-            // Chart type controls
-            const chartControls = document.querySelectorAll('.chart-control');
-            chartControls.forEach(control => {
-                control.addEventListener('click', function() {
-                    chartControls.forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-
-                    const newType = this.dataset.chart;
-                    if (newType !== chartType) {
-                        chartType = newType;
-                        responseChart.destroy();
-
-                        chartConfig.type = newType;
-                        if (newType === 'pie' || newType === 'doughnut') {
-                            delete chartConfig.options.scales;
-                            chartConfig.options.plugins.legend = { display: true, position: 'bottom' };
-                        } else {
-                            chartConfig.options.scales = {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: { precision: 0, font: { size: 12 } },
-                                    grid: { color: '#f3f4f6' }
-                                },
-                                x: {
-                                    ticks: { font: { size: 11, weight: '500' }, maxRotation: 45 },
-                                    grid: { display: false }
-                                }
-                            };
-                            chartConfig.options.plugins.legend = { display: false };
-                        }
-
-                        new Chart(ctx, chartConfig);
-                    }
-                });
-            });
-        }
-        </text>
-        }
-
-        function initializePerformanceChart() {
-            const ctx = document.getElementById('performanceChart');
-            if (!ctx) return;
-
-            const questionSuccessRate = @Model.Analytics.SuccessRate;
-            const testAverageRate = 65; // This should come from your backend
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['This Question', 'Test Average'],
-                    datasets: [{
-                        label: 'Success Rate (%)',
-                        data: [questionSuccessRate, testAverageRate],
-                        backgroundColor: [
-                            questionSuccessRate >= 70 ? colors.success :
-                                questionSuccessRate >= 40 ? colors.warning : colors.danger,
-                            colors.primary
-                        ],
-                        borderColor: [
-                            questionSuccessRate >= 70 ? colors.successDark :
-                                questionSuccessRate >= 40 ? colors.warningDark : colors.dangerDark,
-                            colors.primaryDark
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                },
-                                font: { size: 12 }
-                            },
-                            grid: {
-                                color: '#f3f4f6'
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                font: { size: 12, weight: '500' }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.dataset.label}: ${context.parsed.x.toFixed(1)}%`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function initializeTimeChart() {
-            const ctx = document.getElementById('timeChart');
-            if (!ctx) return;
-
-            // Mock time data - replace with real data from backend
-            const timeData = {
-                labels: ['0-30s', '30s-1m', '1-2m', '2-3m', '3m+'],
-                datasets: [{
-                    label: 'Students',
-                    data: [5, 12, 18, 8, 3],
-                    backgroundColor: colors.purple,
-                    borderColor: colors.purpleDark,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            };
-
-            new Chart(ctx, {
-                type: 'bar',
-                data: timeData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                font: { size: 12 }
-                            },
-                            grid: {
-                                color: '#f3f4f6'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: { size: 12, weight: '500' }
-                            },
-                            grid: {
-                                display: false
-                            }
-                        }
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.parsed.y} students spent ${context.label}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function addEntranceAnimations() {
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('fade-in');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, observerOptions);
-
-            // Observe elements for animation
-            document.querySelectorAll('.metric-card-advanced, .chart-card, .insight-card, .question-card-modern').forEach((element) => {
-                observer.observe(element);
-            });
-        }
-
-        function initializeInteractivity() {
-            // Metric card hover effects
-            document.querySelectorAll('.metric-card-advanced').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-8px) scale(1.02)';
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                });
-            });
-
-            // Chart card interactions
-            document.querySelectorAll('.chart-card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-4px)';
-                });
-
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        }
-});
-
-    // Modal functions
-    function showQuestionPreview() {
-        const modal = new bootstrap.Modal(document.getElementById('questionPreviewModal'));
-
-        // Load question preview content
-        const previewContent = document.querySelector('.preview-content');
-        previewContent.innerHTML = `
-        <h4>@Model.Question.Text</h4>
-        @if (isMultipleChoice)
-        {
-        <text>
-            <div class="options-preview">
-                @foreach (var option in mcQuestion.Options.Select((opt, index) => new { Option = opt, Index = index }))
-        {
-        var isCorrect = mcQuestion.CorrectAnswers.Contains(option.Option);
-        <text>
-                    <div class="option-preview @(isCorrect ? "correct" : "")">
-                        <span class="option-letter">@(((char)('A' + option.Index)).ToString())</span>
-                        <span class="option-text">@option.Option</span>
-                        @if (isCorrect)
-        {
-        <text><i class="fas fa-check text-success"></i></text>
-        }
-                    </div>
-                    </text>
-        }
-            </div>
-            </text>
-        }
-        else if (isTrueFalse)
-        {
-        <text>
-            <div class="tf-preview">
-                <div class="tf-option-preview @(tfQuestion.CorrectAnswer ? "correct" : "")">
-                    <span>True</span>
-                    @if (tfQuestion.CorrectAnswer)
-        {
-        <text><i class="fas fa-check text-success"></i></text>
-        }
-                </div>
-                <div class="tf-option-preview @(!tfQuestion.CorrectAnswer ? "correct" : "")">
-                    <span>False</span>
-                    @if (!tfQuestion.CorrectAnswer)
-        {
-        <text><i class="fas fa-check text-success"></i></text>
-        }
-                </div>
-            </div>
-            </text>
-        }
-        else if (isShortAnswer)
-        {
-        <text>
-            <div class="sa-preview">
-                <div class="expected-answer">
-                    <strong>Expected Answer:</strong> @saQuestion.ExpectedAnswer
-                </div>
-                <div class="answer-settings">
-                    <span class="badge @(saQuestion.CaseSensitive ? "bg-warning" : "bg-success")">
-                        @(saQuestion.CaseSensitive ? "Case Sensitive" : "Case Insensitive")
-                    </span>
-                </div>
-            </div>
-            </text>
-        }
-    `;
-
-        modal.show();
-    }
-
-    function showExportModal() {
-        const modal = new bootstrap.Modal(document.getElementById('exportModal'));
-        modal.show();
-    }
-
-    function showShareModal() {
-        const modal = new bootstrap.Modal(document.getElementById('shareModal'));
-        modal.show();
-    }
-
-    function showStudentResponses() {
-        const modal = new bootstrap.Modal(document.getElementById('studentResponsesModal'));
-
-        // Simulate loading responses
-        setTimeout(() => {
-            const container = document.querySelector('.responses-container');
-            container.innerHTML = `
-            <div class="responses-grid">
-                <div class="response-item">
-                    <div class="student-info">
-                        <strong>John Doe</strong>
-                        <span class="text-muted">john.doe@email.com</span>
-                    </div>
-                    <div class="response-details">
-                        <span class="response-text">Selected: Option A</span>
-                        <span class="badge bg-success">Correct</span>
-                    </div>
-                </div>
-                <!-- Add more response items here -->
-            </div>
-        `;
-        }, 1000);
-
-        modal.show();
-    }
-
-    // Action functions
-    function editQuestion() {
-        showToast('Redirecting to question editor...', 'info');
-        // Implement edit functionality
-    }
-
-    function duplicateQuestion() {
-        showToast('Question duplicated successfully!', 'success');
-        // Implement duplicate functionality
-    }
-
-    function generateReport() {
-        showToast('Generating detailed report...', 'info');
-        // Implement report generation
-    }
-
-    function exportData(format) {
-        showToast(`Exporting data as ${format.toUpperCase()}...`, 'info');
-
-        setTimeout(() => {
-            showToast(`${format.toUpperCase()} export completed!`, 'success');
-            bootstrap.Modal.getInstance(document.getElementById('exportModal')).hide();
-        }, 2000);
-    }
-
-    function shareEmail() {
-        const subject = encodeURIComponent('Question Analytics Report');
-        const body = encodeURIComponent('Check out this question analytics report: ' + window.location.href);
-        window.open(`mailto:?subject=${subject}&body=${body}`);
-        bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
-    }
-
-    async function copyLink() {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            showToast('Link copied to clipboard!', 'success');
-        } catch (err) {
-            showToast('Failed to copy link', 'error');
-        }
-        bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
-    }
-
-    function generateQRCode() {
-        showToast('QR Code generated!', 'success');
-        bootstrap.Modal.getInstance(document.getElementById('shareModal')).hide();
-    }
-
-    // Toast notification system
-    function showToast(message, type = 'info', duration = 5000) {
-        const toastContainer = document.getElementById('toastContainer');
-        const toastId = 'toast-' + Date.now();
-
-        const toast = document.createElement('div');
-        toast.id = toastId;
-        toast.className = `toast align-items-center text-white bg-${getToastBootstrapClass(type)} border-0`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-
-        toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body d-flex align-items-center">
-                <i class="fas ${getToastIcon(type)} me-2"></i>
-                ${message}
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="closeToast('${toastId}')" aria-label="Close"></button>
-        </div>
-    `;
-
-        toastContainer.appendChild(toast);
-
-        // Show toast with animation
-        const bsToast = new bootstrap.Toast(toast, {
-            autohide: true,
-            delay: duration
-        });
-        bsToast.show();
-
-        // Remove from DOM after hiding
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-        });
-    }
-
-    function closeToast(toastId) {
-        const toast = document.getElementById(toastId);
-        if (toast) {
-            const bsToast = bootstrap.Toast.getInstance(toast);
-            if (bsToast) {
-                bsToast.hide();
-            }
-        }
+.difficulty-easy { color: #28a745; }
+.difficulty-moderate { color: #ffc107; }
+.difficulty-challenging { color: #fd7e14; }
+.difficulty-difficult { color: #dc3545; }
+
+.question-display-section {
+    margin-bottom: 2rem;
 }
 
-    function getToastIcon(type) {
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        };
-        return icons[type] || icons.info;
-    }
-
-    function getToastBootstrapClass(type) {
-        const classes = {
-            success: 'success',
-            error: 'danger',
-            warning: 'warning',
-            info: 'primary'
-        };
-        return classes[type] || classes.info;
-    }
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        // Ctrl/Cmd + E for edit
-        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
-            e.preventDefault();
-            editQuestion();
-        }
-
-        // Ctrl/Cmd + D for duplicate
-        if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-            e.preventDefault();
-            duplicateQuestion();
-        }
-
-        // Ctrl/Cmd + P for preview
-        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
-            e.preventDefault();
-            showQuestionPreview();
-        }
-
-        // Escape to close modals
-        if (e.key === 'Escape') {
-            const openModals = document.querySelectorAll('.modal.show');
-            openModals.forEach(modal => {
-                const bsModal = bootstrap.Modal.getInstance(modal);
-                if (bsModal) bsModal.hide();
-            });
-        }
-});
-
-    // Initialize tooltips
-    document.addEventListener('DOMContentLoaded', function() {
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-
-    // Page load analytics tracking
-    window.addEventListener('load', function() {
-        // Track page load time
-        const navigationTiming = performance.getEntriesByType('navigation')[0];
-        const loadTime = navigationTiming.loadEventEnd - navigationTiming.loadEventStart;
-
-        console.log(`Question Analytics page loaded in ${loadTime}ms`);
-
-        // Initialize any final animations or interactions
-        setTimeout(() => {
-            document.body.classList.add('loaded');
-        }, 100);
-    });
-
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-
-    // Print functionality
-    function printAnalytics() {
-        window.print();
-    }
-
-    // Export chart as image
-    function exportChartAsImage(chartId, filename) {
-        const canvas = document.getElementById(chartId);
-        if (canvas) {
-            const url = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = filename || 'chart.png';
-            link.href = url;
-            link.click();
-        }
+.question-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-    // Advanced analytics functions
-    function calculateStatistics() {
-        const successRate = @Model.Analytics.SuccessRate;
-        const correctAnswers = @Model.Analytics.CorrectAnswers;
-        const incorrectAnswers = @Model.Analytics.IncorrectAnswers;
-        const totalResponses = correctAnswers + incorrectAnswers;
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
 
-        return {
-            successRate,
-            correctAnswers,
-            incorrectAnswers,
-            totalResponses,
-            failureRate: 100 - successRate,
-            discriminationIndex: calculateDiscriminationIndex(),
-            difficultyIndex: calculateDifficultyIndex()
-        };
-    }
+.question-type-badge {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
 
-    function calculateDiscriminationIndex() {
-        // This would normally require high/low performer data
-        // For now, return a mock value based on success rate
-        const successRate = @Model.Analytics.SuccessRate;
+.question-points {
+    color: #6c757d;
+    font-weight: 600;
+}
 
-        if (successRate >= 70) return 0.3; // Good discrimination
-        if (successRate >= 50) return 0.5; // Excellent discrimination
-        if (successRate >= 30) return 0.2; // Fair discrimination
-        return 0.1; // Poor discrimination
-    }
+.question-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
 
-    function calculateDifficultyIndex() {
-        // Difficulty index is essentially the success rate as a decimal
-        return @Model.Analytics.SuccessRate / 100;
-    }
+.question-options h6 {
+    margin-bottom: 0.75rem;
+    color: #495057;
+}
 
-    // Context menu for advanced actions
-    document.addEventListener('contextmenu', function(e) {
-        if (e.target.closest('.metric-card-advanced, .chart-card, .insight-card')) {
-            e.preventDefault();
-            showContextMenu(e.pageX, e.pageY);
-        }
-});
+.option-item {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+}
 
-    function showContextMenu(x, y) {
-        // Remove existing context menu
-        const existingMenu = document.querySelector('.context-menu');
-        if (existingMenu) existingMenu.remove();
+.option-item.correct-option {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
 
-        const contextMenu = document.createElement('div');
-        contextMenu.className = 'context-menu';
-        contextMenu.style.position = 'fixed';
-        contextMenu.style.left = x + 'px';
-        contextMenu.style.top = y + 'px';
-        contextMenu.style.background = 'white';
-        contextMenu.style.border = '1px solid #e5e7eb';
-        contextMenu.style.borderRadius = '8px';
-        contextMenu.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-        contextMenu.style.zIndex = '9999';
-        contextMenu.style.minWidth = '150px';
+.tf-answer, .expected-answer {
+    padding: 0.75rem;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    font-weight: 600;
+}
 
-        contextMenu.innerHTML = `
-        <div class="context-menu-item" onclick="exportChartAsImage('responseChart', 'response-chart.png')">
-            <i class="fas fa-image"></i> Export as Image
-        </div>
-        <div class="context-menu-item" onclick="printAnalytics()">
-            <i class="fas fa-print"></i> Print
-        </div>
-        <div class="context-menu-item" onclick="showExportModal()">
-            <i class="fas fa-download"></i> Export Data
-        </div>
-    `;
+.answer-distribution-section, .insights-section {
+    margin-top: 2rem;
+}
 
-        document.body.appendChild(contextMenu);
+.answer-chart {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
 
-        // Close context menu on click outside
-        setTimeout(() => {
-            document.addEventListener('click', function closeContextMenu() {
-                contextMenu.remove();
-                document.removeEventListener('click', closeContextMenu);
-            });
-        }, 100);
-    }
+.answer-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
 
-    // Enhanced accessibility
-    function setupAccessibility() {
-        // Add ARIA labels to charts
-        const charts = document.querySelectorAll('canvas');
-        charts.forEach((chart, index) => {
-            chart.setAttribute('role', 'img');
-            chart.setAttribute('aria-label', `Chart ${index + 1}: Analytics visualization`);
-        });
+.answer-label {
+    flex: 0 0 200px;
+    font-weight: 600;
+}
 
-        // Add keyboard navigation for action buttons
-        const actionButtons = document.querySelectorAll('.action-btn-large');
-        actionButtons.forEach(button => {
-            button.setAttribute('tabindex', '0');
-            button.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.click();
-                }
-            });
-        });
-    }
+.answer-progress {
+    flex: 1;
+    height: 24px;
+    background: #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
 
-    // Initialize accessibility features
-    document.addEventListener('DOMContentLoaded', setupAccessibility);
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    transition: width 0.3s ease;
+}
 
-    // Performance monitoring
-    function monitorPerformance() {
-        // Monitor chart rendering performance
-        const chartContainers = document.querySelectorAll('.chart-container');
-        chartContainers.forEach(container => {
-            const observer = new PerformanceObserver(list => {
-                list.getEntries().forEach(entry => {
-                    if (entry.entryType === 'measure') {
-                        console.log(`Chart rendering: ${entry.name} took ${entry.duration}ms`);
-                    }
-                });
-            });
-            observer.observe({ entryTypes: ['measure'] });
-        });
-    }
+.answer-bar.correct .progress-fill {
+    background: linear-gradient(45deg, #28a745, #1e7e34);
+}
 
-    // Initialize performance monitoring in development
-    if (window.location.hostname === 'localhost') {
-        monitorPerformance();
-    }
+.answer-bar.incorrect .progress-fill {
+    background: linear-gradient(45deg, #6c757d, #495057);
+}
 
-    // Service worker registration for offline functionality
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
-                    console.log('ServiceWorker registration successful');
-                })
-                .catch(function(err) {
-                    console.log('ServiceWorker registration failed');
-                });
-        });
-    }
-</script>
+.answer-stats {
+    flex: 0 0 100px;
+    text-align: right;
+    font-weight: 600;
+}
 
-<!-- Additional styles for context menu and other dynamic elements -->
-<style>
-    .context-menu {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        overflow: hidden;
-        z-index: 9999;
-    }
+.answer-percentage {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
 
-    .context-menu-item {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem 1rem;
-        font-size: 0.875rem;
-        color: #374151;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-bottom: 1px solid #f3f4f6;
-    }
+.insights-grid {
+    display: grid;
+    gap: 1rem;
+}
 
-    .context-menu-item:last-child {
-        border-bottom: none;
-    }
+.insight-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
 
-    .context-menu-item:hover {
-        background: #f8fafc;
-        color: #3b82f6;
-    }
+.insight-card.warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-left: 4px solid #ffc107;
+}
 
-    .context-menu-item i {
-        width: 16px;
-        color: #6b7280;
-    }
+.insight-card.success {
+    background: linear-gradient(135deg, #d4edda 0%, #a8e6cf 100%);
+    border-left: 4px solid #28a745;
+}
 
-    .context-menu-item:hover i {
-        color: #3b82f6;
-    }
+.insight-card.info {
+    background: linear-gradient(135deg, #cce7ff 0%, #a8d8ff 100%);
+    border-left: 4px solid #007bff;
+}
 
-    /* Preview styles for modal content */
-    .options-preview {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        margin-top: 1rem;
-    }
+.insight-card i {
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
 
-    .option-preview {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-    }
+.insight-card.warning i { color: #856404; }
+.insight-card.success i { color: #155724; }
+.insight-card.info i { color: #004085; }
 
-    .option-preview.correct {
-        background: rgba(34, 197, 94, 0.1);
-        border-color: #22c55e;
-    }
+.insight-content h6 {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
 
-    .option-letter {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #3b82f6;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 0.75rem;
-    }
-
-    .option-text {
-        flex: 1;
-        color: #1f2937;
-    }
-
-    .tf-preview {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .tf-option-preview {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .tf-option-preview.correct {
-        background: rgba(34, 197, 94, 0.1);
-        border-color: #22c55e;
-    }
-
-    .sa-preview {
-        margin-top: 1rem;
-    }
-
-    .expected-answer {
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 1rem;
-    }
-
-    .answer-settings {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .responses-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .response-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background: #f8fafc;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .student-info {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .response-details {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .response-text {
-        color: #6b7280;
-        font-size: 0.875rem;
-    }
-
-    /* Loading state for better UX */
-    body.loaded .metric-card-advanced {
-        animation: slideInUp 0.6s ease-out;
-    }
-
-    body.loaded .chart-card {
-        animation: slideInUp 0.8s ease-out;
-    }
-
-    body.loaded .insight-card {
-        animation: slideInUp 1s ease-out;
-    }
-
-    @@keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* High contrast mode support */
-    @@media (prefers-contrast: high) {
-        .metric-card-advanced,
-        .chart-card,
-        .insight-card,
-        .question-card-modern {
-            border: 2px solid #000;
-        }
-
-        .action-btn,
-        .action-btn-large {
-            border: 2px solid #000;
-        }
-
-        /* Reduced motion support */
-        @@media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-
-            .float-element {
-                animation: none;
-            }
-
-            .metric-glow {
-                animation: none;
-            }
-
-
-            /* Dark mode support (future enhancement) */
-            @@media (prefers-color-scheme: dark) {
-                .question-analytics-wrapper {
-                    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-                    color: #f9fafb;
-                }
-
-                .metric-card-advanced,
-                .chart-card,
-                .insight-card,
-                .question-card-modern {
-                    background: #374151;
-                    border-color: #4b5563;
-                    color: #f9fafb;
-                }
-            }
-        }
-    }
-
+.insight-content p {
+    margin: 0;
+    line-height: 1.5;
+}
 </style>

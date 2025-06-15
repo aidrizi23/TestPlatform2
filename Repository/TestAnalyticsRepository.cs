@@ -346,14 +346,16 @@ namespace TestPlatform2.Repository
             for (int i = 6; i >= 0; i--)
             {
                 var date = DateTime.Today.AddDays(-i);
-                var nextDate = date.AddDays(1);
+                var startOfDay = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+                var endOfDay = DateTime.SpecifyKind(date.AddDays(1), DateTimeKind.Utc);
                 
                 // Count completed attempts for this day
                 var completionCount = await _context.TestAttempts
                     .Where(a => a.TestId == testId 
                                && a.IsCompleted 
                                && a.EndTime.HasValue
-                               && a.EndTime.Value.Date == date)
+                               && a.EndTime.Value >= startOfDay
+                               && a.EndTime.Value < endOfDay)
                     .CountAsync();
                     
                 timelineData.Add(new DailyCompletionData

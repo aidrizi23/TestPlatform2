@@ -1,0 +1,138 @@
+@{
+    ViewData["Title"] = "Privacy Settings";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h1 class="settings-title">
+                        <i class="fas fa-shield-alt me-3"></i>
+                        Privacy Settings
+                    </h1>
+                    <p class="settings-subtitle">Control your privacy and data sharing preferences</p>
+                </div>
+
+                <div class="settings-content">
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-eye me-2"></i>
+                            Profile Visibility
+                        </h3>
+                        
+                        <div class="privacy-option">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="profileVisibility" id="publicProfile" value="public">
+                                <label class="form-check-label" for="publicProfile">
+                                    <strong>Public</strong>
+                                    <small class="d-block text-muted">Your profile is visible to other users</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="profileVisibility" id="privateProfile" value="private" checked>
+                                <label class="form-check-label" for="privateProfile">
+                                    <strong>Private</strong>
+                                    <small class="d-block text-muted">Only you can see your profile information</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Analytics & Usage
+                        </h3>
+                        
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="usageAnalytics" checked>
+                                <label class="form-check-label" for="usageAnalytics">
+                                    <strong>Usage Analytics</strong>
+                                    <small class="d-block text-muted">Help us improve the platform by sharing anonymous usage data</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="privacy-option">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="performanceData">
+                                <label class="form-check-label" for="performanceData">
+                                    <strong>Performance Data</strong>
+                                    <small class="d-block text-muted">Share performance metrics to help optimize the platform</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-trash me-2"></i>
+                            Data Management
+                        </h3>
+                        
+                        <div class="data-action">
+                            <h5>Export Your Data</h5>
+                            <p class="text-muted">Download a copy of all your test data, results, and account information.</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportData()">
+                                <i class="fas fa-download me-2"></i>
+                                Request Data Export
+                            </button>
+                        </div>
+
+                        <div class="data-action">
+                            <h5 class="text-danger">Delete Account</h5>
+                            <p class="text-muted">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="showDeleteAccountModal()">
+                                <i class="fas fa-trash me-2"></i>
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Privacy Notice:</strong> We take your privacy seriously. Read our <a href="#" class="alert-link">Privacy Policy</a> for more details.
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="savePrivacySettings()">
+                            <i class="fas fa-save me-2"></i>
+                            Save Settings
+                        </button>
+                        <a asp-controller="Test" asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Tests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <script>
+        function savePrivacySettings() {
+            showToast('Privacy settings saved!', 'success');
+        }
+
+        function exportData() {
+            showToast('Data export request submitted. You will receive an email when ready.', 'info');
+        }
+
+        function showDeleteAccountModal() {
+            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                showToast('Account deletion is not yet implemented. Contact support for assistance.', 'warning');
+            }
+        }
+    </script>
+}
