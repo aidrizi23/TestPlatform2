@@ -107,14 +107,6 @@ ViewData["Title"] = "My Tests";
                         <span id="archiveToggleText">@(ViewBag.ShowArchived == true ? "Show Active Tests" : "Show Archived Tests")</span>
                     </button>
                 </div>
-                <div class="view-options">
-                    <button class="view-btn active" data-view="grid" title="Grid View">
-                        <i class="fas fa-th-large"></i>
-                    </button>
-                    <button class="view-btn" data-view="list" title="List View">
-                        <i class="fas fa-list"></i>
-                    </button>
-                </div>
                 <div class="sort-options">
                     <select class="form-select sort-select" id="sortTests">
                         <option value="recent">Recently Created</option>
@@ -1100,7 +1092,7 @@ ViewData["Title"] = "My Tests";
         let currentShowArchived = archiveToggle ? archiveToggle.dataset.showArchived === 'true' : false;
 
         // Unified filter state
-        const filterState = {
+        window.filterState = {
             search: '',
             category: '',
             tag: '',
@@ -1116,7 +1108,7 @@ ViewData["Title"] = "My Tests";
                 
                 if (term === lastSearchTerm) return;
                 lastSearchTerm = term;
-                filterState.search = term;
+                window.filterState.search = term;
                 
                 searchTimeout = setTimeout(() => {
                     loadFilteredTests();
@@ -1129,7 +1121,7 @@ ViewData["Title"] = "My Tests";
                     case 'Escape':
                         this.value = '';
                         lastSearchTerm = '';
-                        filterState.search = '';
+                        window.filterState.search = '';
                         loadFilteredTests();
                         this.blur();
                         break;
@@ -1143,21 +1135,21 @@ ViewData["Title"] = "My Tests";
 
         if (sortSelect) {
             sortSelect.addEventListener('change', function() {
-                filterState.sort = this.value;
+                window.filterState.sort = this.value;
                 loadFilteredTests();
             });
         }
 
         if (categoryFilter) {
             categoryFilter.addEventListener('change', function() {
-                filterState.category = this.value;
+                window.filterState.category = this.value;
                 loadFilteredTests();
             });
         }
 
         if (tagFilter) {
             tagFilter.addEventListener('change', function() {
-                filterState.tag = this.value;
+                window.filterState.tag = this.value;
                 loadFilteredTests();
             });
         }
@@ -1170,7 +1162,7 @@ ViewData["Title"] = "My Tests";
                 this.disabled = true;
 
                 // Toggle state
-                filterState.showArchived = !filterState.showArchived;
+                window.filterState.showArchived = !window.filterState.showArchived;
                 updateArchiveToggleUI();
                 
                 // Load filtered tests and re-enable button
@@ -1414,7 +1406,9 @@ ViewData["Title"] = "My Tests";
             const icon = archiveToggle.querySelector('i');
             const text = archiveToggle.querySelector('#archiveToggleText');
             
-            if (filterState.showArchived) {
+            if (!icon || !text) return;
+            
+            if (window.filterState.showArchived) {
                 archiveToggle.className = 'btn btn-outline-secondary';
                 icon.className = 'fas fa-box me-2';
                 text.textContent = 'Show Active Tests';
@@ -1424,7 +1418,7 @@ ViewData["Title"] = "My Tests";
                 text.textContent = 'Show Archived Tests';
             }
             
-            archiveToggle.dataset.showArchived = filterState.showArchived;
+            archiveToggle.dataset.showArchived = window.filterState.showArchived;
         }
         
         function updateResultsCount(visible, total) {
